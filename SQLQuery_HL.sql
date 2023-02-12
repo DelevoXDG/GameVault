@@ -1,3 +1,39 @@
+/*
+Entity–relationship model:
+
+users
+  |
+  v
+games  <-  game_developers
+  |
+  v
+developers
+  |
+  v
+publishers  <-  game_publishers
+  |
+  v
+platforms
+  |
+  v
+reviews  <-  ratings
+  |
+  v
+wishlist
+  |
+  v
+cart
+  |
+  v
+orders  <-  order_items  <-  shipping_address  <-  payment_methods
+  |
+  v
+game_tags
+  |
+  v
+game_awards
+*/
+
 CREATE TABLE USERS (
   ID INT PRIMARY KEY,
   USERNAME VARCHAR(255) NOT NULL,
