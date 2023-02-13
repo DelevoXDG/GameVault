@@ -16,7 +16,7 @@ PUBLISHERS  <-  GAME_PUBLISHERS
 PLATFORMS
   |
   V
-REVIEWS  <-  RATINGS
+REVIEWS  <-  SCORE
   |
   V
 WISHLIST
@@ -25,15 +25,16 @@ WISHLIST
 CART
   |
   V
-ORDERS  <-  ORDER_ITEMS  <-  SHIPPING_ADDRESS  <-  PAYMENT_METHODS
+ORDERS  <-  ORDER_ITEMS
   |
   V
-GAME_TAGS
+GAME_GENRES
   |
   V
 GAME_AWARDS
 */
 
+-- 1
 CREATE TABLE USERS (
   ID INT PRIMARY KEY,
   USERNAME VARCHAR(255) NOT NULL,
@@ -49,6 +50,24 @@ VALUES
   (4, 'sara_lee', 'sara_lee@example.com', 'password4'),
   (5, 'tom_jones', 'tom_jones@example.com', 'password5');
 
+-- 2
+CREATE TABLE GAME_DEVELOPERS (
+  ID INT PRIMARY KEY,
+  GAME_ID INT NOT NULL,
+  DEVELOPER_ID INT NOT NULL,
+  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
+  FOREIGN KEY (DEVELOPER_ID) REFERENCES DEVELOPERS (ID)
+);
+
+INSERT INTO GAME_DEVELOPERS (ID, GAME_ID, DEVELOPER_ID) 
+VALUES 
+  (1, 1, 1),
+  (2, 2, 2),
+  (3, 3, 3),
+  (4, 4, 4),
+  (5, 5, 5);
+
+-- 3
 CREATE TABLE GAMES (
   ID INT PRIMARY KEY,
   TITLE VARCHAR(255) NOT NULL,
@@ -66,6 +85,7 @@ VALUES
   (4, 'Halo 5: Guardians', 'First-person shooter', '2015-10-27', 'A first-person shooter developed by 343 Industries', 59.99),
   (5, 'Minecraft', 'Sandbox', '2011-11-18', 'A sandbox game developed by Mojang Studios', 26.95);
 
+-- 4
 CREATE TABLE DEVELOPERS (
   ID INT PRIMARY KEY,
   NAME VARCHAR(255) NOT NULL,
@@ -81,6 +101,24 @@ VALUES
   (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
+-- 5
+CREATE TABLE GAME_PUBLISHERS (
+  ID INT PRIMARY KEY,
+  GAME_ID INT NOT NULL,
+  PUBLISHER_ID INT NOT NULL,
+  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
+  FOREIGN KEY (PUBLISHER_ID) REFERENCES PUBLISHERS (ID)
+);
+
+INSERT INTO GAME_PUBLISHERS (ID, GAME_ID, PUBLISHER_ID) 
+VALUES 
+  (1, 1, 1),
+  (2, 2, 2),
+  (3, 3, 3),
+  (4, 4, 4),
+  (5, 5, 5);
+
+-- 6
 CREATE TABLE PUBLISHERS (
   ID INT PRIMARY KEY,
   NAME VARCHAR(255) NOT NULL,
@@ -96,6 +134,7 @@ VALUES
 (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
 (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
+-- 7
 CREATE TABLE PLATFORMS (
   ID INT PRIMARY KEY,
   NAME VARCHAR(255) NOT NULL
@@ -109,29 +148,12 @@ VALUES
 (4, 'PC'),
 (5, 'Mobile');
 
-CREATE TABLE REVIEWS (
+-- 8
+CREATE TABLE SCORE (
   ID INT PRIMARY KEY,
   USER_ID INT NOT NULL,
   GAME_ID INT NOT NULL,
   SCORE INT NOT NULL CHECK (SCORE BETWEEN 1 AND 10),
-  REVIEW TEXT,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
-);
-
-INSERT INTO REVIEWS (ID, USER_ID, GAME_ID, REVIEW) 
-VALUES 
-(1, 1, 1, 10, 'Great game with fantastic graphics and gameplay!'),
-(2, 2, 1, 10, 'Loved the storyline and the character development.'),
-(3, 3, 2, 6, 'Not the best game I have played, but it is still fun.'),
-(4, 4, 3, 7, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
-(5, 5, 4, 8, 'I would recommend this game to anyone looking for a challenging experience.');
-
-CREATE TABLE RATINGS (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  RATING INT NOT NULL,
   FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
   FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
 );
@@ -144,6 +166,25 @@ VALUES
 (4, 4, 3, 6),
 (5, 5, 4, 9);
 
+-- 9
+CREATE TABLE REVIEWS (
+  ID INT PRIMARY KEY,
+  USER_ID INT NOT NULL,
+  GAME_ID INT NOT NULL,
+  REVIEW TEXT,
+  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
+  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+);
+
+INSERT INTO REVIEWS (ID, USER_ID, GAME_ID, REVIEW) 
+VALUES 
+(1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
+(2, 2, 1, 'Loved the storyline and the character development.'),
+(3, 3, 2, 'Not the best game I have played, but it is still fun.'),
+(4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
+(5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+
+-- 10
 CREATE TABLE WISHLIST (
   ID INT PRIMARY KEY,
   USER_ID INT NOT NULL,
@@ -160,6 +201,7 @@ VALUES
 (4, 4, 5),
 (5, 5, 1);
 
+-- 11
 CREATE TABLE CART (
   ID INT PRIMARY KEY,
   USER_ID INT NOT NULL,
@@ -177,22 +219,7 @@ VALUES
 (4, 4, 5, 4),
 (5, 5, 1, 5);
 
-CREATE TABLE ORDERS (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  ORDER_DATE DATE NOT NULL,
-  TOTAL_AMOUNT DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
-);
-
-INSERT INTO ORDERS (ID, USER_ID, ORDER_DATE, TOTAL_AMOUNT) 
-VALUES 
-(1, 1, '2022-12-01', 200.00),
-(2, 2, '2022-11-15', 150.00),
-(3, 3, '2022-10-31', 100.00),
-(4, 4, '2022-09-15', 75.00),
-(5, 5, '2022-08-01', 50.00);
-
+-- 12
 CREATE TABLE ORDER_ITEMS (
   ID INT PRIMARY KEY,
   ORDER_ID INT NOT NULL,
@@ -211,6 +238,24 @@ VALUES
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
 
+-- 13
+CREATE TABLE ORDERS (
+  ID INT PRIMARY KEY,
+  USER_ID INT NOT NULL,
+  ORDER_DATE DATE NOT NULL,
+  TOTAL_AMOUNT DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
+);
+
+INSERT INTO ORDERS (ID, USER_ID, ORDER_DATE, TOTAL_AMOUNT) 
+VALUES 
+(1, 1, '2022-12-01', 200.00),
+(2, 2, '2022-11-15', 150.00),
+(3, 3, '2022-10-31', 100.00),
+(4, 4, '2022-09-15', 75.00),
+(5, 5, '2022-08-01', 50.00);
+
+-- 14
 CREATE TABLE GAME_PLATFORMS (
   ID INT PRIMARY KEY,
   GAME_ID INT NOT NULL,
@@ -227,38 +272,23 @@ VALUES
   (4, 4, 4),
   (5, 5, 5);
 
-CREATE TABLE GAME_DEVELOPERS (
+-- 15
+CREATE TABLE GAME_GENRES (
   ID INT PRIMARY KEY,
   GAME_ID INT NOT NULL,
-  DEVELOPER_ID INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
-  FOREIGN KEY (DEVELOPER_ID) REFERENCES DEVELOPERS (ID)
+  TAG VARCHAR(255) NOT NULL,
+  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
 );
 
-INSERT INTO GAME_DEVELOPERS (ID, GAME_ID, DEVELOPER_ID) 
-VALUES 
-  (1, 1, 1),
-  (2, 2, 2),
-  (3, 3, 3),
-  (4, 4, 4),
-  (5, 5, 5);
+INSERT INTO GAME_GENRES (ID, GAME_ID, TAG)
+VALUES
+  (1, 1, 'Multiplayer'),
+  (2, 1, 'Open-World'),
+  (3, 2, 'First-Person'),
+  (4, 2, 'Shooter'),
+  (5, 3, 'Adventure');
 
-CREATE TABLE GAME_PUBLISHERS (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  PUBLISHER_ID INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
-  FOREIGN KEY (PUBLISHER_ID) REFERENCES PUBLISHERS (ID)
-);
-
-INSERT INTO GAME_PUBLISHERS (ID, GAME_ID, PUBLISHER_ID) 
-VALUES 
-  (1, 1, 1),
-  (2, 2, 2),
-  (3, 3, 3),
-  (4, 4, 4),
-  (5, 5, 5);
-
+-- 16
 CREATE TABLE GAME_AWARDS (
   ID INT PRIMARY KEY,
   GAME_ID INT NOT NULL,
