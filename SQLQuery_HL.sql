@@ -96,7 +96,6 @@ VALUES
 (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
 (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
-
 CREATE TABLE PLATFORMS (
   ID INT PRIMARY KEY,
   NAME VARCHAR(255) NOT NULL
@@ -114,6 +113,7 @@ CREATE TABLE REVIEWS (
   ID INT PRIMARY KEY,
   USER_ID INT NOT NULL,
   GAME_ID INT NOT NULL,
+  SCORE INT NOT NULL CHECK (SCORE BETWEEN 1 AND 10),
   REVIEW TEXT,
   FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
   FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
@@ -121,11 +121,11 @@ CREATE TABLE REVIEWS (
 
 INSERT INTO REVIEWS (ID, USER_ID, GAME_ID, REVIEW) 
 VALUES 
-(1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
-(2, 2, 1, 'Loved the storyline and the character development.'),
-(3, 3, 2, 'Not the best game I have played, but it is still fun.'),
-(4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
-(5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+(1, 1, 1, 10, 'Great game with fantastic graphics and gameplay!'),
+(2, 2, 1, 10, 'Loved the storyline and the character development.'),
+(3, 3, 2, 6, 'Not the best game I have played, but it is still fun.'),
+(4, 4, 3, 7, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
+(5, 5, 4, 8, 'I would recommend this game to anyone looking for a challenging experience.');
 
 CREATE TABLE RATINGS (
   ID INT PRIMARY KEY,
