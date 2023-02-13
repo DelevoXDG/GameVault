@@ -163,11 +163,11 @@ CREATE TABLE PLATFORMS (
 
 INSERT INTO PLATFORMS (ID, NAME) 
 VALUES 
-(1, 'PlayStation 4'),
-(2, 'Xbox One'),
-(3, 'Nintendo Switch'),
-(4, 'PC'),
-(5, 'Mobile');
+  (1, 'PlayStation 4'),
+  (2, 'Xbox One'),
+  (3, 'Nintendo Switch'),
+  (4, 'PC'),
+  (5, 'Mobile');
 
 -- 8
 IF OBJECT_ID('SCORE', 'U') IS NOT NULL
@@ -184,11 +184,11 @@ CREATE TABLE SCORE (
 
 INSERT INTO RATINGS (ID, USER_ID, GAME_ID, RATING) 
 VALUES 
-(1, 1, 1, 9),
-(2, 2, 1, 8),
-(3, 3, 2, 7),
-(4, 4, 3, 6),
-(5, 5, 4, 9);
+  (1, 1, 1, 9),
+  (2, 2, 1, 8),
+  (3, 3, 2, 7),
+  (4, 4, 3, 6),
+  (5, 5, 4, 9);
 
 -- 9
 IF OBJECT_ID('REVIEWS', 'U') IS NOT NULL
@@ -205,11 +205,11 @@ CREATE TABLE REVIEWS (
 
 INSERT INTO REVIEWS (ID, USER_ID, GAME_ID, REVIEW) 
 VALUES 
-(1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
-(2, 2, 1, 'Loved the storyline and the character development.'),
-(3, 3, 2, 'Not the best game I have played, but it is still fun.'),
-(4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
-(5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+  (1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
+  (2, 2, 1, 'Loved the storyline and the character development.'),
+  (3, 3, 2, 'Not the best game I have played, but it is still fun.'),
+  (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
+  (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
 -- 10
 IF OBJECT_ID('WISHLIST', 'U') IS NOT NULL
@@ -225,11 +225,11 @@ CREATE TABLE WISHLIST (
 
 INSERT INTO WISHLIST (ID, USER_ID, GAME_ID) 
 VALUES 
-(1, 1, 2),
-(2, 2, 3),
-(3, 3, 4),
-(4, 4, 5),
-(5, 5, 1);
+  (1, 1, 2),
+  (2, 2, 3),
+  (3, 3, 4),
+  (4, 4, 5),
+  (5, 5, 1);
 
 -- 11
 IF OBJECT_ID('CART', 'U') IS NOT NULL
@@ -246,11 +246,11 @@ CREATE TABLE CART (
 
 INSERT INTO CART (ID, USER_ID, GAME_ID, QUANTITY) 
 VALUES 
-(1, 1, 2, 1),
-(2, 2, 3, 2),
-(3, 3, 4, 3),
-(4, 4, 5, 4),
-(5, 5, 1, 5);
+  (1, 1, 2, 1),
+  (2, 2, 3, 2),
+  (3, 3, 4, 3),
+  (4, 4, 5, 4),
+  (5, 5, 1, 5);
 
 -- 12
 IF OBJECT_ID('ORDER_ITEMS', 'U') IS NOT NULL
@@ -288,11 +288,11 @@ CREATE TABLE ORDERS (
 
 INSERT INTO ORDERS (ID, USER_ID, ORDER_DATE, TOTAL_AMOUNT) 
 VALUES 
-(1, 1, '2022-12-01', 200.00),
-(2, 2, '2022-11-15', 150.00),
-(3, 3, '2022-10-31', 100.00),
-(4, 4, '2022-09-15', 75.00),
-(5, 5, '2022-08-01', 50.00);
+  (1, 1, '2022-12-01', 200.00),
+  (2, 2, '2022-11-15', 150.00),
+  (3, 3, '2022-10-31', 100.00),
+  (4, 4, '2022-09-15', 75.00),
+  (5, 5, '2022-08-01', 50.00);
 
 -- 14
 IF OBJECT_ID('GAME_PLATFORMS', 'U') IS NOT NULL
