@@ -1,60 +1,60 @@
-IF OBJECT_ID('ORDER_ITEMS', 'U') IS NOT NULL
-  DROP TABLE ORDER_ITEMS;
+IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
+  DROP TABLE OrderItems;
 
-IF OBJECT_ID('ORDERS', 'U') IS NOT NULL
-  DROP TABLE ORDERS;
+IF OBJECT_ID('Orders', 'U') IS NOT NULL
+  DROP TABLE Orders;
 
-IF OBJECT_ID('CART', 'U') IS NOT NULL
-  DROP TABLE CART;
+IF OBJECT_ID('Cart', 'U') IS NOT NULL
+  DROP TABLE Cart;
 
-IF OBJECT_ID('WISHLIST', 'U') IS NOT NULL
-  DROP TABLE WISHLIST;
+IF OBJECT_ID('Wishlist', 'U') IS NOT NULL
+  DROP TABLE Wishlist;
 
-IF OBJECT_ID('GAME_PUBLISHERS', 'U') IS NOT NULL
-  DROP TABLE GAME_PUBLISHERS;
+IF OBJECT_ID('GamePublishers', 'U') IS NOT NULL
+  DROP TABLE GamePublishers;
 
-IF OBJECT_ID('PUBLISHERS', 'U') IS NOT NULL
-  DROP TABLE PUBLISHERS;
+IF OBJECT_ID('Publishers', 'U') IS NOT NULL
+  DROP TABLE Publishers;
 
-IF OBJECT_ID('GAME_DEVELOPERS', 'U') IS NOT NULL
-  DROP TABLE GAME_DEVELOPERS;
+IF OBJECT_ID('GameDevelopers', 'U') IS NOT NULL
+  DROP TABLE GameDevelopers;
 
-IF OBJECT_ID('DEVELOPERS', 'U') IS NOT NULL
-  DROP TABLE DEVELOPERS;
+IF OBJECT_ID('Developers', 'U') IS NOT NULL
+  DROP TABLE Developers;
 
-IF OBJECT_ID('GAME_AWARDS', 'U') IS NOT NULL
-  DROP TABLE GAME_AWARDS;
+IF OBJECT_ID('GameAwards', 'U') IS NOT NULL
+  DROP TABLE GameAwards;
 
-IF OBJECT_ID('REVIEWS', 'U') IS NOT NULL
-  DROP TABLE REVIEWS;
+IF OBJECT_ID('Reviews', 'U') IS NOT NULL
+  DROP TABLE Reviews;
 
-IF OBJECT_ID('SCORE', 'U') IS NOT NULL
-  DROP TABLE SCORE;
+IF OBJECT_ID('Score', 'U') IS NOT NULL
+  DROP TABLE Score;
 
-IF OBJECT_ID('GAME_PLATFORMS', 'U') IS NOT NULL
-  DROP TABLE GAME_PLATFORMS;
+IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
+  DROP TABLE GamePlatforms;
 
-IF OBJECT_ID('PLATFORMS', 'U') IS NOT NULL
-  DROP TABLE PLATFORMS;
+IF OBJECT_ID('Platforms', 'U') IS NOT NULL
+  DROP TABLE Platforms;
 
-IF OBJECT_ID('GAME_GENRES', 'U') IS NOT NULL
-  DROP TABLE GAME_GENRES;
+IF OBJECT_ID('GameGenres', 'U') IS NOT NULL
+  DROP TABLE GameGenres;
 
-IF OBJECT_ID('GAMES', 'U') IS NOT NULL
-  DROP TABLE GAMES;
+IF OBJECT_ID('Games', 'U') IS NOT NULL
+  DROP TABLE Games;
 
-IF OBJECT_ID('USERS', 'U') IS NOT NULL
-  DROP TABLE USERS;
+IF OBJECT_ID('Users', 'U') IS NOT NULL
+  DROP TABLE Users;
 
 -- 1
-CREATE TABLE USERS (
-  ID INT PRIMARY KEY,
-  USERNAME VARCHAR(255) NOT NULL,
-  EMAIL VARCHAR(255) NOT NULL UNIQUE,
-  PASSWORD VARCHAR(255) NOT NULL
+CREATE TABLE Users (
+  Id INT PRIMARY KEY,
+  Username VARCHAR(255) NOT NULL,
+  Email VARCHAR(255) NOT NULL UNIQUE,
+  Password VARCHAR(255) NOT NULL
 );
 
-INSERT INTO USERS (ID, USERNAME, EMAIL, PASSWORD)
+INSERT INTO Users (Id, Username, Email, Password)
 VALUES
   (1, 'john_doe', 'john_doe@example.com', 'password1'),
   (2, 'jane_doe', 'jane_doe@example.com', 'password2'),
@@ -63,15 +63,15 @@ VALUES
   (5, 'tom_jones', 'tom_jones@example.com', 'password5');
 
 -- 2
-CREATE TABLE GAMES (
-  ID INT PRIMARY KEY,
-  TITLE VARCHAR(255) NOT NULL,
-  RELEASE_DATE DATE,
-  DESCRIPTION TEXT,
-  PRICE DECIMAL(10,2) NOT NULL
+CREATE TABLE Games (
+  Id INT PRIMARY KEY,
+  Title VARCHAR(255) NOT NULL,
+  ReleaseDate DATE,
+  Description TEXT,
+  Price DECIMAL(10,2) NOT NULL
 );
 
-INSERT INTO GAMES (ID, TITLE, RELEASE_DATE, DESCRIPTION, PRICE)
+INSERT INTO Games (Id, Title, ReleaseDate, Description, Price)
 VALUES
   (1, 'The Last of Us Part II', '2020-06-19', 'A post-apocalyptic action-adventure game developed by Naughty Dog', 59.99),
   (2, 'Red Dead Redemption 2', '2018-10-26', 'An action-adventure game developed by Rockstar Studios', 59.99),
@@ -80,14 +80,14 @@ VALUES
   (5, 'Minecraft', '2011-11-18', 'A sandbox game developed by Mojang Studios', 26.95);
 
 -- 3
-CREATE TABLE GAME_GENRES (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  GENRE VARCHAR(255) NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE GameGenres (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  Genre VARCHAR(255) NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO GAME_GENRES (ID, GAME_ID, GENRE)
+INSERT INTO GameGenres (Id, GameId, Genre)
 VALUES
   (1, 1, 'Multiplayer'),
   (2, 1, 'Open-World'),
@@ -96,12 +96,12 @@ VALUES
   (5, 3, 'Adventure');
 
 -- 4
-CREATE TABLE PLATFORMS (
-  ID INT PRIMARY KEY,
-  NAME VARCHAR(255) NOT NULL
+CREATE TABLE Platforms (
+  Id INT PRIMARY KEY,
+  Name VARCHAR(255) NOT NULL
 );
 
-INSERT INTO PLATFORMS (ID, NAME) 
+INSERT INTO Platforms (Id, Name) 
 VALUES 
   (1, 'PlayStation 4'),
   (2, 'Xbox One'),
@@ -110,15 +110,15 @@ VALUES
   (5, 'Mobile');
 
 -- 5
-CREATE TABLE GAME_PLATFORMS (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  PLATFORM_ID INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
-  FOREIGN KEY (PLATFORM_ID) REFERENCES PLATFORMS (ID)
+CREATE TABLE GamePlatforms (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  PlatformId INT NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id),
+  FOREIGN KEY (PlatformId) REFERENCES Platforms (Id)
 );
 
-INSERT INTO GAME_PLATFORMS (ID, GAME_ID, PLATFORM_ID) 
+INSERT INTO GamePlatforms (Id, GameId, PlatformId) 
 VALUES 
   (1, 1, 1),
   (2, 2, 2),
@@ -127,16 +127,16 @@ VALUES
   (5, 5, 5);
 
 -- 6
-CREATE TABLE SCORE (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  SCORE INT NOT NULL CHECK (SCORE BETWEEN 1 AND 10),
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE Score (
+  Id INT PRIMARY KEY,
+  UserId INT NOT NULL,
+  GameId INT NOT NULL,
+  Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
+  FOREIGN KEY (UserId) REFERENCES Users (Id),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO SCORE (ID, USER_ID, GAME_ID, SCORE) 
+INSERT INTO Score (Id, UserId, GameId, Score) 
 VALUES 
   (1, 1, 1, 9),
   (2, 2, 1, 8),
@@ -144,17 +144,16 @@ VALUES
   (4, 4, 3, 6),
   (5, 5, 4, 9);
 
--- 7
-CREATE TABLE REVIEWS (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  REVIEW TEXT,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE Reviews (
+  Id INT PRIMARY KEY,
+  UserId INT NOT NULL,
+  GameId INT NOT NULL,
+  Review TEXT,
+  FOREIGN KEY (UserId) REFERENCES Users (Id),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO REVIEWS (ID, USER_ID, GAME_ID, REVIEW) 
+INSERT INTO Reviews (Id, UserId, GameId, Review) 
 VALUES 
   (1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
   (2, 2, 1, 'Loved the storyline and the character development.'),
@@ -162,16 +161,15 @@ VALUES
   (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
--- 8
-CREATE TABLE GAME_AWARDS (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  AWARD_NAME VARCHAR(255) NOT NULL,
-  YEAR INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE GameAwards (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  AwardName VARCHAR(255) NOT NULL,
+  Year INT NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO GAME_AWARDS (ID, GAME_ID, AWARD_NAME, YEAR) 
+INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
 VALUES 
   (1, 1, 'Best Game of the Year', 2022),
   (2, 2, 'Best RPG of the Year', 2022),
@@ -179,15 +177,14 @@ VALUES
   (4, 4, 'Best Adventure Game of the Year', 2022),
   (5, 5, 'Best Multiplayer Game of the Year', 2022);
 
--- 9
-CREATE TABLE DEVELOPERS (
-  ID INT PRIMARY KEY,
-  NAME VARCHAR(255) NOT NULL,
-  DESCRIPTION TEXT,
-  WEBSITE VARCHAR(255)
+CREATE TABLE Developers (
+  Id INT PRIMARY KEY,
+  Name VARCHAR(255) NOT NULL,
+  Description TEXT,
+  Website VARCHAR(255)
 );
 
-INSERT INTO DEVELOPERS (ID, NAME, DESCRIPTION, WEBSITE)
+INSERT INTO Developers (Id, Name, Description, Website)
 VALUES
   (1, 'Naughty Dog', 'A first-party video game developer based in Santa Monica, California', 'naughtydog.com'),
   (2, 'Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
@@ -195,16 +192,15 @@ VALUES
   (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
--- 10
-CREATE TABLE GAME_DEVELOPERS (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  DEVELOPER_ID INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
-  FOREIGN KEY (DEVELOPER_ID) REFERENCES DEVELOPERS (ID)
+CREATE TABLE GameDevelopers (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  DeveloperId INT NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id),
+  FOREIGN KEY (DeveloperId) REFERENCES Developers (Id)
 );
 
-INSERT INTO GAME_DEVELOPERS (ID, GAME_ID, DEVELOPER_ID) 
+INSERT INTO GameDevelopers (Id, GameId, DeveloperId) 
 VALUES 
   (1, 1, 1),
   (2, 2, 2),
@@ -213,14 +209,14 @@ VALUES
   (5, 5, 5);
 
 -- 11
-CREATE TABLE PUBLISHERS (
-  ID INT PRIMARY KEY,
-  NAME VARCHAR(255) NOT NULL,
-  DESCRIPTION TEXT,
-  WEBSITE VARCHAR(255)
+CREATE TABLE Publishers (
+  Id INT PRIMARY KEY,
+  Name VARCHAR(255) NOT NULL,
+  Description TEXT,
+  Website VARCHAR(255)
 );
 
-INSERT INTO PUBLISHERS (ID, NAME, DESCRIPTION, WEBSITE) 
+INSERT INTO Publishers (Id, Name, Description, Website) 
 VALUES 
   (1, 'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
   (2, 'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
@@ -229,15 +225,15 @@ VALUES
   (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
 -- 12
-CREATE TABLE GAME_PUBLISHERS (
-  ID INT PRIMARY KEY,
-  GAME_ID INT NOT NULL,
-  PUBLISHER_ID INT NOT NULL,
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID),
-  FOREIGN KEY (PUBLISHER_ID) REFERENCES PUBLISHERS (ID)
+CREATE TABLE GamePublishers (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  PublisherId INT NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id),
+  FOREIGN KEY (PublisherId) REFERENCES Publishers (Id)
 );
 
-INSERT INTO GAME_PUBLISHERS (ID, GAME_ID, PUBLISHER_ID) 
+INSERT INTO GamePublishers (Id, GameId, PublisherId) 
 VALUES 
   (1, 1, 1),
   (2, 2, 2),
@@ -246,15 +242,15 @@ VALUES
   (5, 5, 5);
 
 -- 13
-CREATE TABLE WISHLIST (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE Wishlist (
+  Id INT PRIMARY KEY,
+  UserId INT NOT NULL,
+  GameId INT NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users (Id),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO WISHLIST (ID, USER_ID, GAME_ID) 
+INSERT INTO Wishlist (Id, UserId, GameId) 
 VALUES 
   (1, 1, 2),
   (2, 2, 3),
@@ -263,16 +259,16 @@ VALUES
   (5, 5, 1);
 
 -- 14
-CREATE TABLE CART (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  QUANTITY INT NOT NULL,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE Cart (
+  Id INT PRIMARY KEY,
+  UserId INT NOT NULL,
+  GameId INT NOT NULL,
+  Quantity INT NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users (Id),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO CART (ID, USER_ID, GAME_ID, QUANTITY) 
+INSERT INTO Cart (Id, UserId, GameId, Quantity) 
 VALUES 
   (1, 1, 2, 1),
   (2, 2, 3, 2),
@@ -281,15 +277,15 @@ VALUES
   (5, 5, 1, 5);
 
 -- 15
-CREATE TABLE ORDERS (
-  ID INT PRIMARY KEY,
-  USER_ID INT NOT NULL,
-  ORDER_DATE DATE NOT NULL,
-  TOTAL_AMOUNT DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
+CREATE TABLE Orders (
+  Id INT PRIMARY KEY,
+  UserId INT NOT NULL,
+  OrderDate DATE NOT NULL,
+  TotalAmount DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (UserId) REFERENCES Users (Id)
 );
 
-INSERT INTO ORDERS (ID, USER_ID, ORDER_DATE, TOTAL_AMOUNT) 
+INSERT INTO Orders (Id, UserId, OrderDate, TotalAmount) 
 VALUES 
   (1, 1, '2022-12-01', 200.00),
   (2, 2, '2022-11-15', 150.00),
@@ -298,17 +294,17 @@ VALUES
   (5, 5, '2022-08-01', 50.00);
 
 -- 16
-CREATE TABLE ORDER_ITEMS (
-  ID INT PRIMARY KEY,
-  ORDER_ID INT NOT NULL,
-  GAME_ID INT NOT NULL,
-  QUANTITY INT NOT NULL,
-  PRICE DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (ORDER_ID) REFERENCES ORDERS (ID),
-  FOREIGN KEY (GAME_ID) REFERENCES GAMES (ID)
+CREATE TABLE OrderItems (
+  Id INT PRIMARY KEY,
+  OrderId INT NOT NULL,
+  GameId INT NOT NULL,
+  Quantity INT NOT NULL,
+  Price DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (OrderId) REFERENCES Orders (Id),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
 );
 
-INSERT INTO ORDER_ITEMS (ID, ORDER_ID, GAME_ID, QUANTITY, PRICE) 
+INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, Price) 
 VALUES 
   (1, 1, 1, 2, 59.99),
   (2, 2, 2, 1, 49.99),
