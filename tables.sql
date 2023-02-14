@@ -1,3 +1,8 @@
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
+  CREATE DATABASE Steam;
+
+USE Steam;
+
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
   DROP TABLE OrderItems;
 
