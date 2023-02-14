@@ -1,5 +1,6 @@
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
   CREATE DATABASE Steam;
+GO
 
 USE Steam;
 
