@@ -26,7 +26,7 @@ class table_display_gui(qtw.QWidget):
         # self.buttonBox.addButton(button1)
         # Appending our widgets to the layout
         if create_connection(DATABASE_NAME) is True:
-            sql_statement = 'SELECT * FROM products'
+            sql_statement = "SELECT * FROM {}".format(TABLE_NAME)
             dataView = display_data(sql_statement)
             # dataView.show()
         self.model = QSqlRelationalTableModel(self)
@@ -47,37 +47,54 @@ class table_display_gui(qtw.QWidget):
 
         self.layout.addWidget(self.label)
         # self.layout.addWidget(self.buttonBox)
+        self.row_count = self.model.rowCount()
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
 
         insert_btn = QPushButton("Insert Record")
         delete_btn = QPushButton("Delete Record")
+        submit_btn = QPushButton("Submit All Changes")
         insert_btn.clicked.connect(self.insert_record)
+        # delete_btn.clicked.connect(self.delete_record)
+        submit_btn.clicked.connect(self.submit_changes)
 
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
+        button_box.layout.addWidget(submit_btn)
 
         self.layout.addWidget(button_box)
 
         # Connecting our 'OK' and 'Cancel' buttons to the corresponding return codes
         # self.buttonBox.accepted.connect(self.accept)
         # self.buttonBox.rejected.connect(self.reject)
+
+    def submit_changes(self):
+        print('Submitting changes')
+        self.model.submitAll()
+        self.model.select()
+
     def insert_record(self):
         print('Inserting record')
-        rows = self.model.rowCount()
-        # r = self.model.record()
+        r = self.model.record()
         # qry = QSqlQuery(self.DATABASE_NAME)
         # print(qry.prepare('SET IDENTITY_INSERT {} ON'.format(self.TABLE_NAME)))
         # qry.exec()
         # for i in range(2, self.model.columnCount()):
-        #     r.setValue(i, 'aaa')
-        # # self.model.insertRecord(-1, r)
-        res = self.model.insertRow(1)
-        if res:
-            print('Sucess')
-        else:
-            print('Failed')
+        # r.setValue(i, 'aaa')
+        # self.row_count += 1
+        r.setValue(0, self.row_count+1)
+        r.setValue(1, '')
+        r.setValue(2, '1999-01-01')
+        r.setValue(3, '')
+        r.setValue(4, 0.00)
+
+        self.model.insertRecord(-1, r)
+        # res = self.model.insertRow(1)
+        # if res:
+        #     print('Sucess')
+        # else:
+        #     print('Failed')
         print('Done')
         # qry.prepare('SET IDENTITY_INSERT {} OFF'.format(
         #     self.model.tableName()))
@@ -137,7 +154,7 @@ def main():
     # palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
     # palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
+    # palette.setColor(QPalette.CfolorRole.ToolTipBase, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
@@ -148,7 +165,7 @@ def main():
     # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
     # app.setPalette(palette)
 
-    gui = table_display_gui('NORTHWND', 'Products')
+    gui = table_display_gui('master', 'Games')
     gui.show()
 
     ### ----------------- ###
@@ -177,6 +194,7 @@ def main():
     #     cmd.execute(query)
 
     #     rows=cmd.fetchall()
+
 
     #     for row in rows:
     #         for col in row:
