@@ -144,6 +144,7 @@ VALUES
   (4, 4, 3, 6),
   (5, 5, 4, 9);
 
+-- 7
 CREATE TABLE Reviews (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -161,6 +162,7 @@ VALUES
   (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
+-- 8
 CREATE TABLE GameAwards (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
@@ -177,6 +179,7 @@ VALUES
   (4, 4, 'Best Adventure Game of the Year', 2022),
   (5, 5, 'Best Multiplayer Game of the Year', 2022);
 
+-- 9
 CREATE TABLE Developers (
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL,
@@ -192,6 +195,7 @@ VALUES
   (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
+-- 10
 CREATE TABLE GameDevelopers (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
