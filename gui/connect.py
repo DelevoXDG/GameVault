@@ -11,11 +11,45 @@ import PyQt6.QtWidgets as qtw
 import sys
 
 
+class TM(QSqlRelationalTableModel):
+    def __init__(self):
+        super(TM, self).__init__()
+        self.row_count = super().rowCount()
+        self.editStrategy = QSqlRelationalTableModel.EditStrategy.OnFieldChange
+        self.pk_edit = False
+
+    def set_pk_edit(self, on):
+        self.pk_edit = on
+
+    def flags(self, index):  # Overriding the flags method
+        cflags = super().flags(index)
+
+        # if index.column() == 0:
+        #     cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
+
+        # if index.column() == 0 and self.pk_edit is False:
+        #     return cflags and ~ Qt.ItemFlag.ItemIsEditable
+
+        return cflags
+
+    def submit(self):
+        print('submitting')
+        if self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnFieldChange or self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnRowChange:
+            res = super().submitAll()
+            # self.select()
+            if res is False:
+                print(self.lastError().text())
+                self.select()
+            return res
+
+        return True
+
+
 class table_display_gui(qtw.QWidget):
     def __init__(self,  DATABASE_NAME, TABLE_NAME):
         # Initializing QDialog and locking the size at a certain value
         super(table_display_gui, self).__init__()
-        self.setFixedSize(700, 450)
+        self.setFixedSize(700, 480)
         self.DATABASE_NAME = DATABASE_NAME
         self.TABLE_NAME = TABLE_NAME
         # Defining our widgets and main layout
@@ -29,25 +63,51 @@ class table_display_gui(qtw.QWidget):
             sql_statement = "SELECT * FROM {}".format(TABLE_NAME)
             dataView = display_data(sql_statement)
             # dataView.show()
-        self.model = QSqlRelationalTableModel(self)
+        self.model = TM()
         self.model.setTable(TABLE_NAME)
+
         self.model.setEditStrategy(
             QSqlRelationalTableModel.EditStrategy.OnFieldChange)
         # self.model.setHeaderData(0, Qt.Horizontal, "ID")
         # self.model.setHeaderData(1, Qt.Horizontal, "Name")
         # self.model.setHeaderData(2, Qt.Horizontal, "Job")
         # self.model.setHeaderData(3, Qt.Horizontal, "Email")
+
+        self.doc = QTextDocument(self)
+        self._wordwrap = True
+        mode = QTextOption.WrapMode.WordWrap if True else QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere
+        textOption = QTextOption(self.doc.defaultTextOption())
+        textOption.setWrapMode(mode)
+        self.doc.setDefaultTextOption(textOption)
+        # self.parent().viewport().update()
+
         self.model.select()
+
         # Set up the view
         self.view = QTableView()
         self.view.setModel(self.model)
         self.view.resizeColumnsToContents()
+        self.selection_model = self.view.selectionModel()
+        self.view.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows)
         # self.setCentralWidget(self.view)
         self.layout.addWidget(self.view)
+        # self.view.
 
         self.layout.addWidget(self.label)
         # self.layout.addWidget(self.buttonBox)
-        self.row_count = self.model.rowCount()
+
+        header = self.view.horizontalHeader()
+        # header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        for i in range(1, self.model.columnCount()):
+            header.setSectionResizeMode(
+                i, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.view.setColumnWidth(4, 70)
+        # header.size
+
+        # self.model.flags(self.model.index(0, 0), Qt.ItemFlag.ItemIsEditable)
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
@@ -56,7 +116,7 @@ class table_display_gui(qtw.QWidget):
         delete_btn = QPushButton("Delete Record")
         submit_btn = QPushButton("Submit All Changes")
         insert_btn.clicked.connect(self.insert_record)
-        # delete_btn.clicked.connect(self.delete_record)
+        delete_btn.clicked.connect(self.delete_records)
         submit_btn.clicked.connect(self.submit_changes)
 
         button_box.layout.addWidget(insert_btn)
@@ -76,20 +136,31 @@ class table_display_gui(qtw.QWidget):
 
     def insert_record(self):
         print('Inserting record')
-        r = self.model.record()
         # qry = QSqlQuery(self.DATABASE_NAME)
         # print(qry.prepare('SET IDENTITY_INSERT {} ON'.format(self.TABLE_NAME)))
         # qry.exec()
         # for i in range(2, self.model.columnCount()):
         # r.setValue(i, 'aaa')
-        # self.row_count += 1
-        r.setValue(0, self.row_count+1)
+        self.model.row_count += 1
+        self.model.set_pk_edit(True)
+        last_row_num = self.model.rowCount() - 1
+        if last_row_num == 0:
+            row_num = 1
+        else:
+            row_num = int(self.model.index(last_row_num, 0).data())+1
+        # while (self.model.index(row_num, 0).isValid()):
+        #     print('Valid')
+        #     row_num += 1
+
+        r = self.model.record()
+        r.setValue(0, row_num)
         r.setValue(1, '')
         r.setValue(2, '1999-01-01')
         r.setValue(3, '')
         r.setValue(4, 0.00)
 
         self.model.insertRecord(-1, r)
+        self.model.set_pk_edit(False)
         # res = self.model.insertRow(1)
         # if res:
         #     print('Sucess')
@@ -101,6 +172,14 @@ class table_display_gui(qtw.QWidget):
         # qry.exec()
         self.model.select()
         # write a code that read user input and inserts a new row to the end of the table
+
+    def delete_records(self):
+        rows = self.selection_model.selectedRows()
+        # indices = self.view.selectedRows()
+        for index in sorted(rows):
+            self.model.removeRow(index.row())
+            self.model.row_count -= 1
+        self.model.select()
 
 
 def create_connection(DATABASE_NAME):
@@ -165,7 +244,7 @@ def main():
     # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
     # app.setPalette(palette)
 
-    gui = table_display_gui('master', 'Games')
+    gui = table_display_gui('Steam', 'Games')
     gui.show()
 
     ### ----------------- ###

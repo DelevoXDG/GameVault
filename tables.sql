@@ -1,4 +1,6 @@
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
+IF NOT EXISTS (SELECT name
+FROM sys.databases
+WHERE name = N'Steam')
   CREATE DATABASE Steam;
 GO
 
@@ -53,14 +55,16 @@ IF OBJECT_ID('Users', 'U') IS NOT NULL
   DROP TABLE Users;
 
 -- 1
-CREATE TABLE Users (
+CREATE TABLE Users
+(
   Id INT PRIMARY KEY,
   Username VARCHAR(255) NOT NULL,
   Email VARCHAR(255) NOT NULL UNIQUE,
   Password VARCHAR(255) NOT NULL
 );
 
-INSERT INTO Users (Id, Username, Email, Password)
+INSERT INTO Users
+  (Id, Username, Email, Password)
 VALUES
   (1, 'john_doe', 'john_doe@example.com', 'password1'),
   (2, 'jane_doe', 'jane_doe@example.com', 'password2'),
@@ -69,7 +73,8 @@ VALUES
   (5, 'tom_jones', 'tom_jones@example.com', 'password5');
 
 -- 2
-CREATE TABLE Games (
+CREATE TABLE Games
+(
   Id INT PRIMARY KEY,
   Title VARCHAR(255) NOT NULL,
   ReleaseDate DATE,
@@ -77,7 +82,8 @@ CREATE TABLE Games (
   Price DECIMAL(10,2) NOT NULL
 );
 
-INSERT INTO Games (Id, Title, ReleaseDate, Description, Price)
+INSERT INTO Games
+  (Id, Title, ReleaseDate, Description, Price)
 VALUES
   (1, 'The Last of Us Part II', '2020-06-19', 'A post-apocalyptic action-adventure game developed by Naughty Dog', 59.99),
   (2, 'Red Dead Redemption 2', '2018-10-26', 'An action-adventure game developed by Rockstar Studios', 59.99),
@@ -86,14 +92,16 @@ VALUES
   (5, 'Minecraft', '2011-11-18', 'A sandbox game developed by Mojang Studios', 26.95);
 
 -- 3
-CREATE TABLE GameGenres (
+CREATE TABLE GameGenres
+(
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   Genre VARCHAR(255) NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GameGenres (Id, GameId, Genre)
+INSERT INTO GameGenres
+  (Id, GameId, Genre)
 VALUES
   (1, 1, 'Multiplayer'),
   (2, 1, 'Open-World'),
@@ -102,13 +110,15 @@ VALUES
   (5, 3, 'Adventure');
 
 -- 4
-CREATE TABLE Platforms (
+CREATE TABLE Platforms
+(
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL
 );
 
-INSERT INTO Platforms (Id, Name) 
-VALUES 
+INSERT INTO Platforms
+  (Id, Name)
+VALUES
   (1, 'PlayStation 4'),
   (2, 'Xbox One'),
   (3, 'Nintendo Switch'),
@@ -116,16 +126,18 @@ VALUES
   (5, 'Mobile');
 
 -- 5
-CREATE TABLE GamePlatforms (
+CREATE TABLE GamePlatforms
+(
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   PlatformId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (PlatformId) REFERENCES Platforms (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PlatformId) REFERENCES Platforms (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GamePlatforms (Id, GameId, PlatformId) 
-VALUES 
+INSERT INTO GamePlatforms
+  (Id, GameId, PlatformId)
+VALUES
   (1, 1, 1),
   (2, 2, 2),
   (3, 3, 3),
@@ -133,17 +145,19 @@ VALUES
   (5, 5, 5);
 
 -- 6
-CREATE TABLE Score (
+CREATE TABLE Score
+(
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Score (Id, UserId, GameId, Score) 
-VALUES 
+INSERT INTO Score
+  (Id, UserId, GameId, Score)
+VALUES
   (1, 1, 1, 9),
   (2, 2, 1, 8),
   (3, 3, 2, 7),
@@ -151,17 +165,19 @@ VALUES
   (5, 5, 4, 9);
 
 -- 7
-CREATE TABLE Reviews (
+CREATE TABLE Reviews
+(
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Review TEXT,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Reviews (Id, UserId, GameId, Review) 
-VALUES 
+INSERT INTO Reviews
+  (Id, UserId, GameId, Review)
+VALUES
   (1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
   (2, 2, 1, 'Loved the storyline and the character development.'),
   (3, 3, 2, 'Not the best game I have played, but it is still fun.'),
@@ -169,16 +185,18 @@ VALUES
   (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
 -- 8
-CREATE TABLE GameAwards (
+CREATE TABLE GameAwards
+(
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   AwardName VARCHAR(255) NOT NULL,
   Year INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
-VALUES 
+INSERT INTO GameAwards
+  (Id, GameId, AwardName, Year)
+VALUES
   (1, 1, 'Best Game of the Year', 2022),
   (2, 2, 'Best RPG of the Year', 2022),
   (3, 3, 'Best Sports Game of the Year', 2022),
@@ -186,14 +204,16 @@ VALUES
   (5, 5, 'Best Multiplayer Game of the Year', 2022);
 
 -- 9
-CREATE TABLE Developers (
+CREATE TABLE Developers
+(
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL,
   Description TEXT,
   Website VARCHAR(255)
 );
 
-INSERT INTO Developers (Id, Name, Description, Website)
+INSERT INTO Developers
+  (Id, Name, Description, Website)
 VALUES
   (1, 'Naughty Dog', 'A first-party video game developer based in Santa Monica, California', 'naughtydog.com'),
   (2, 'Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
@@ -202,16 +222,18 @@ VALUES
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
 -- 10
-CREATE TABLE GameDevelopers (
+CREATE TABLE GameDevelopers
+(
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   DeveloperId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (DeveloperId) REFERENCES Developers (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (DeveloperId) REFERENCES Developers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GameDevelopers (Id, GameId, DeveloperId) 
-VALUES 
+INSERT INTO GameDevelopers
+  (Id, GameId, DeveloperId)
+VALUES
   (1, 1, 1),
   (2, 2, 2),
   (3, 3, 3),
@@ -219,15 +241,17 @@ VALUES
   (5, 5, 5);
 
 -- 11
-CREATE TABLE Publishers (
+CREATE TABLE Publishers
+(
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL,
   Description TEXT,
   Website VARCHAR(255)
 );
 
-INSERT INTO Publishers (Id, Name, Description, Website) 
-VALUES 
+INSERT INTO Publishers
+  (Id, Name, Description, Website)
+VALUES
   (1, 'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
   (2, 'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
   (3, 'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
@@ -235,16 +259,18 @@ VALUES
   (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
 -- 12
-CREATE TABLE GamePublishers (
+CREATE TABLE GamePublishers
+(
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   PublisherId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (PublisherId) REFERENCES Publishers (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PublisherId) REFERENCES Publishers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GamePublishers (Id, GameId, PublisherId) 
-VALUES 
+INSERT INTO GamePublishers
+  (Id, GameId, PublisherId)
+VALUES
   (1, 1, 1),
   (2, 2, 2),
   (3, 3, 3),
@@ -252,16 +278,18 @@ VALUES
   (5, 5, 5);
 
 -- 13
-CREATE TABLE Wishlist (
+CREATE TABLE Wishlist
+(
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Wishlist (Id, UserId, GameId) 
-VALUES 
+INSERT INTO Wishlist
+  (Id, UserId, GameId)
+VALUES
   (1, 1, 2),
   (2, 2, 3),
   (3, 3, 4),
@@ -269,17 +297,19 @@ VALUES
   (5, 5, 1);
 
 -- 14
-CREATE TABLE Cart (
+CREATE TABLE Cart
+(
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Cart (Id, UserId, GameId, Quantity) 
-VALUES 
+INSERT INTO Cart
+  (Id, UserId, GameId, Quantity)
+VALUES
   (1, 1, 2, 1),
   (2, 2, 3, 2),
   (3, 3, 4, 3),
@@ -287,16 +317,18 @@ VALUES
   (5, 5, 1, 5);
 
 -- 15
-CREATE TABLE Orders (
+CREATE TABLE Orders
+(
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
   TotalAmount DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Orders (Id, UserId, OrderDate, TotalAmount) 
-VALUES 
+INSERT INTO Orders
+  (Id, UserId, OrderDate, TotalAmount)
+VALUES
   (1, 1, '2022-12-01', 200.00),
   (2, 2, '2022-11-15', 150.00),
   (3, 3, '2022-10-31', 100.00),
@@ -304,18 +336,20 @@ VALUES
   (5, 5, '2022-08-01', 50.00);
 
 -- 16
-CREATE TABLE OrderItems (
+CREATE TABLE OrderItems
+(
   Id INT PRIMARY KEY,
   OrderId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
   Price DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (OrderId) REFERENCES Orders (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, Price) 
-VALUES 
+INSERT INTO OrderItems
+  (Id, OrderId, GameId, Quantity, Price)
+VALUES
   (1, 1, 1, 2, 59.99),
   (2, 2, 2, 1, 49.99),
   (3, 3, 3, 3, 39.99),
