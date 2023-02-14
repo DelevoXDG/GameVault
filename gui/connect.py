@@ -11,27 +11,28 @@ import PyQt6.QtWidgets as qtw
 import sys
 
 
-class game_viewer_gui(qtw.QMainWindow):
-    def __init__(self):
+class table_display_gui(qtw.QWidget):
+    def __init__(self,  DATABASE_NAME, TABLE_NAME):
         # Initializing QDialog and locking the size at a certain value
-        super(game_viewer_gui, self).__init__()
+        super(table_display_gui, self).__init__()
         self.setFixedSize(700, 450)
-
+        self.DATABASE_NAME = DATABASE_NAME
+        self.TABLE_NAME = TABLE_NAME
         # Defining our widgets and main layout
         self.layout = qtw.QVBoxLayout(self)
         self.label = qtw.QLabel("Hello, world!", self)
         self.buttonBox = qtw.QDialogButtonBox(self)
-        self.buttonBox.setStandardButtons(
-            qtw.QDialogButtonBox.StandardButton.Cancel | qtw.QDialogButtonBox.StandardButton.Ok)
 
+        # self.buttonBox.addButton(button1)
         # Appending our widgets to the layout
-        if create_connection() is True:
+        if create_connection(DATABASE_NAME) is True:
             sql_statement = 'SELECT * FROM products'
             dataView = display_data(sql_statement)
             # dataView.show()
-        self.model = QSqlTableModel(self)
-        self.model.setTable("Products")
-        self.model.setEditStrategy(QSqlTableModel.EditStrategy.OnFieldChange)
+        self.model = QSqlRelationalTableModel(self)
+        self.model.setTable(TABLE_NAME)
+        self.model.setEditStrategy(
+            QSqlRelationalTableModel.EditStrategy.OnFieldChange)
         # self.model.setHeaderData(0, Qt.Horizontal, "ID")
         # self.model.setHeaderData(1, Qt.Horizontal, "Name")
         # self.model.setHeaderData(2, Qt.Horizontal, "Job")
@@ -41,21 +42,53 @@ class game_viewer_gui(qtw.QMainWindow):
         self.view = QTableView()
         self.view.setModel(self.model)
         self.view.resizeColumnsToContents()
-        self.setCentralWidget(self.view)
-        self.layout.addWidget(dataView)
+        # self.setCentralWidget(self.view)
+        self.layout.addWidget(self.view)
 
         self.layout.addWidget(self.label)
-        self.layout.addWidget(self.buttonBox)
+        # self.layout.addWidget(self.buttonBox)
+
+        button_box = QWidget()
+        button_box.layout = QHBoxLayout(button_box)
+
+        insert_btn = QPushButton("Insert Record")
+        delete_btn = QPushButton("Delete Record")
+        insert_btn.clicked.connect(self.insert_record)
+
+        button_box.layout.addWidget(insert_btn)
+        button_box.layout.addWidget(delete_btn)
+
+        self.layout.addWidget(button_box)
 
         # Connecting our 'OK' and 'Cancel' buttons to the corresponding return codes
         # self.buttonBox.accepted.connect(self.accept)
         # self.buttonBox.rejected.connect(self.reject)
+    def insert_record(self):
+        print('Inserting record')
+        rows = self.model.rowCount()
+        # r = self.model.record()
+        # qry = QSqlQuery(self.DATABASE_NAME)
+        # print(qry.prepare('SET IDENTITY_INSERT {} ON'.format(self.TABLE_NAME)))
+        # qry.exec()
+        # for i in range(2, self.model.columnCount()):
+        #     r.setValue(i, 'aaa')
+        # # self.model.insertRecord(-1, r)
+        res = self.model.insertRow(1)
+        if res:
+            print('Sucess')
+        else:
+            print('Failed')
+        print('Done')
+        # qry.prepare('SET IDENTITY_INSERT {} OFF'.format(
+        #     self.model.tableName()))
+        # qry.exec()
+        self.model.select()
+        # write a code that read user input and inserts a new row to the end of the table
 
 
-def create_connection():
+def create_connection(DATABASE_NAME):
     DRIVER_NAME = 'SQL SERVER'
     SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
-    DATABASE_NAME = 'NORTHWND'
     # UID='sa';
     # PWD='sa';
     conn_str = f"""
@@ -115,7 +148,7 @@ def main():
     # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
     # app.setPalette(palette)
 
-    gui = game_viewer_gui()
+    gui = table_display_gui('NORTHWND', 'Products')
     gui.show()
 
     ### ----------------- ###
