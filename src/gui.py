@@ -2,16 +2,19 @@ from PyQt6.QtSql import *
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QKeySequence, QPalette, QColor
 from PyQt6.QtGui import *
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QDate
 import sys
 from connect import create_connection
+
+import datetime
+
+DATE_FORMAT = "%Y-%m-%d"
 
 
 class TM(QSqlRelationalTableModel):
     def __init__(self):
         super(TM, self).__init__()
         self.row_count = super().rowCount()
-        self.editStrategy = QSqlRelationalTableModel.EditStrategy.OnFieldChange
         self.pk_edit = False
 
     def set_pk_edit(self, on):
@@ -20,8 +23,8 @@ class TM(QSqlRelationalTableModel):
     def flags(self, index):  # Overriding the flags method
         cflags = super().flags(index)
 
-        # if index.column() == 0:
-        #     cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
+        if index.column() == 0:
+            cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
 
         if index.column() == 0 and self.pk_edit is False:
             return cflags and ~ Qt.ItemFlag.ItemIsEditable
@@ -29,16 +32,52 @@ class TM(QSqlRelationalTableModel):
         return cflags
 
     def submit(self):
-        print('submitting')
+        print('Submitting')
+        success = True
+
         if self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnFieldChange or self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnRowChange:
             res = super().submitAll()
-            # self.select()
             if res is False:
-                print(self.lastError().text())
+                success = False
                 self.select()
-            return res
+        else:
+            res = super().submit()
 
-        return True
+        if success:
+            print('Submit successful')
+        else:
+            print('Submit failed')
+            print(self.lastError().text())
+        return res
+
+
+class DateDelegate(QStyledItemDelegate):
+    def createEditor(self, parent, option, index):
+        widget = QDateEdit(parent)
+        widget.setCalendarPopup(True)
+        return widget
+
+    def setEditorData(self, editor, index):
+        print('Setting editor date')
+        if isinstance(editor, QDateEdit):
+            dt_str = str(index.data(Qt.ItemDataRole.EditRole))
+            qtDate = QDate.fromString(dt_str, 'yyyy-mm-dd')
+            # dt = datetime.datetime.strptime(dt_str, DATE_FORMAT).date()
+            editor.setDate(qtDate)
+            return
+        super().setEditorData(editor, index)
+
+    def setModelData(self, editor, model, index):
+        print('Setting model data')
+        if isinstance(editor, QDateEdit):
+            dt = editor.date().toPyDate()
+            dt_str = str(dt)
+            # print(dt_str)
+            print(type(editor.date()))
+            qtDate = QDate.fromString(dt_str, 'yyyy-mm-dd')
+            model.setData(index, qtDate, Qt.ItemDataRole.EditRole)
+            return
+        super().setModelData(editor, model, index)
 
 
 class table_display_gui(QWidget):
@@ -61,45 +100,41 @@ class table_display_gui(QWidget):
 
         self.model.select()
 
-        # Set up the view
         self.view = QTableView()
         self.view.setModel(self.model)
         self.view.resizeColumnsToContents()
         self.selection_model = self.view.selectionModel()
         self.view.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows)
-        # self.setCentralWidget(self.view)
         self.layout.addWidget(self.view)
-        # self.view.
-
         self.layout.addWidget(self.label)
-        # self.layout.addWidget(self.buttonBox)
 
         header = self.view.horizontalHeader()
-        # header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
-        for i in range(1, self.model.columnCount()):
+        for i in range(0, self.model.columnCount()):
             header.setSectionResizeMode(
                 i, QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.view.setColumnWidth(4, 120)
         self.view.setColumnWidth(4, 70)
-        # header.size
 
-        # self.model.flags(self.model.index(0, 0), Qt.ItemFlag.ItemIsEditable)
+        # self.view.setItemDelegateForColumn(2, DateDelegate(self.model))
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
 
         insert_btn = QPushButton("Insert Record")
         delete_btn = QPushButton("Delete Record")
-        submit_btn = QPushButton("Submit All Changes")
+        # submit_btn = QPushButton("Submit All Changes")
         insert_btn.clicked.connect(self.insert_record)
         delete_btn.clicked.connect(self.delete_records)
-        submit_btn.clicked.connect(self.submit_changes)
+        # submit_btn.clicked.connect(self.submit_changes)
 
+        button_box.layout.addSpacing(300)
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
-        button_box.layout.addWidget(submit_btn)
+        # button_box.layout.addWidget(submit_btn)
 
         self.layout.addWidget(button_box)
 
@@ -133,7 +168,8 @@ class table_display_gui(QWidget):
         r = self.model.record()
         r.setValue(0, row_num)
         r.setValue(1, '')
-        r.setValue(2, '1999-01-01')
+        dt = str(datetime.datetime.now().date())
+        r.setValue(2, dt)
         r.setValue(3, '')
         r.setValue(4, 0.00)
 
@@ -234,7 +270,7 @@ def main():
     gui = table_display_gui('Steam', 'Games')
     gui.show()
 
-    ### ----------------- ###
+    # ----------------- #
     # app = qtw.QApplication(sys.argv)
     # app.setApplicationName('BD_Project')
 
@@ -260,7 +296,6 @@ def main():
     #     cmd.execute(query)
 
     #     rows=cmd.fetchall()
-
 
     #     for row in rows:
     #         for col in row:
