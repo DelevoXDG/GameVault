@@ -9,11 +9,12 @@ import datetime
 
 
 class ProxyStyle(QProxyStyle):
-    def drawControl(self, ctl, opt, qp, widget=None):
-        if ctl == QStyle.ControlElement.CE_HeaderSection and opt.orientation == Qt.Orientation.Horizontal:
-            if opt.section == widget.parent().property('hideSortIndicatorColumn'):
-                opt.sortIndicator = 0
-        super().drawControl(ctl, opt, qp, widget)
+    # def drawControl(self, ctl, opt, qp, widget=None):
+    #     if ctl == QStyle.ControlElement.CE_HeaderSection and opt.orientation == Qt.Orientation.Horizontal:
+    #         if opt.section == widget.parent().property('hideSortIndicatorColumn'):
+    #             opt.sortIndicator = 0
+    #     super().drawControl(ctl, opt, qp, widget)
+    pass
 
 
 class table_model(QSqlRelationalTableModel):
@@ -68,7 +69,7 @@ class table_widget(QWidget):
         self.setFixedSize(700, 480)
         self.setWindowTitle("Game Catalogue @ Admin Panel")
 
-        self.set_icon('assets\logo.ico')
+        self.set_icon('assets\logo3.png')
 
         self.layout = QVBoxLayout(self)
         # self.label = QLabel("Admin Panel", self)
@@ -113,18 +114,19 @@ class table_widget(QWidget):
         self.vh.setMinimumWidth(25)
         # self.vh.setAutoFillBackground(True)
         self.vh.setStyleSheet(
-            "QHeaderView {background-color: #f2f2f2;}")
+            'QHeaderView {background-color: #f2f2f2;}')
 
         self.view.setSortingEnabled(True)
-        self._style = ProxyStyle(self.view.style())
-        self.view.setStyle(self._style)
+        # self._style = ProxyStyle(self.view.style())
+        # self.view.setStyle(self._style)
         self.model.setProperty('hideSortIndicatorColumn', 3)
+        self.model.sort(0, Qt.SortOrder.AscendingOrder)
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
 
-        insert_btn = QPushButton("Insert Record")
-        delete_btn = QPushButton("Delete Record")
+        insert_btn = QPushButton('Insert Record')
+        delete_btn = QPushButton('Delete Record')
         insert_btn.clicked.connect(self.insert_record)
         delete_btn.clicked.connect(self.delete_records)
 
@@ -136,7 +138,7 @@ class table_widget(QWidget):
 
     def set_icon(self, relative_path):
         scriptDir = os.path.dirname(os.path.realpath(__file__))
-        self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'assets\logo.ico'))
+        self.setWindowIcon(QIcon(scriptDir + os.path.sep + relative_path))
 
     def submit_changes(self):
         print('Submitting changes')
