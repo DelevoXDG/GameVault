@@ -29,7 +29,7 @@ class table_model(QSqlRelationalTableModel):
         cur_flags = super().flags(index)
 
         if index.column() == 0 and self.pk_edit is False:
-            cur_flags &= ~ Qt.ItemFlag.ItemIsEditable
+            return cur_flags and ~  Qt.ItemFlag.ItemIsEditable
 
         return cur_flags
 
@@ -56,7 +56,7 @@ class table_model(QSqlRelationalTableModel):
     def sort(self, column, order):
         if column != 3:
             self._sort_order = order
-            super().sort(column, order)
+            super().sort(column, self._sort_order)
 
 
 class table_widget(QWidget):
@@ -67,21 +67,18 @@ class table_widget(QWidget):
         super(table_widget, self).__init__()
 
         self.setFixedSize(700, 480)
-        self.setWindowTitle("Game Catalogue @ Admin Panel")
+        self.setWindowTitle(
+            '{} @ Admin Panel'.format(self.TABLE_NAME.replace("dbo.", "")))
 
-        self.set_icon('assets\logo3.png')
+        self.set_icon('assets\logo4.png')
 
         self.layout = QVBoxLayout(self)
-        # self.label = QLabel("Admin Panel", self)
-        self.buttonBox = QDialogButtonBox(self)
 
         self.model = table_model()
         self.model.setTable(TABLE_NAME)
 
         self.model.setEditStrategy(
             QSqlRelationalTableModel.EditStrategy.OnFieldChange)
-
-        self.model.select()
 
         self.view = QTableView()
         self.view.setModel(self.model)
@@ -117,10 +114,16 @@ class table_widget(QWidget):
             'QHeaderView {background-color: #f2f2f2;}')
 
         self.view.setSortingEnabled(True)
+
         # self._style = ProxyStyle(self.view.style())
         # self.view.setStyle(self._style)
-        self.model.setProperty('hideSortIndicatorColumn', 3)
-        self.model.sort(0, Qt.SortOrder.AscendingOrder)
+        # self.model.setProperty('hideSortIndicatorColumn', 3)
+        # self.model.sort(0, Qt.SortOrder.DescendingOrder)
+        # self.model.sort(0, Qt.SortOrder.AscendingOrder)
+        # self.hh.setSortOrder(Qt.SortOrder.AscendingOrder)
+        self.hh.setSortIndicator(0, Qt.SortOrder.AscendingOrder)
+        cur_sort_order = self.view.horizontalHeader().sortIndicatorOrder()
+        print(cur_sort_order)
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
@@ -136,6 +139,8 @@ class table_widget(QWidget):
 
         self.layout.addWidget(button_box)
 
+        self.model.select()
+
     def set_icon(self, relative_path):
         scriptDir = os.path.dirname(os.path.realpath(__file__))
         self.setWindowIcon(QIcon(scriptDir + os.path.sep + relative_path))
@@ -146,10 +151,10 @@ class table_widget(QWidget):
         self.model.select()
 
     def insert_record(self):
-        # print('Inserting record')
 
         self.model.set_pk_edit(True)
         last_row_num = self.model.rowCount() - 1
+
         cur_sort_col = self.hh.sortIndicatorSection()
         cur_sort_order = self.hh.sortIndicatorOrder()
 
