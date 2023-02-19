@@ -1,3 +1,5 @@
+DROP DATABASE Steam;
+
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
   CREATE DATABASE Steam;
 GO
@@ -87,6 +89,7 @@ VALUES
 CREATE TABLE Games (
   Id INT PRIMARY KEY,
   Title VARCHAR(255) NOT NULL,
+  LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL
 );
