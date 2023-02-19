@@ -206,7 +206,7 @@ CREATE TABLE Reviews
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
-  Review TEXT,
+  Review TEXT NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -230,6 +230,7 @@ CREATE TABLE GameAwards
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+<<<<<<< HEAD
 INSERT INTO GameAwards
   (Id, GameId, AwardName, Year)
 VALUES
@@ -238,6 +239,15 @@ VALUES
   (3, 3, 'Best Sports Game of the Year', 2022),
   (4, 4, 'Best Adventure Game of the Year', 2022),
   (5, 5, 'Best Multiplayer Game of the Year', 2022);
+=======
+INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
+VALUES 
+  (1, 1, 'Best Game of the Year', 2020),
+  (2, 2, 'Best RPG of the Year', 2019),
+  (3, 3, 'Best Adventure Game of the Year', 2019),
+  (4, 4, 'Best Shooter of the Year', 2016),
+  (5, 5, 'Best Multiplayer Game of the Year', 2011);
+>>>>>>> 960016b4d004460265dcd82f4e99453dd00a9ee3
 
 -- 9
 CREATE TABLE Developers
@@ -358,13 +368,18 @@ CREATE TABLE Orders
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
-  TotalAmount DECIMAL(10,2) NOT NULL,
+  [Total amount in USD] MONEY NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+<<<<<<< HEAD
 INSERT INTO Orders
   (Id, UserId, OrderDate, TotalAmount)
 VALUES
+=======
+INSERT INTO Orders (Id, UserId, OrderDate, [Total amount in USD]) 
+VALUES 
+>>>>>>> 960016b4d004460265dcd82f4e99453dd00a9ee3
   (1, 1, '2022-12-01', 200.00),
   (2, 2, '2022-11-15', 150.00),
   (3, 3, '2022-10-31', 100.00),
@@ -378,16 +393,39 @@ CREATE TABLE OrderItems
   OrderId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
-  Price DECIMAL(10,2) NOT NULL,
+  [Price in USD] MONEY NOT NULL,
   FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+<<<<<<< HEAD
 INSERT INTO OrderItems
   (Id, OrderId, GameId, Quantity, Price)
 VALUES
+=======
+INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, [Price in USD]) 
+VALUES 
+>>>>>>> 960016b4d004460265dcd82f4e99453dd00a9ee3
   (1, 1, 1, 2, 59.99),
   (2, 2, 2, 1, 49.99),
   (3, 3, 3, 3, 39.99),
   (4, 4, 4, 4, 29.99),
+<<<<<<< HEAD
   (5, 5, 5, 5, 19.99);
+=======
+  (5, 5, 5, 5, 19.99);
+
+-- 21
+CREATE TABLE ExchangeRate (
+  Currency NVARCHAR(3) PRIMARY KEY,
+  [Equal 1 USD] MONEY NOT NULL
+)
+
+INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
+VALUES 
+  ('USD', 1.00),
+  ('EUR', 0.93),
+  ('GBP', 0.83),
+  ('JPY', 134.15),
+  ('PLN', 4.45);
+>>>>>>> 960016b4d004460265dcd82f4e99453dd00a9ee3
