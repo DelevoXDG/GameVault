@@ -4,6 +4,9 @@ GO
 
 USE Steam;
 
+IF OBJECT_ID('ExchangeRate', 'U') IS NOT NULL
+  DROP TABLE ExchangeRate;
+
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
   DROP TABLE OrderItems;
 
@@ -36,6 +39,18 @@ IF OBJECT_ID('Reviews', 'U') IS NOT NULL
 
 IF OBJECT_ID('Score', 'U') IS NOT NULL
   DROP TABLE Score;
+
+IF OBJECT_ID('ReleasedGames', 'U') IS NOT NULL
+  DROP TABLE ReleasedGames;
+
+IF OBJECT_ID('BetaGames', 'U') IS NOT NULL
+  DROP TABLE BetaGames;
+
+IF OBJECT_ID('PreOrderGames', 'U') IS NOT NULL
+  DROP TABLE PreOrderGames;
+
+IF OBJECT_ID('UpcomingGames', 'U') IS NOT NULL
+  DROP TABLE UpcomingGames;
 
 IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
   DROP TABLE GamePlatforms;
@@ -72,18 +87,17 @@ VALUES
 CREATE TABLE Games (
   Id INT PRIMARY KEY,
   Title VARCHAR(255) NOT NULL,
-  ReleaseDate DATE,
   Description TEXT,
-  Price DECIMAL(10,2) NOT NULL
+  [Price in USD] MONEY NOT NULL
 );
 
-INSERT INTO Games (Id, Title, ReleaseDate, Description, Price)
+INSERT INTO Games (Id, Title, Description, [Price in USD])
 VALUES
-  (1, 'The Last of Us Part II', '2020-06-19', 'A post-apocalyptic action-adventure game developed by Naughty Dog', 59.99),
-  (2, 'Red Dead Redemption 2', '2018-10-26', 'An action-adventure game developed by Rockstar Studios', 59.99),
-  (3, 'God of War', '2018-04-20', 'A soft reboot of the God of War series developed by Santa Monica Studio', 39.99),
-  (4, 'Halo 5: Guardians', '2015-10-27', 'A first-person shooter developed by 343 Industries', 59.99),
-  (5, 'Minecraft', '2011-11-18', 'A sandbox game developed by Mojang Studios', 26.95);
+  (1, 'The Last of Us Part II', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  (2, 'Red Dead Redemption 2', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  (3, 'God of War', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  (4, 'Halo 5: Guardians', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  (5, 'Minecraft', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
 
 -- 3
 CREATE TABLE GameGenres (
@@ -133,6 +147,73 @@ VALUES
   (5, 5, 5);
 
 -- 6
+CREATE TABLE UpcomingGames (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  TrailerUrl VARCHAR(255),
+  ExpectedDeliveryDate DATE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
+);
+
+INSERT INTO UpcomingGames (Id, GameId, TrailerUrl, ExpectedDeliveryDate)
+VALUES
+  (1, 1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
+  (2, 3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
+  (3, 5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
+  (4, 4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
+  (5, 2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+
+-- 7
+CREATE TABLE PreOrderGames (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  PreOrderBonus VARCHAR(255),
+  PreOrderDiscount DECIMAL(5,2),
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
+);
+
+INSERT INTO PreOrderGames (Id, GameId, PreOrderBonus, PreOrderDiscount)
+VALUES
+  (1, 1, 'Bonus skin pack', 5.00),
+  (2, 4, 'Bonus weapon pack', 10.00),
+  (3, 2, 'Bonus story mission', 5.00),
+  (4, 3, 'Exclusive in-game item', 5.00),
+  (5, 5, 'Bonus skin pack', 5.00);
+
+-- 8
+CREATE TABLE BetaGames (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  BetaStartDate DATE NOT NULL,
+  BetaEndDate DATE NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
+);
+
+INSERT INTO BetaGames (Id, GameId, BetaStartDate, BetaEndDate)
+VALUES
+  (1, 1, '2020-05-19', '2020-06-19'),
+  (2, 2, '2018-06-01', '2018-07-01'),
+  (3, 3, '2018-02-01', '2018-03-15'),
+  (4, 4, '2015-08-01', '2015-10-27'),
+  (5, 5, '2011-10-01', '2011-11-18');
+
+-- 9
+CREATE TABLE ReleasedGames (
+  Id INT PRIMARY KEY,
+  GameId INT NOT NULL,
+  ReleaseDate DATE NOT NULL,
+  FOREIGN KEY (GameId) REFERENCES Games (Id)
+);
+
+INSERT INTO ReleasedGames (Id, GameId, ReleaseDate)
+VALUES
+  (1, 1, '2020-06-19'),
+  (2, 3, '2018-04-20'),
+  (3, 4, '2015-10-27'),
+  (4, 5, '2011-11-18'),
+  (5, 2, '2018-10-26');
+
+-- 10
 CREATE TABLE Score (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -150,7 +231,7 @@ VALUES
   (4, 4, 3, 6),
   (5, 5, 4, 9);
 
--- 7
+-- 11
 CREATE TABLE Reviews (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -168,7 +249,7 @@ VALUES
   (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
--- 8
+-- 12
 CREATE TABLE GameAwards (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
@@ -185,7 +266,7 @@ VALUES
   (4, 4, 'Best Adventure Game of the Year', 2022),
   (5, 5, 'Best Multiplayer Game of the Year', 2022);
 
--- 9
+-- 13
 CREATE TABLE Developers (
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL,
@@ -201,7 +282,7 @@ VALUES
   (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
--- 10
+-- 14
 CREATE TABLE GameDevelopers (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
@@ -218,7 +299,7 @@ VALUES
   (4, 4, 4),
   (5, 5, 5);
 
--- 11
+-- 15
 CREATE TABLE Publishers (
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL,
@@ -234,7 +315,7 @@ VALUES
   (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
   (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
--- 12
+-- 16
 CREATE TABLE GamePublishers (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
@@ -251,7 +332,7 @@ VALUES
   (4, 4, 4),
   (5, 5, 5);
 
--- 13
+-- 17
 CREATE TABLE Wishlist (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -268,7 +349,7 @@ VALUES
   (4, 4, 5),
   (5, 5, 1);
 
--- 14
+-- 18
 CREATE TABLE Cart (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -286,7 +367,7 @@ VALUES
   (4, 4, 5, 4),
   (5, 5, 1, 5);
 
--- 15
+-- 19
 CREATE TABLE Orders (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
@@ -303,7 +384,7 @@ VALUES
   (4, 4, '2022-09-15', 75.00),
   (5, 5, '2022-08-01', 50.00);
 
--- 16
+-- 20
 CREATE TABLE OrderItems (
   Id INT PRIMARY KEY,
   OrderId INT NOT NULL,
@@ -321,3 +402,17 @@ VALUES
   (3, 3, 3, 3, 39.99),
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
+
+-- 21
+CREATE TABLE ExchangeRate (
+  Currency NVARCHAR(7) PRIMARY KEY,
+  [Equal 1 USD] MONEY NOT NULL
+)
+
+INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
+VALUES 
+  ('USD', 1.00),
+  ('EUR', 0.93),
+  ('GBP', 0.83),
+  ('JPY', 134.15),
+  ('PLN', 4.45);
