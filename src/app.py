@@ -1,20 +1,18 @@
 from PyQt6.QtSql import *
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QKeySequence, QPalette, QColor
 from PyQt6.QtGui import *
 from PyQt6.QtCore import Qt, QDate
 import sys
 from connect import create_connection
-
+import os
 import datetime
 
 DATE_FORMAT = "%Y-%m-%d"
 
 
-class TM(QSqlRelationalTableModel):
+class tableModel(QSqlRelationalTableModel):
     def __init__(self):
-        super(TM, self).__init__()
-        self.row_count = super().rowCount()
+        super(tableModel, self).__init__()
         self.pk_edit = False
 
     def set_pk_edit(self, on):
@@ -23,8 +21,8 @@ class TM(QSqlRelationalTableModel):
     def flags(self, index):  # Overriding the flags method
         cflags = super().flags(index)
 
-        if index.column() == 0:
-            cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
+        # if index.column() == 0:
+        #     cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
 
         if index.column() == 0 and self.pk_edit is False:
             return cflags and ~ Qt.ItemFlag.ItemIsEditable
@@ -85,14 +83,18 @@ class table_display_gui(QWidget):
         # Initializing QDialog and locking the size at a certain value
         super(table_display_gui, self).__init__()
         self.setFixedSize(700, 480)
+        self.setWindowTitle("Game Catalogue @ Admin Panel")
+
+        self.set_icon('assets\logo.ico')
+
         self.DATABASE_NAME = DATABASE_NAME
         self.TABLE_NAME = TABLE_NAME
-        # Defining our widgets and main layout
+
         self.layout = QVBoxLayout(self)
         self.label = QLabel("Hello, world!", self)
         self.buttonBox = QDialogButtonBox(self)
 
-        self.model = TM()
+        self.model = tableModel()
         self.model.setTable(TABLE_NAME)
 
         self.model.setEditStrategy(
@@ -142,6 +144,10 @@ class table_display_gui(QWidget):
         # self.buttonBox.accepted.connect(self.accept)
         # self.buttonBox.rejected.connect(self.reject)
 
+    def set_icon(self, relative_path):
+        scriptDir = os.path.dirname(os.path.realpath(__file__))
+        self.setWindowIcon(QIcon(scriptDir + os.path.sep + 'assets\logo.ico'))
+
     def submit_changes(self):
         print('Submitting changes')
         self.model.submitAll()
@@ -149,12 +155,7 @@ class table_display_gui(QWidget):
 
     def insert_record(self):
         print('Inserting record')
-        # qry = QSqlQuery(self.DATABASE_NAME)
-        # print(qry.prepare('SET IDENTITY_INSERT {} ON'.format(self.TABLE_NAME)))
-        # qry.exec()
-        # for i in range(2, self.model.columnCount()):
-        # r.setValue(i, 'aaa')
-        self.model.row_count += 1
+
         self.model.set_pk_edit(True)
         last_row_num = self.model.rowCount() - 1
         if last_row_num == 0:
@@ -188,11 +189,10 @@ class table_display_gui(QWidget):
         # write a code that read user input and inserts a new row to the end of the table
 
     def delete_records(self):
-        rows = self.selection_model.selectedRows()
-        # indices = self.view.selectedRows()
-        for index in sorted(rows):
+        del_rows = self.selection_model.selectedRows()
+
+        for index in sorted(del_rows):
             self.model.removeRow(index.row())
-            self.model.row_count -= 1
         self.model.select()
 
 
@@ -260,6 +260,20 @@ def set_style(app):
     pass
 
 
+def start(DRIVER_NAME, SERVER_NAME, DATABASE_NAME, TABLE_NAME):
+    print('Starting app')
+    app = QApplication(sys.argv)
+    set_style(app)
+    create_connection(DRIVER_NAME, SERVER_NAME, DATABASE_NAME)
+    global db
+    from connect import db
+
+    main_window = table_display_gui(DATABASE_NAME, TABLE_NAME)
+    main_window.show()
+
+    sys.exit(app.exec())
+
+
 def main():
     app = QApplication(sys.argv)
     set_style(app)
@@ -267,8 +281,8 @@ def main():
     global db
     from connect import db
 
-    gui = table_display_gui('Steam', 'Games')
-    gui.show()
+    main_window = table_display_gui('Steam', 'Games')
+    main_window.show()
 
     # ----------------- #
     # app = qtw.QApplication(sys.argv)
@@ -296,6 +310,7 @@ def main():
     #     cmd.execute(query)
 
     #     rows=cmd.fetchall()
+
 
     #     for row in rows:
     #         for col in row:

@@ -1,10 +1,11 @@
 from PyQt6.QtSql import QSqlDatabase
 
 
-def create_connection():
-    DRIVER_NAME = 'SQL SERVER'
-    SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
-    DATABASE_NAME = 'STEAM'
+def create_connection(DRIVER_NAME,
+                      SERVER_NAME,
+                      DATABASE_NAME
+                      ):
+
     # UID='sa';
     # PWD='sa';
     conn_str = f"""
