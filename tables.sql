@@ -91,20 +91,20 @@ CREATE TABLE Games (
   [Price in USD] MONEY NOT NULL
 );
 
-INSERT INTO Games (Id, Title, Description, [Price in USD])
+INSERT INTO Games (Id, Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
-  (1, 'The Last of Us Part II', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
-  (2, 'Red Dead Redemption 2', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
-  (3, 'God of War', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
-  (4, 'Halo 5: Guardians', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
-  (5, 'Minecraft', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
+  (1, 'The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  (2, 'Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  (3, 'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  (4, 'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  (5, 'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
 
 -- 3
 CREATE TABLE GameGenres (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   Genre VARCHAR(255) NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO GameGenres (Id, GameId, Genre)
@@ -134,8 +134,8 @@ CREATE TABLE GamePlatforms (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   PlatformId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (PlatformId) REFERENCES Platforms (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PlatformId) REFERENCES Platforms (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO GamePlatforms (Id, GameId, PlatformId) 
@@ -152,7 +152,7 @@ CREATE TABLE UpcomingGames (
   GameId INT NOT NULL,
   TrailerUrl VARCHAR(255),
   ExpectedDeliveryDate DATE,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO UpcomingGames (Id, GameId, TrailerUrl, ExpectedDeliveryDate)
@@ -169,7 +169,7 @@ CREATE TABLE PreOrderGames (
   GameId INT NOT NULL,
   PreOrderBonus VARCHAR(255),
   PreOrderDiscount DECIMAL(5,2),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO PreOrderGames (Id, GameId, PreOrderBonus, PreOrderDiscount)
@@ -186,7 +186,7 @@ CREATE TABLE BetaGames (
   GameId INT NOT NULL,
   BetaStartDate DATE NOT NULL,
   BetaEndDate DATE NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO BetaGames (Id, GameId, BetaStartDate, BetaEndDate)
@@ -202,7 +202,7 @@ CREATE TABLE ReleasedGames (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   ReleaseDate DATE NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO ReleasedGames (Id, GameId, ReleaseDate)
@@ -219,8 +219,8 @@ CREATE TABLE Score (
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO Score (Id, UserId, GameId, Score) 
@@ -237,8 +237,8 @@ CREATE TABLE Reviews (
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Review TEXT,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO Reviews (Id, UserId, GameId, Review) 
@@ -255,7 +255,7 @@ CREATE TABLE GameAwards (
   GameId INT NOT NULL,
   AwardName VARCHAR(255) NOT NULL,
   Year INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
@@ -287,8 +287,8 @@ CREATE TABLE GameDevelopers (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   DeveloperId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (DeveloperId) REFERENCES Developers (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (DeveloperId) REFERENCES Developers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO GameDevelopers (Id, GameId, DeveloperId) 
@@ -320,8 +320,8 @@ CREATE TABLE GamePublishers (
   Id INT PRIMARY KEY,
   GameId INT NOT NULL,
   PublisherId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (Id),
-  FOREIGN KEY (PublisherId) REFERENCES Publishers (Id)
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PublisherId) REFERENCES Publishers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO GamePublishers (Id, GameId, PublisherId) 
@@ -337,8 +337,8 @@ CREATE TABLE Wishlist (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO Wishlist (Id, UserId, GameId) 
@@ -355,8 +355,8 @@ CREATE TABLE Cart (
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO Cart (Id, UserId, GameId, Quantity) 
@@ -373,7 +373,7 @@ CREATE TABLE Orders (
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
   TotalAmount DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (Id)
+  FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO Orders (Id, UserId, OrderDate, TotalAmount) 
@@ -391,8 +391,8 @@ CREATE TABLE OrderItems (
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
   Price DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (OrderId) REFERENCES Orders (Id),
-  FOREIGN KEY (GameId) REFERENCES Games (Id)
+  FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, Price) 
