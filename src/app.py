@@ -8,27 +8,32 @@ import os
 import datetime
 
 
-class tableModel(QSqlRelationalTableModel):
+class ProxyStyle(QProxyStyle):
+    def drawControl(self, ctl, opt, qp, widget=None):
+        if ctl == QStyle.ControlElement.CE_HeaderSection and opt.orientation == Qt.Orientation.Horizontal:
+            if opt.section == widget.parent().property('hideSortIndicatorColumn'):
+                opt.sortIndicator = 0
+        super().drawControl(ctl, opt, qp, widget)
+
+
+class table_model(QSqlRelationalTableModel):
     def __init__(self):
-        super(tableModel, self).__init__()
+        super(table_model, self).__init__()
         self.pk_edit = False
 
     def set_pk_edit(self, on):
         self.pk_edit = on
 
     def flags(self, index):  # Overriding the flags method
-        cflags = super().flags(index)
-
-        # if index.column() == 0:
-        #     cflags = cflags and ~Qt.ItemFlag.ItemIsSelectable
+        cur_flags = super().flags(index)
 
         if index.column() == 0 and self.pk_edit is False:
-            return cflags and ~ Qt.ItemFlag.ItemIsEditable
+            cur_flags &= ~ Qt.ItemFlag.ItemIsEditable
 
-        return cflags
+        return cur_flags
 
     def submit(self):
-        print('Submitting')
+        # print('Submitting')
         success = True
 
         if self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnFieldChange or self.editStrategy == QSqlRelationalTableModel.EditStrategy.OnRowChange:
@@ -40,30 +45,36 @@ class tableModel(QSqlRelationalTableModel):
             res = super().submit()
 
         if success:
-            print('Submit successful')
+            # print('Submit successful')
+            pass
         else:
             print('Submit failed')
             print(self.lastError().text())
         return res
 
+    def sort(self, column, order):
+        if column != 3:
+            self._sort_order = order
+            super().sort(column, order)
 
-class table_display_gui(QWidget):
+
+class table_widget(QWidget):
     def __init__(self,  DATABASE_NAME, TABLE_NAME):
-        # Initializing QDialog and locking the size at a certain value
-        super(table_display_gui, self).__init__()
+        self.DATABASE_NAME = DATABASE_NAME
+        self.TABLE_NAME = TABLE_NAME
+
+        super(table_widget, self).__init__()
+
         self.setFixedSize(700, 480)
         self.setWindowTitle("Game Catalogue @ Admin Panel")
 
         self.set_icon('assets\logo.ico')
 
-        self.DATABASE_NAME = DATABASE_NAME
-        self.TABLE_NAME = TABLE_NAME
-
         self.layout = QVBoxLayout(self)
-        self.label = QLabel("Hello, world!", self)
+        # self.label = QLabel("Admin Panel", self)
         self.buttonBox = QDialogButtonBox(self)
 
-        self.model = tableModel()
+        self.model = table_model()
         self.model.setTable(TABLE_NAME)
 
         self.model.setEditStrategy(
@@ -78,17 +89,36 @@ class table_display_gui(QWidget):
         self.view.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows)
         self.layout.addWidget(self.view)
-        self.layout.addWidget(self.label)
+        # self.layout.addWidget(self.label)
+        # self.view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        header = self.view.horizontalHeader()
+        self.hh = self.view.horizontalHeader()
         for i in range(0, self.model.columnCount()):
-            header.setSectionResizeMode(
+            self.hh.setSectionResizeMode(
                 i, QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.hh.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        self.hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
         self.view.setColumnWidth(4, 120)
         self.view.setColumnWidth(4, 70)
+
+        bold_font = self.hh.font()
+        bold_font.setBold(True)
+        self.hh.setFont(bold_font)
+        self.hh.setHighlightSections(True)
+
+        self.vh = self.view.verticalHeader()
+        # self.vh.setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        # self.vh.setFixedSize(20, 20)
+        self.vh.setMinimumWidth(25)
+        # self.vh.setAutoFillBackground(True)
+        self.vh.setStyleSheet(
+            "QHeaderView {background-color: #f2f2f2;}")
+
+        self.view.setSortingEnabled(True)
+        self._style = ProxyStyle(self.view.style())
+        self.view.setStyle(self._style)
+        self.model.setProperty('hideSortIndicatorColumn', 3)
 
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
@@ -114,14 +144,20 @@ class table_display_gui(QWidget):
         self.model.select()
 
     def insert_record(self):
-        print('Inserting record')
+        # print('Inserting record')
 
         self.model.set_pk_edit(True)
         last_row_num = self.model.rowCount() - 1
-        if last_row_num == 0:
+        cur_sort_col = self.hh.sortIndicatorSection()
+        cur_sort_order = self.hh.sortIndicatorOrder()
+
+        self.model.sort(0, Qt.SortOrder.AscendingOrder)
+
+        if last_row_num == -1:
             row_num = 1
         else:
             row_num = int(self.model.index(last_row_num, 0).data())+1
+
         # while (self.model.index(row_num, 0).isValid()):
         #     print('Valid')
         #     row_num += 1
@@ -134,25 +170,29 @@ class table_display_gui(QWidget):
         r.setValue(3, '')
         r.setValue(4, 0.00)
 
-        self.model.insertRecord(-1, r)
+        success = self.model.insertRecord(-1, r)
         self.model.set_pk_edit(False)
-        # res = self.model.insertRow(1)
-        # if res:
-        #     print('Sucess')
-        # else:
-        #     print('Failed')
-        print('Done')
-        # qry.prepare('SET IDENTITY_INSERT {} OFF'.format(
-        #     self.model.tableName()))
-        # qry.exec()
+        self.model.sort(cur_sort_col, cur_sort_order)
+
+        if success is False:
+            print('Insert failed')
+        else:
+            print('Insert successful')
+
         self.model.select()
-        # write a code that read user input and inserts a new row to the end of the table
 
     def delete_records(self):
+        # print('Deleting records')
         del_rows = self.selection_model.selectedRows()
-
+        success = True
         for index in sorted(del_rows):
-            self.model.removeRow(index.row())
+            success = self.model.removeRow(index.row())
+            if not success:
+                break
+        if success:
+            print('Delete successful')
+        else:
+            print('Delete failed')
         self.model.select()
 
 
@@ -174,22 +214,22 @@ def set_style(app):
     app.setStyle('Fusion')
     # app.setStyle("Fusion")
 
-    # # Now use a palette to switch to dark colors:
-    # palette = QPalette()
-    # palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
+    palette = QPalette()
+    palette.setColor(QPalette.ColorRole.Window, QColor(231, 231, 231))
     # palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.Base, QColor(25, 25, 25))
     # palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
     # palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
     # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
-    # palette.setColor(QPalette.ColorRole.Button, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.Button, QColor(190, 232, 190))
+    palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.black)
     # palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
     # palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
-    # palette.setColor(QPalette.ColorRole.Highlight, QColor(42, 130, 218))
-    # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
-    # app.setPalette(palette)
+    # palette.setColor(QPalette.ColorRole.Highlight, QColor(239, 239, 239))
+    palette.setColor(QPalette.ColorRole.Highlight, QColor(216, 234, 216))
+    palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
+    app.setPalette(palette)
     pass
 
 
@@ -201,7 +241,7 @@ def start(DRIVER_NAME, SERVER_NAME, DATABASE_NAME, TABLE_NAME):
     global db
     from connect import db
 
-    main_window = table_display_gui(DATABASE_NAME, TABLE_NAME)
+    main_window = table_widget(DATABASE_NAME, TABLE_NAME)
     main_window.show()
 
     sys.exit(app.exec())
