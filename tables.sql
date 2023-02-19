@@ -6,53 +6,89 @@ GO
 
 USE Steam;
 
+IF OBJECT_ID('ExchangeRate', 'U') IS NOT NULL
+  DROP TABLE ExchangeRate;
+GO
+
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
   DROP TABLE OrderItems;
+GO
 
 IF OBJECT_ID('Orders', 'U') IS NOT NULL
   DROP TABLE Orders;
+GO
 
 IF OBJECT_ID('Cart', 'U') IS NOT NULL
   DROP TABLE Cart;
+GO
 
 IF OBJECT_ID('Wishlist', 'U') IS NOT NULL
   DROP TABLE Wishlist;
+GO
 
 IF OBJECT_ID('GamePublishers', 'U') IS NOT NULL
   DROP TABLE GamePublishers;
+GO
 
 IF OBJECT_ID('Publishers', 'U') IS NOT NULL
   DROP TABLE Publishers;
+GO
 
 IF OBJECT_ID('GameDevelopers', 'U') IS NOT NULL
   DROP TABLE GameDevelopers;
+GO
 
 IF OBJECT_ID('Developers', 'U') IS NOT NULL
   DROP TABLE Developers;
+GO
 
 IF OBJECT_ID('GameAwards', 'U') IS NOT NULL
   DROP TABLE GameAwards;
+GO
 
 IF OBJECT_ID('Reviews', 'U') IS NOT NULL
   DROP TABLE Reviews;
+GO
 
 IF OBJECT_ID('Score', 'U') IS NOT NULL
   DROP TABLE Score;
+GO
+
+IF OBJECT_ID('ReleasedGames', 'U') IS NOT NULL
+  DROP TABLE ReleasedGames;
+GO
+
+IF OBJECT_ID('BetaGames', 'U') IS NOT NULL
+  DROP TABLE BetaGames;
+GO
+
+IF OBJECT_ID('PreOrderGames', 'U') IS NOT NULL
+  DROP TABLE PreOrderGames;
+GO
+
+IF OBJECT_ID('UpcomingGames', 'U') IS NOT NULL
+  DROP TABLE UpcomingGames;
+GO
 
 IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
   DROP TABLE GamePlatforms;
+GO
 
 IF OBJECT_ID('Platforms', 'U') IS NOT NULL
   DROP TABLE Platforms;
+GO
 
 IF OBJECT_ID('GameGenres', 'U') IS NOT NULL
   DROP TABLE GameGenres;
+GO
 
 IF OBJECT_ID('Games', 'U') IS NOT NULL
   DROP TABLE Games;
+GO
 
 IF OBJECT_ID('Users', 'U') IS NOT NULL
   DROP TABLE Users;
+GO
 
 -- 1
 CREATE TABLE Users
