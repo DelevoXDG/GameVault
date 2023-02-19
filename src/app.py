@@ -7,8 +7,6 @@ from connect import create_connection
 import os
 import datetime
 
-DATE_FORMAT = "%Y-%m-%d"
-
 
 class tableModel(QSqlRelationalTableModel):
     def __init__(self):
@@ -47,35 +45,6 @@ class tableModel(QSqlRelationalTableModel):
             print('Submit failed')
             print(self.lastError().text())
         return res
-
-
-class DateDelegate(QStyledItemDelegate):
-    def createEditor(self, parent, option, index):
-        widget = QDateEdit(parent)
-        widget.setCalendarPopup(True)
-        return widget
-
-    def setEditorData(self, editor, index):
-        print('Setting editor date')
-        if isinstance(editor, QDateEdit):
-            dt_str = str(index.data(Qt.ItemDataRole.EditRole))
-            qtDate = QDate.fromString(dt_str, 'yyyy-mm-dd')
-            # dt = datetime.datetime.strptime(dt_str, DATE_FORMAT).date()
-            editor.setDate(qtDate)
-            return
-        super().setEditorData(editor, index)
-
-    def setModelData(self, editor, model, index):
-        print('Setting model data')
-        if isinstance(editor, QDateEdit):
-            dt = editor.date().toPyDate()
-            dt_str = str(dt)
-            # print(dt_str)
-            print(type(editor.date()))
-            qtDate = QDate.fromString(dt_str, 'yyyy-mm-dd')
-            model.setData(index, qtDate, Qt.ItemDataRole.EditRole)
-            return
-        super().setModelData(editor, model, index)
 
 
 class table_display_gui(QWidget):
@@ -121,28 +90,19 @@ class table_display_gui(QWidget):
         self.view.setColumnWidth(4, 120)
         self.view.setColumnWidth(4, 70)
 
-        # self.view.setItemDelegateForColumn(2, DateDelegate(self.model))
-
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
 
         insert_btn = QPushButton("Insert Record")
         delete_btn = QPushButton("Delete Record")
-        # submit_btn = QPushButton("Submit All Changes")
         insert_btn.clicked.connect(self.insert_record)
         delete_btn.clicked.connect(self.delete_records)
-        # submit_btn.clicked.connect(self.submit_changes)
 
         button_box.layout.addSpacing(300)
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
-        # button_box.layout.addWidget(submit_btn)
 
         self.layout.addWidget(button_box)
-
-        # Connecting our 'OK' and 'Cancel' buttons to the corresponding return codes
-        # self.buttonBox.accepted.connect(self.accept)
-        # self.buttonBox.rejected.connect(self.reject)
 
     def set_icon(self, relative_path):
         scriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -194,33 +154,6 @@ class table_display_gui(QWidget):
         for index in sorted(del_rows):
             self.model.removeRow(index.row())
         self.model.select()
-
-
-# def create_connection(DATABASE_NAME):
-#     DRIVER_NAME = 'SQL SERVER'
-#     SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
-#     # UID='sa';
-#     # PWD='sa';
-#     conn_str = f"""
-#     DRIVER={{{DRIVER_NAME}}};
-#     SERVER={SERVER_NAME};
-#     DATABASE={DATABASE_NAME};
-#     Trusted_Connection=yes;
-#     """
-#     # conn = pyodbc.connect(conn_str)
-#     # df = pandas.read_sql_query('SELECT * FROM products', conn)
-#     # print(df)
-#     # print(type(df))
-
-#     global db
-#     db = qt.QSqlDatabase.addDatabase('QODBC')
-#     db.setDatabaseName(conn_str)
-#     if db.open() is True:
-#         print('Connection to SQL Server successful')
-#         return True
-#     else:
-#         print('Connection to SQL Server failed')
-#         return False
 
 
 def display_data(sqlStatement):
@@ -283,41 +216,8 @@ def main():
 
     main_window = table_display_gui('Steam', 'Games')
     main_window.show()
-
-    # ----------------- #
-    # app = qtw.QApplication(sys.argv)
-    # app.setApplicationName('BD_Project')
-
-    # if create_connection() is True:
-    #     sql_statement = 'SELECT * FROM products'
-    # dataView = display_data(sql_statement)
-    # dataView.show()
-
-    # app.exit()
-
-    # sys.exit(app.exec())
-    ### ----------------- ###
-
     sys.exit(app.exec())
 
-    # try:
-    #     cn=ps.connect(host='localhost',port=8889,user='sa',password='sa',db='NORTHWND')
 
-    #     cmd=cn.cursor()
-
-    #     query="select * from products"
-
-    #     cmd.execute(query)
-
-    #     rows=cmd.fetchall()
-
-
-    #     for row in rows:
-    #         for col in row:
-    #             print(col,end=' ')
-    #         print()
-    #     cn.close()
-    # except Exception as e:
-    #     print(e)
 if __name__ == '__main__':
     main()
