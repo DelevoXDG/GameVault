@@ -258,7 +258,7 @@ CREATE TABLE Reviews (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
-  Review TEXT,
+  Review TEXT NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -282,11 +282,11 @@ CREATE TABLE GameAwards (
 
 INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
 VALUES 
-  (1, 1, 'Best Game of the Year', 2022),
-  (2, 2, 'Best RPG of the Year', 2022),
-  (3, 3, 'Best Sports Game of the Year', 2022),
-  (4, 4, 'Best Adventure Game of the Year', 2022),
-  (5, 5, 'Best Multiplayer Game of the Year', 2022);
+  (1, 1, 'Best Game of the Year', 2020),
+  (2, 2, 'Best RPG of the Year', 2019),
+  (3, 3, 'Best Adventure Game of the Year', 2019),
+  (4, 4, 'Best Shooter of the Year', 2016),
+  (5, 5, 'Best Multiplayer Game of the Year', 2011);
 
 -- 13
 CREATE TABLE Developers (
@@ -394,11 +394,11 @@ CREATE TABLE Orders (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
-  TotalAmount DECIMAL(10,2) NOT NULL,
+  [Total amount in USD] MONEY NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Orders (Id, UserId, OrderDate, TotalAmount) 
+INSERT INTO Orders (Id, UserId, OrderDate, [Total amount in USD]) 
 VALUES 
   (1, 1, '2022-12-01', 200.00),
   (2, 2, '2022-11-15', 150.00),
@@ -412,12 +412,12 @@ CREATE TABLE OrderItems (
   OrderId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
-  Price DECIMAL(10,2) NOT NULL,
+  [Price in USD] MONEY NOT NULL,
   FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, Price) 
+INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, [Price in USD]) 
 VALUES 
   (1, 1, 1, 2, 59.99),
   (2, 2, 2, 1, 49.99),
@@ -427,7 +427,7 @@ VALUES
 
 -- 21
 CREATE TABLE ExchangeRate (
-  Currency NVARCHAR(7) PRIMARY KEY,
+  Currency NVARCHAR(3) PRIMARY KEY,
   [Equal 1 USD] MONEY NOT NULL
 )
 
