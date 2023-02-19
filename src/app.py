@@ -205,19 +205,3 @@ def start(DRIVER_NAME, SERVER_NAME, DATABASE_NAME, TABLE_NAME):
     main_window.show()
 
     sys.exit(app.exec())
-
-
-def main():
-    app = QApplication(sys.argv)
-    set_style(app)
-    create_connection()
-    global db
-    from connect import db
-
-    main_window = table_display_gui('Steam', 'Games')
-    main_window.show()
-    sys.exit(app.exec())
-
-
-if __name__ == '__main__':
-    main()
