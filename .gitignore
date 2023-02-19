@@ -448,3 +448,5 @@ samples/features/sql-management-objects/src/out/CodeCoverage/CodeCoverage.config
 
 #mememe
 .vscode/
+**/tempCodeRunnerFile.py
+todo.todo
