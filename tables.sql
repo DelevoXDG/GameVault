@@ -438,3 +438,22 @@ VALUES
   ('GBP', 0.83),
   ('JPY', 134.15),
   ('PLN', 4.45);
+GO
+
+IF OBJECT_ID('dbo.HowMuch', 'FN') IS NOT NULL
+  DROP FUNCTION dbo.HowMuch
+GO
+CREATE FUNCTION HowMuch (
+	@GameID INT, --ten nas ciekawi
+	@Currency CHAR(3))
+	RETURNS MONEY
+
+	BEGIN
+
+		DECLARE @A MONEY -- budzet
+		DECLARE @B MONEY -- equal
+		SET @A = (SELECT [Price in USD] FROM Games WHERE @GameID = ID)
+		SET @B = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+		RETURN ROUND((@A * @B), 2)
+	END
+GO

@@ -1,17 +1,26 @@
 
 from PyQt6.QtSql import QSqlRelationalTableModel, QSqlDatabase, QSqlQuery
-from PyQt6.QtWidgets import QApplication, QProxyStyle, QTableView, QAbstractItemView, QHeaderView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QStyle, QDialog, QLabel, QDialogButtonBox, QAbstractButton
-from PyQt6.QtGui import QPalette, QColor, QIcon, QPixmap, QPainter
-from PyQt6.QtCore import Qt, QDate, QSize
+from PyQt6.QtWidgets import QApplication, QProxyStyle, QTableView, QAbstractItemView, QHeaderView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QStyle, QDialog, QLabel, QDialogButtonBox, QAbstractButton, QMessageBox, QComboBox
+from PyQt6.QtGui import QPalette, QColor, QIcon, QBrush, QPixmap, QPainter, QDesktopServices
+from PyQt6.QtCore import Qt, QDate, QSize, QUrl
 import sys
-from connect import create_connection
+import connect 
 import os
 import datetime
 
+class SQL_CONFIG:
+    DRIVER_NAME = 'SQL SERVER'
+    SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
+    DATABASE_NAME = 'STEAM'
+    TABLE_NAME = 'dbo.Games'
+    TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
+
 
 class ASSETS:
-    ICON = 'assets\logo5.png'
+    LOGO = 'assets\logo_200.png'
     HELP_ICON = 'assets\help.png'
+    GH_ICON = 'assets\github.png'
+    CURRENCY_ICON_FORMAT= f'assets\currencies\{{}}.png'
 
 
 class ProxyStyle(QProxyStyle):
@@ -29,8 +38,18 @@ class TableModel(QSqlRelationalTableModel):
         self.pk_edit = False
         self.setEditStrategy(
             QSqlRelationalTableModel.EditStrategy.OnFieldChange)
+        self.currency = self.default_currency()
+
+    def default_currency(self):
+        return 'USD'
 
     def set_pk_edit(self, on):
+        log_enabled = False
+        if log_enabled:
+            if on:
+                print('Enabled Private Key column editing')
+            else:
+                print('Disabled Private Key column editing')
         self.pk_edit = on
 
     def flags(self, index):  # Overriding the flags method
@@ -38,7 +57,9 @@ class TableModel(QSqlRelationalTableModel):
 
         if index.column() == 0 and self.pk_edit is False:
             return cur_flags and ~  Qt.ItemFlag.ItemIsEditable
-
+        if index.column()>=super().columnCount():
+            return cur_flags and ~ Qt.ItemFlag.ItemIsUserCheckable and Qt.ItemFlag.ItemIsEditable
+            
         return cur_flags
 
     def submit(self):
@@ -66,25 +87,100 @@ class TableModel(QSqlRelationalTableModel):
             self._sort_order = order
             super().sort(column, self._sort_order)
 
+    def columnCount(self, parent=None):
+        if parent is None:
+            cc = super().columnCount()
+        else:
+            cc = super().columnCount(parent)
+        return cc+1
+    # def select(self) -> bool:
+    #     res = super().select()
+    #     if res is False:
+    #         print('Select failed')
+    #         print(self.lastError().text())
+    #         return res
+    #     col_num = self.columnCount()-1
+    #     for i in range(self.rowCount()):
+    #         self.setData(self.index(i, self), self.data(self.index(i, 3)))
+
+    def data(self, index, role):
+        if(role == Qt.ItemDataRole.ForegroundRole):
+            return QBrush(Qt.GlobalColor.black)
+        
+        
+        if index.column() == super().columnCount():
+            if (role == Qt.ItemDataRole.DisplayRole):
+                if (self.currency == self.default_currency()):
+                    return ''
+                else:
+                    qry = QSqlQuery(db)
+                    statement = "SELECT dbo.HowMuch('{}','{}')".format(
+                        self.data(self.index(index.row(), 0), role), self.currency)
+                        
+                    qry.prepare(statement) 
+                    qry.exec()
+                    qry.next()
+                    res = qry.record().value(0)
+                    return res
+        return super().data(index, role)
 
 class HelpDialogue(QWidget):
-    def __init__(self,):
+    def __init__(self, DATABASE_NAME='DB'):
         super(HelpDialogue, self).__init__()
-        self.setFixedSize(500, 300)
-        self.setWindowTitle('Help')
+
+        self.DATABASE_NAME = DATABASE_NAME
+        self.setFixedSize(400, 310)
+        self.setWindowTitle('About')
+
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
 
         self.set_icon(ASSETS.HELP_ICON)
 
-        self.layout = QVBoxLayout(self)
+        
+        self.setLayout(self.setup_layout())
+
+    def open_gh(self):
+        QDesktopServices.openUrl(QUrl('https://github.com/DelevoXDG/bd_project/'))
+
+    def setup_layout(self):
+        layout = QVBoxLayout(self)
+        
+        button_box = QWidget()
+        button_box.layout = QHBoxLayout(button_box)
+        
+        github_button = QPushButton('')
+        github_button.setIcon(QIcon(full_path(ASSETS.GH_ICON)))
+        gh_btn_size = QSize(30, 30)
+        github_button.setIconSize(gh_btn_size)
+        github_button.setFixedSize(gh_btn_size)
+        github_button.setStyleSheet(
+            "QPushButton { background-color: transparent; border: 0px }")
 
         close_btn = QPushButton('Close')
+        close_btn.setMinimumSize(QSize(60, 30))
 
+        button_box.layout.addWidget(github_button)
+        
+        button_box.layout.addSpacing(200)
+        button_box.layout.addWidget(close_btn)
+
+        
+        text = "<center>" \
+            "<h1>{}</h1>" \
+            "&#8291;" \
+            "<img src={} width=\"100\" height=\"100\">" \
+            "<center>" \
+            "Sample server application to manage the database of the<br>" \
+            "video game digital distribution service. </center>".format(
+                self.DATABASE_NAME+" DB<br>Management Studio", full_path(ASSETS.LOGO))
+        message = QLabel(text)
+        layout.addWidget(message)
+        layout.addWidget(button_box)
+
+        github_button.clicked.connect(self.open_gh)
         close_btn.clicked.connect(self.close)
-
-        message = QLabel("Something happened, is that OK?")
-        self.layout.addWidget(message)
-        self.layout.addWidget(close_btn)
-        self.setLayout(self.layout)
+        
+        return layout
 
     def set_icon(self, relative_path):
         self.setWindowIcon(QIcon(full_path(relative_path)))
@@ -121,10 +217,17 @@ class MainWidget(QWidget):
 
         # self.setWindowFlags(
         #     Qt.WindowType.WindowContextHelpButtonHint and self.windowFlags())
-        self.set_icon(ASSETS.ICON)
+        self.set_icon(ASSETS.LOGO)
 
         self.model = TableModel()
         self.model.setTable(TABLE_NAME)
+
+        self.model.setHeaderData(0, Qt.Orientation.Horizontal, "ID")
+        self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Title")
+        self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Last Update Date")
+        self.model.setHeaderData(3, Qt.Orientation.Horizontal, "Description")
+        self.model.setHeaderData(4, Qt.Orientation.Horizontal, "USD")
+        self.model.setHeaderData(5, Qt.Orientation.Horizontal, self.model.currency)
 
         self.view = QTableView()
         self.view.setModel(self.model)
@@ -142,9 +245,13 @@ class MainWidget(QWidget):
 
         self.help_widget = self.setup_help()
         
+        self.layout= self.setup_layout()
+        self.setLayout(self.layout)
+        
 
-        self.setLayout(self.setup_layout())
         self.model.select()
+
+
 
     def setup_horizontal_header(self):
         hh = self.view.horizontalHeader()
@@ -154,8 +261,11 @@ class MainWidget(QWidget):
         hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         hh.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
-        self.view.setColumnWidth(4, 120)
-        self.view.setColumnWidth(4, 70)
+        hh.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.view.setColumnWidth(2, 120)
+        self.view.setColumnWidth(4, 90)
+        self.view.setColumnWidth(5, 90)
+        
 
         bold_font = hh.font()
         bold_font.setBold(True)
@@ -181,33 +291,80 @@ class MainWidget(QWidget):
 
         help_btn = QPushButton()
 
-        pixmap = QPixmap(full_path(ASSETS.HELP_ICON))
-        help_btn.setIcon(QIcon(pixmap))
-        help_btn_size = QSize(25, 25)
+        help_btn.setIcon(QIcon(full_path(ASSETS.HELP_ICON)))
+        help_btn_size = QSize(35, 35)
         help_btn.setIconSize(help_btn_size)
         help_btn.setFixedSize(help_btn_size)
         help_btn.setStyleSheet(
             "QPushButton { background-color: transparent; border: 0px }")
 
         insert_btn = QPushButton('Insert Record')
-        delete_btn = QPushButton('Delete Record')
+        delete_btn = QPushButton('Delete Records')
+
+        regular_btn_size = QSize(100, 35)
+        insert_btn.setMinimumSize(regular_btn_size)
+        delete_btn.setMinimumSize(regular_btn_size)
+        
+
+
         help_btn.clicked.connect(self.show_help)
         insert_btn.clicked.connect(self.insert_record)
         delete_btn.clicked.connect(self.delete_records)
 
+        cur_combo = QComboBox()
+
+        currencies = self.get_currency_list()
+        for cur in currencies:
+            cur_icon = QIcon(full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur)))
+            cur_combo.addItem(cur_icon, cur)
+        cur_combo.currentTextChanged.connect(self.changed_currency)
+
+        cur_combo.setStyleSheet(
+            "QComboBox { background-color: #DCDCDC;  }")
+        cur_combo.setFixedSize(QSize(100, 35))
+
+
+        font = insert_btn.font()
+        font.setBold(True)
+        insert_btn.setFont(font)
+        delete_btn.setFont(font)
+        cur_combo.setFont(font)
+
         button_box.layout.addWidget(help_btn)
         button_box.layout.addSpacing(300)
+        button_box.layout.addWidget(cur_combo)
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
 
         layout.addWidget(button_box)
         return layout
 
+    def changed_currency(self, text):
+        print('Set currency to {}'.format(text))
+        self.model.currency = text
+        self.model.setHeaderData(
+            5, Qt.Orientation.Horizontal, self.model.currency)
+        self.model.select()
+
+    def get_currency_list(self):
+        qry = QSqlQuery(db)
+        statement = "SELECT * FROM {}".format(
+           SQL_CONFIG.TABLE_EXCHANGE_RATE)
+
+        qry.prepare(statement)
+        qry.exec()
+        res = []
+        while qry.next() is True:
+            res.append(qry.record().value(0))
+        res.reverse()
+        return res
+
+
     def setup_help(self):
         print('Displaying help dialogue')
 
-        # help_dialogue.show()
-        help_dialogue =  HelpDialogue()
+        help_dialogue =  HelpDialogue(self.DATABASE_NAME)
+        
         return help_dialogue
 
     def set_icon(self, relative_path):
@@ -304,15 +461,16 @@ def set_style(app):
     pass
 
 
-def start(DRIVER_NAME, SERVER_NAME, DATABASE_NAME, TABLE_NAME):
+def start():
     print('Starting app')
     app = QApplication(sys.argv)
     set_style(app)
-    create_connection(DRIVER_NAME, SERVER_NAME, DATABASE_NAME)
+    connect.create_connection(SQL_CONFIG.DRIVER_NAME,
+                              SQL_CONFIG.SERVER_NAME, SQL_CONFIG.DATABASE_NAME)
     global db
     from connect import db
 
-    main_window = MainWidget(DATABASE_NAME, TABLE_NAME)
+    main_window = MainWidget(SQL_CONFIG.DATABASE_NAME, SQL_CONFIG.TABLE_NAME)
     main_window.show()
 
     sys.exit(app.exec())
