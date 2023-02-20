@@ -450,3 +450,4 @@ samples/features/sql-management-objects/src/out/CodeCoverage/CodeCoverage.config
 .vscode/
 **/tempCodeRunnerFile.py
 todo.todo
+**/drafts/
