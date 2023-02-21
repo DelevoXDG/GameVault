@@ -8,13 +8,17 @@ import connect
 import os
 import datetime
 
-class SQL_CONFIG:
+class CONFIG:
     DRIVER_NAME = 'SQL SERVER'
     SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
     DATABASE_NAME = 'STEAM'
     TABLE_NAME = 'dbo.Games'
+    APP_NAME = 'Management Studio'
+    FULL_APP_NAME = DATABASE_NAME + ' BD ' + APP_NAME 
     TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
-    FN_CONVERT_CURRENCY = 'dbo.howMuch'
+    FN_CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+    DEFAULT_CURRENCY = 'USD'
+    
 
 
 class ASSETS:
@@ -24,25 +28,28 @@ class ASSETS:
     CURRENCY_ICON_FORMAT= f'assets\currencies\{{}}.png'
 
 
-class ProxyStyle(QProxyStyle):
+# class ProxyStyle(QProxyStyle):
     # def drawControl(self, ctl, opt, qp, widget=None):
     #     if ctl == QStyle.ControlElement.CE_HeaderSection and opt.orientation == Qt.Orientation.Horizontal:
     #         if opt.section == widget.parent().property('hideSortIndicatorColumn'):
     #             opt.sortIndicator = 0
     #     super().drawControl(ctl, opt, qp, widget)
-    pass
+    # pass
 
 
 class TableModel(QSqlRelationalTableModel):
     def __init__(self):
         super(TableModel, self).__init__()
         self.pk_edit = False
+        self.hh = None
+        self.vh = None
+
         self.setEditStrategy(
             QSqlRelationalTableModel.EditStrategy.OnFieldChange)
         self.currency = self.default_currency()
 
     def default_currency(self):
-        return 'USD'
+        return CONFIG.DEFAULT_CURRENCY
 
     def set_pk_edit(self, on):
         log_enabled = False
@@ -53,7 +60,7 @@ class TableModel(QSqlRelationalTableModel):
                 print('Disabled Private Key column editing')
         self.pk_edit = on
 
-    def flags(self, index):  # Overriding the flags method
+    def flags(self, index): 
         cur_flags = super().flags(index)
 
         if index.column() == 0 and self.pk_edit is False:
@@ -84,7 +91,13 @@ class TableModel(QSqlRelationalTableModel):
         return success
 
     def sort(self, column, order):
-        if column != 3:
+        sort_enabled = True
+        if column == 3:
+            sort_enabled=False
+        elif column >= super().columnCount():
+            column -=1 
+        
+        if sort_enabled:
             self._sort_order = order
             super().sort(column, self._sort_order)
 
@@ -106,11 +119,11 @@ class TableModel(QSqlRelationalTableModel):
                     return ''
                 else:
                     qry = QSqlQuery(db)
-                    statement = "SELECT {}('{}','{}')".format(
-                        SQL_CONFIG.FN_CONVERT_CURRENCY,
-                        self.data(self.index(index.row(), 0), role), 
-                                  self.currency)
-                        
+                    
+                    statement = CONFIG.FN_CONVERT_CURRENCY.format(
+                        self.data(self.index(index.row(), 0), role),
+                        "'"+self.currency+"'"
+                    )
                     qry.prepare(statement) 
                     qry.exec()
                     qry.next()
@@ -128,11 +141,23 @@ class TableModel(QSqlRelationalTableModel):
         return ind
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        default = super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
+    
         if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Horizontal:
             if section == 5:
-                return 'Price in {}'.format(self.currency)
-            return super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
-        
+                res = 'Price in {}'.format(self.currency)
+            else:
+                res= default
+            # if self.hh is not None:
+                # cur_sort_col = self.hh.sortIndicatorSection()
+                # cur_sort_order = self.hh.sortIndicatorOrder()
+                # if cur_sort_col == section:
+                #     if cur_sort_order == Qt.SortOrder.AscendingOrder:
+                #         res += ' (Sorted ASCENDING)'
+                #     else:
+                #         res += ' (Sorting DESCENDING)'
+            return res
+
         if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
             headers = {
                         0: 'ID',
@@ -142,10 +167,13 @@ class TableModel(QSqlRelationalTableModel):
                         4: 'USD',
                         5: self.currency
                     }
-            result = headers.get(section, 'default')
-            return result
+            
+            res = headers.get(section, default)
+            
+            return res
         if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Vertical:
-            num = super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
+            num = default
+            
             return ordinal(num)+' row'
         
         return super().headerData(section, orientation, role)
@@ -162,8 +190,7 @@ class HelpDialogue(QWidget):
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
 
-        self.set_icon(ASSETS.HELP_ICON)
-
+        self.setWindowIcon(QIcon(full_path(ASSETS.HELP_ICON)))
         
         self.setLayout(self.setup_layout())
 
@@ -195,19 +222,20 @@ class HelpDialogue(QWidget):
         button_box.layout.addWidget(close_btn)
         
 
-        ptrn = f"<center>" \
+        pattern = f"<center>" \
             "<h1>{}</h1>" \
             "&#8291;" \
             "<img src={} width=\"100\" height=\"100\"></center>" \
             "<center>" \
-            "Sample server application to manage the database of the<br>" \
-            "video game digital distribution service. </center>" \
+            "Sample application to manage the database of the video game<br>" \
+            "digital distribution service.</center>" \
             "<p style=\"margin-left:10px; text-align:left;\"><b>Attributions</b><br>""<span>&#8226;</span> Flag icons made by <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a> from <a href=\"http://www.flaticon.com/\">www.flaticon.com</a><br>" \
             "<span>&#8226;</span> Logo generated via <a href=\"https://midjourney.com/\">midjourney.com</a>" \
             "</p>"
-        text = ptrn.format(
-            self.DATABASE_NAME+" DB<br>Management Studio", full_path(ASSETS.LOGO))
-        label = QLabel(text)
+        pattern = pattern.format(
+            CONFIG.DATABASE_NAME+" DB<br>" + CONFIG.APP_NAME, full_path(ASSETS.LOGO))
+        
+        label = QLabel(pattern)
         label.setTextFormat(Qt.TextFormat.RichText)
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         label.setOpenExternalLinks(True)
@@ -219,28 +247,6 @@ class HelpDialogue(QWidget):
         
         return layout
 
-    def set_icon(self, relative_path):
-        self.setWindowIcon(QIcon(full_path(relative_path)))
-
-
-class PictureButton(QAbstractButton):
-
-    def __init__(self, picture, parent):
-        super().__init__(parent)
-        self.setPicture(QPixmap(picture))
-
-    def setPicture(self, picture):
-        self.picture = picture
-        self.update()
-
-    def sizeHint(self):
-        return self.picture.size()
-
-    def paintEvent(self, e):
-        painter = QPainter(self)
-        painter.drawPixmap(0, 0, self.picture)
-
-
 class MainWidget(QWidget):
     def __init__(self,  DATABASE_NAME, TABLE_NAME):
         self.DATABASE_NAME = DATABASE_NAME
@@ -250,11 +256,11 @@ class MainWidget(QWidget):
 
         self.setFixedSize(700, 480)
         self.setWindowTitle(
-            '{} @ Admin Panel'.format(self.TABLE_NAME.replace("dbo.", "")))
+            '{} @ {}'.format(self.TABLE_NAME.replace("dbo.", ""), CONFIG.FULL_APP_NAME ))
 
         # self.setWindowFlags(
         #     Qt.WindowType.WindowContextHelpButtonHint and self.windowFlags())
-        self.set_icon(ASSETS.LOGO)
+        self.setWindowIcon(QIcon(full_path(ASSETS.LOGO)))
 
         self.model = TableModel()
         self.model.setTable(TABLE_NAME)
@@ -276,6 +282,8 @@ class MainWidget(QWidget):
     
         self.hh = self.setup_horizontal_header()
         self.vh = self.setup_vertical_header()
+        self.model.hh=self.hh
+        self.model.vh=self.vh
 
         self.view.setSortingEnabled(True)
         self.hh.setSortIndicator(0, Qt.SortOrder.AscendingOrder)
@@ -284,11 +292,9 @@ class MainWidget(QWidget):
         
         self.layout= self.setup_layout()
         self.setLayout(self.layout)
-        
 
         self.model.select()
 
-    
 
     def setup_horizontal_header(self):
         hh = self.view.horizontalHeader()
@@ -347,7 +353,7 @@ class MainWidget(QWidget):
         delete_btn.setMinimumSize(regular_btn_size)
         delete_btn.setStyleSheet('''
             QPushButton:disabled {
-                background-color: #666;
+                background-color: #666666;
             }
         ''')
         self.delete_btn=delete_btn
@@ -358,7 +364,8 @@ class MainWidget(QWidget):
         cur_combo = QComboBox()
         currencies = self.get_currency_list()
         for cur in currencies:
-            cur_icon = QIcon(full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur)))
+            icon_path = full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur))
+            cur_icon = QIcon(icon_path)
             cur_combo.addItem(cur_icon, cur)
         cur_combo.currentTextChanged.connect(self.changed_currency)
 
@@ -367,7 +374,7 @@ class MainWidget(QWidget):
             QComboBox {
                 background-color: #DCDCDC;
                     }
-                    ''')
+            ''')
         cur_combo.setFixedSize(QSize(100, 35))
 
 
@@ -388,8 +395,6 @@ class MainWidget(QWidget):
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
 
-
-
         layout.addWidget(button_box)
         return layout
 
@@ -403,7 +408,7 @@ class MainWidget(QWidget):
     def get_currency_list(self):
         qry = QSqlQuery(db)
         statement = "SELECT * FROM {}".format(
-           SQL_CONFIG.TABLE_EXCHANGE_RATE)
+           CONFIG.TABLE_EXCHANGE_RATE)
 
         qry.prepare(statement)
         qry.exec()
@@ -416,22 +421,12 @@ class MainWidget(QWidget):
 
     def setup_help(self):
         print('Displaying help dialogue')
-
         help_dialogue =  HelpDialogue(self.DATABASE_NAME)
         
         return help_dialogue
 
-    def set_icon(self, relative_path):
-        self.setWindowIcon(QIcon(full_path(relative_path)))
-
-    def submit_changes(self):
-        print('Submitting changes')
-        self.model.submitAll()
-        self.model.select()
-
 
     def insert_record(self):
-
         self.model.set_pk_edit(True)
         last_row_num = self.model.rowCount() - 1
 
@@ -445,9 +440,6 @@ class MainWidget(QWidget):
         else:
             row_num = int(self.model.index(last_row_num, 0).data())+1
 
-        # while (self.model.index(row_num, 0).isValid()):
-        #     print('Valid')
-        #     row_num += 1
 
         r = self.model.record()
         r.setValue(0, row_num)
@@ -501,41 +493,32 @@ def full_path(relative_path):
     scriptDir = os.path.dirname(os.path.realpath(__file__))
     return scriptDir + os.path.sep + relative_path
 
-
-def set_style(app):
+def set_style(app: QApplication):
     app.setStyle('Fusion')
-    # app.setStyle('Macintosh')
 
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(220, 220, 220))
-    # palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.black)
     palette.setColor(QPalette.ColorRole.Base, QColor(242, 242, 242))
-    # palette.setColor(QPalette.ColorRole.AlternateBase, QColor(53, 53, 53))
-    # palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.white)
-    # palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.white)
-    # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.white)
+    palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.black)
     palette.setColor(QPalette.ColorRole.Button, QColor(70, 152, 27))
-    # palette.setColor(QPalette.ColorRole.Button, QColor(147, 223, 147))
     palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.black)
-    # palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
-    # palette.setColor(QPalette.ColorRole.Link, QColor(42, 130, 218))
-    # palette.setColor(QPalette.ColorRole.Highlight, QColor(239, 239, 239))
+    palette.setColor(QPalette.ColorRole.Link, QColor(32, 121, 0))
     palette.setColor(QPalette.ColorRole.Highlight, QColor(216, 234, 216))
     palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.black)
     app.setPalette(palette)
-    pass
 
 
 def start():
     print('Starting app')
     app = QApplication(sys.argv)
     set_style(app)
-    connect.create_connection(SQL_CONFIG.DRIVER_NAME,
-                              SQL_CONFIG.SERVER_NAME, SQL_CONFIG.DATABASE_NAME)
+    connect.create_connection(CONFIG.DRIVER_NAME,
+                              CONFIG.SERVER_NAME, CONFIG.DATABASE_NAME)
     global db
     from connect import db
 
-    main_window = MainWidget(SQL_CONFIG.DATABASE_NAME, SQL_CONFIG.TABLE_NAME)
+    main_window = MainWidget(CONFIG.DATABASE_NAME, CONFIG.TABLE_NAME)
     main_window.show()
 
     sys.exit(app.exec())

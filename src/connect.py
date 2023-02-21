@@ -6,8 +6,6 @@ def create_connection(DRIVER_NAME,
                       DATABASE_NAME
                       ):
 
-    # UID='sa';
-    # PWD='sa';
     conn_str = f"""
     DRIVER={{{DRIVER_NAME}}};
     SERVER={SERVER_NAME};
