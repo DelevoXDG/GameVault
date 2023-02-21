@@ -14,6 +14,7 @@ class SQL_CONFIG:
     DATABASE_NAME = 'STEAM'
     TABLE_NAME = 'dbo.Games'
     TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
+    FN_CONVERT_CURRENCY = 'dbo.howMuch'
 
 
 class ASSETS:
@@ -56,31 +57,31 @@ class TableModel(QSqlRelationalTableModel):
         cur_flags = super().flags(index)
 
         if index.column() == 0 and self.pk_edit is False:
-            return cur_flags and ~  Qt.ItemFlag.ItemIsEditable
+            return (cur_flags )  and ~  Qt.ItemFlag.ItemIsEditable
         if index.column()>=super().columnCount():
-            return cur_flags and ~ Qt.ItemFlag.ItemIsUserCheckable and Qt.ItemFlag.ItemIsEditable
+            return  (~ Qt.ItemFlag.ItemIsUserCheckable | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled) and ~ Qt.ItemFlag.ItemIsEditable
             
         return cur_flags
+    
+
 
     def submit(self):
         print('Submitting')
         success = True
 
         if self.editStrategy() == QSqlRelationalTableModel.EditStrategy.OnFieldChange or self.editStrategy() == QSqlRelationalTableModel.EditStrategy.OnRowChange:
-            res = super().submitAll()
-            if res is False:
-                success = False
-                self.select()
+            success = super().submitAll()
         else:
-            res = super().submit()
+            success = super().submit()
 
         if success:
             # print('Submit successful')
             pass
         else:
+            self.select()
             print('Submit failed')
             print(self.lastError().text())
-        return res
+        return success
 
     def sort(self, column, order):
         if column != 3:
@@ -93,29 +94,22 @@ class TableModel(QSqlRelationalTableModel):
         else:
             cc = super().columnCount(parent)
         return cc+1
-    # def select(self) -> bool:
-    #     res = super().select()
-    #     if res is False:
-    #         print('Select failed')
-    #         print(self.lastError().text())
-    #         return res
-    #     col_num = self.columnCount()-1
-    #     for i in range(self.rowCount()):
-    #         self.setData(self.index(i, self), self.data(self.index(i, 3)))
 
     def data(self, index, role):
         if(role == Qt.ItemDataRole.ForegroundRole):
             return QBrush(Qt.GlobalColor.black)
         
         
-        if index.column() == super().columnCount():
+        if index.column() >= super().columnCount():
             if (role == Qt.ItemDataRole.DisplayRole):
                 if (self.currency == self.default_currency()):
                     return ''
                 else:
                     qry = QSqlQuery(db)
-                    statement = "SELECT dbo.HowMuch('{}','{}')".format(
-                        self.data(self.index(index.row(), 0), role), self.currency)
+                    statement = "SELECT {}('{}','{}')".format(
+                        SQL_CONFIG.FN_CONVERT_CURRENCY,
+                        self.data(self.index(index.row(), 0), role), 
+                                  self.currency)
                         
                     qry.prepare(statement) 
                     qry.exec()
@@ -123,13 +117,47 @@ class TableModel(QSqlRelationalTableModel):
                     res = qry.record().value(0)
                     return res
         return super().data(index, role)
+    def index(self, row, column, parent=None):
+        if column >= super(TableModel, self).columnCount() and row <= super().rowCount():
+            ind = self.createIndex(row, column)
+        else:
+            if parent is None:
+                ind =  super(TableModel, self).index(row, column)
+            else:
+                ind=  super(TableModel, self).index(row, column, parent)
+        return ind
+
+    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+        if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Horizontal:
+            if section == 5:
+                return 'Price in {}'.format(self.currency)
+            return super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
+        
+        if role == Qt.ItemDataRole.DisplayRole and orientation == Qt.Orientation.Horizontal:
+            headers = {
+                        0: 'ID',
+                        1: 'Title',
+                        2: 'Last Updated',
+                        3: 'Description',
+                        4: 'USD',
+                        5: self.currency
+                    }
+            result = headers.get(section, 'default')
+            return result
+        if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Vertical:
+            num = super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
+            return ordinal(num)+' row'
+        
+        return super().headerData(section, orientation, role)
+    
+ 
 
 class HelpDialogue(QWidget):
     def __init__(self, DATABASE_NAME='DB'):
         super(HelpDialogue, self).__init__()
 
         self.DATABASE_NAME = DATABASE_NAME
-        self.setFixedSize(400, 310)
+        self.setFixedSize(400, 360)
         self.setWindowTitle('About')
 
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
@@ -148,36 +176,45 @@ class HelpDialogue(QWidget):
         button_box = QWidget()
         button_box.layout = QHBoxLayout(button_box)
         
-        github_button = QPushButton('')
-        github_button.setIcon(QIcon(full_path(ASSETS.GH_ICON)))
+        gh_btn = QPushButton('')
+        gh_btn.setIcon(QIcon(full_path(ASSETS.GH_ICON)))
         gh_btn_size = QSize(30, 30)
-        github_button.setIconSize(gh_btn_size)
-        github_button.setFixedSize(gh_btn_size)
-        github_button.setStyleSheet(
+        gh_btn.setIconSize(gh_btn_size)
+        gh_btn.setFixedSize(gh_btn_size)
+        gh_btn.setStyleSheet(
             "QPushButton { background-color: transparent; border: 0px }")
+        gh_btn.setToolTip('GitHub repo')
 
         close_btn = QPushButton('Close')
-        close_btn.setMinimumSize(QSize(60, 30))
+        close_btn.setMinimumSize(QSize(40, 30))
+        close_btn.setToolTip('Close this window')
 
-        button_box.layout.addWidget(github_button)
+        button_box.layout.addWidget(gh_btn)
         
         button_box.layout.addSpacing(200)
         button_box.layout.addWidget(close_btn)
-
         
-        text = "<center>" \
+
+        ptrn = f"<center>" \
             "<h1>{}</h1>" \
             "&#8291;" \
-            "<img src={} width=\"100\" height=\"100\">" \
+            "<img src={} width=\"100\" height=\"100\"></center>" \
             "<center>" \
             "Sample server application to manage the database of the<br>" \
-            "video game digital distribution service. </center>".format(
-                self.DATABASE_NAME+" DB<br>Management Studio", full_path(ASSETS.LOGO))
-        message = QLabel(text)
-        layout.addWidget(message)
+            "video game digital distribution service. </center>" \
+            "<p style=\"margin-left:10px; text-align:left;\"><b>Attributions</b><br>""<span>&#8226;</span> Flag icons made by <a href=\"https://www.flaticon.com/authors/freepik\">Freepik</a> from <a href=\"http://www.flaticon.com/\">www.flaticon.com</a><br>" \
+            "<span>&#8226;</span> Logo generated via <a href=\"https://midjourney.com/\">midjourney.com</a>" \
+            "</p>"
+        text = ptrn.format(
+            self.DATABASE_NAME+" DB<br>Management Studio", full_path(ASSETS.LOGO))
+        label = QLabel(text)
+        label.setTextFormat(Qt.TextFormat.RichText)
+        label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+        layout.addWidget(label)
         layout.addWidget(button_box)
 
-        github_button.clicked.connect(self.open_gh)
+        gh_btn.clicked.connect(self.open_gh)
         close_btn.clicked.connect(self.close)
         
         return layout
@@ -221,13 +258,13 @@ class MainWidget(QWidget):
 
         self.model = TableModel()
         self.model.setTable(TABLE_NAME)
+        # self.model.setHeaderData(0, Qt.Orientation.Horizontal, "ID")
+        # self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Title")
+        # self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Last Updated")
+        # self.model.setHeaderData(3, Qt.Orientation.Horizontal, "Description")
+        # self.model.setHeaderData(4, Qt.Orientation.Horizontal, "USD")
+        # self.model.setHeaderData(5, Qt.Orientation.Horizontal, "Price in {}".format(self.model.currency))
 
-        self.model.setHeaderData(0, Qt.Orientation.Horizontal, "ID")
-        self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Title")
-        self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Last Update Date")
-        self.model.setHeaderData(3, Qt.Orientation.Horizontal, "Description")
-        self.model.setHeaderData(4, Qt.Orientation.Horizontal, "USD")
-        self.model.setHeaderData(5, Qt.Orientation.Horizontal, self.model.currency)
 
         self.view = QTableView()
         self.view.setModel(self.model)
@@ -236,7 +273,7 @@ class MainWidget(QWidget):
             QAbstractItemView.SelectionBehavior.SelectRows)
 
         self.selection_model = self.view.selectionModel()
-
+    
         self.hh = self.setup_horizontal_header()
         self.vh = self.setup_vertical_header()
 
@@ -251,7 +288,7 @@ class MainWidget(QWidget):
 
         self.model.select()
 
-
+    
 
     def setup_horizontal_header(self):
         hh = self.view.horizontalHeader()
@@ -262,15 +299,17 @@ class MainWidget(QWidget):
         hh.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
         hh.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
-        self.view.setColumnWidth(2, 120)
-        self.view.setColumnWidth(4, 90)
-        self.view.setColumnWidth(5, 90)
+        self.view.setColumnWidth(2, 100)
+        self.view.setColumnWidth(4, 70)
+        if self.model.columnCount() ==6:
+            self.view.setColumnWidth(5, 70)
         
 
         bold_font = hh.font()
         bold_font.setBold(True)
         hh.setFont(bold_font)
         hh.setHighlightSections(True)
+
         return hh
 
     def setup_vertical_header(self):
@@ -282,7 +321,7 @@ class MainWidget(QWidget):
         vh.setStyleSheet(
             'QHeaderView {background-color: #f2f2f2;}')
         return vh
-
+    
     def setup_layout(self):
         layout = QVBoxLayout(self)
         layout.addWidget(self.view)
@@ -297,22 +336,26 @@ class MainWidget(QWidget):
         help_btn.setFixedSize(help_btn_size)
         help_btn.setStyleSheet(
             "QPushButton { background-color: transparent; border: 0px }")
-
-        insert_btn = QPushButton('Insert Record')
-        delete_btn = QPushButton('Delete Records')
+        help_btn.clicked.connect(self.show_help)
 
         regular_btn_size = QSize(100, 35)
+        insert_btn = QPushButton('Insert Record')
         insert_btn.setMinimumSize(regular_btn_size)
-        delete_btn.setMinimumSize(regular_btn_size)
-        
-
-
-        help_btn.clicked.connect(self.show_help)
         insert_btn.clicked.connect(self.insert_record)
+        
+        delete_btn = QPushButton('Delete Records')
+        delete_btn.setMinimumSize(regular_btn_size)
+        delete_btn.setStyleSheet('''
+            QPushButton:disabled {
+                background-color: #666;
+            }
+        ''')
+        self.delete_btn=delete_btn
         delete_btn.clicked.connect(self.delete_records)
+        delete_btn.setEnabled(False)
+        self.selection_model.selectionChanged.connect(self.toggle_delete_btn)
 
         cur_combo = QComboBox()
-
         currencies = self.get_currency_list()
         for cur in currencies:
             cur_icon = QIcon(full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur)))
@@ -320,7 +363,11 @@ class MainWidget(QWidget):
         cur_combo.currentTextChanged.connect(self.changed_currency)
 
         cur_combo.setStyleSheet(
-            "QComboBox { background-color: #DCDCDC;  }")
+            '''
+            QComboBox {
+                background-color: #DCDCDC;
+                    }
+                    ''')
         cur_combo.setFixedSize(QSize(100, 35))
 
 
@@ -330,11 +377,18 @@ class MainWidget(QWidget):
         delete_btn.setFont(font)
         cur_combo.setFont(font)
 
+        help_btn.setToolTip('About')
+        insert_btn.setToolTip("Insert a new record with empty values and today's date")
+        delete_btn.setToolTip('Delete all the selected records')
+        cur_combo.setToolTip('Select the currency to convert prices to')
+
         button_box.layout.addWidget(help_btn)
         button_box.layout.addSpacing(300)
         button_box.layout.addWidget(cur_combo)
         button_box.layout.addWidget(insert_btn)
         button_box.layout.addWidget(delete_btn)
+
+
 
         layout.addWidget(button_box)
         return layout
@@ -374,6 +428,7 @@ class MainWidget(QWidget):
         print('Submitting changes')
         self.model.submitAll()
         self.model.select()
+
 
     def insert_record(self):
 
@@ -427,10 +482,20 @@ class MainWidget(QWidget):
             print('Delete failed')
         self.model.select()
 
+    def toggle_delete_btn(self):
+        self.delete_btn.setEnabled(self.selection_model.hasSelection())
+
     def show_help(self):
         print('Showing help')
         self.help_widget.show()
 
+
+def ordinal(n: int):
+    if 11 <= (n % 100) <= 13:
+        suffix = 'th'
+    else:
+        suffix = ['th', 'st', 'nd', 'rd', 'th'][min(n % 10, 4)]
+    return str(n) + suffix
 
 def full_path(relative_path):
     scriptDir = os.path.dirname(os.path.realpath(__file__))
@@ -439,7 +504,7 @@ def full_path(relative_path):
 
 def set_style(app):
     app.setStyle('Fusion')
-    # app.setStyle("Fusion")
+    # app.setStyle('Macintosh')
 
     palette = QPalette()
     palette.setColor(QPalette.ColorRole.Window, QColor(220, 220, 220))

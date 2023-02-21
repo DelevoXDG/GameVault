@@ -110,7 +110,7 @@ CREATE TABLE Games (
   Title VARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
-  [Price in USD] MONEY NOT NULL
+  [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
 );
 
 INSERT INTO Games (Id, Title, LastUpdatedDate, Description, [Price in USD])
@@ -412,7 +412,7 @@ CREATE TABLE OrderItems (
   OrderId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
-  [Price in USD] MONEY NOT NULL,
+  [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0),
   FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -444,16 +444,16 @@ IF OBJECT_ID('dbo.HowMuch', 'FN') IS NOT NULL
   DROP FUNCTION dbo.HowMuch
 GO
 CREATE FUNCTION HowMuch (
-	@GameID INT, --ten nas ciekawi
+	@GameID INT, 
 	@Currency CHAR(3))
 	RETURNS MONEY
 
 	BEGIN
 
-		DECLARE @A MONEY -- budzet
-		DECLARE @B MONEY -- equal
-		SET @A = (SELECT [Price in USD] FROM Games WHERE @GameID = ID)
-		SET @B = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-		RETURN ROUND((@A * @B), 2)
+		DECLARE @Price MONEY 
+		DECLARE @ExchRate MONEY 
+		SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = ID)
+		SET @ExchRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+		RETURN ROUND((@Price * @ExchRate), 2)
 	END
 GO
