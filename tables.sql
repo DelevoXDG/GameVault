@@ -1,91 +1,135 @@
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
-  CREATE DATABASE Steam;
+BEGIN
+  CREATE DATABASE Steam
+END
 GO
 
 USE Steam;
 
 IF OBJECT_ID('ExchangeRate', 'U') IS NOT NULL
-  DROP TABLE ExchangeRate;
+BEGIN
+  DROP TABLE ExchangeRate
+END
 GO
 
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
-  DROP TABLE OrderItems;
+BEGIN
+  DROP TABLE OrderItems
+END
 GO
 
 IF OBJECT_ID('Orders', 'U') IS NOT NULL
-  DROP TABLE Orders;
+BEGIN
+  DROP TABLE Orders
+END
 GO
 
 IF OBJECT_ID('Cart', 'U') IS NOT NULL
-  DROP TABLE Cart;
+BEGIN
+  DROP TABLE Cart
+END
 GO
 
 IF OBJECT_ID('Wishlist', 'U') IS NOT NULL
-  DROP TABLE Wishlist;
+BEGIN
+  DROP TABLE Wishlist
+END
 GO
 
 IF OBJECT_ID('GamePublishers', 'U') IS NOT NULL
-  DROP TABLE GamePublishers;
+BEGIN
+  DROP TABLE GamePublishers
+END
 GO
 
 IF OBJECT_ID('Publishers', 'U') IS NOT NULL
-  DROP TABLE Publishers;
+BEGIN
+  DROP TABLE Publishers
+END
 GO
 
 IF OBJECT_ID('GameDevelopers', 'U') IS NOT NULL
-  DROP TABLE GameDevelopers;
+BEGIN
+  DROP TABLE GameDevelopers
+END
 GO
 
 IF OBJECT_ID('Developers', 'U') IS NOT NULL
-  DROP TABLE Developers;
+BEGIN
+  DROP TABLE Developers
+END
 GO
 
 IF OBJECT_ID('GameAwards', 'U') IS NOT NULL
-  DROP TABLE GameAwards;
+BEGIN
+  DROP TABLE GameAwards
+END
 GO
 
 IF OBJECT_ID('Reviews', 'U') IS NOT NULL
-  DROP TABLE Reviews;
+BEGIN
+  DROP TABLE Reviews
+END
 GO
 
 IF OBJECT_ID('Score', 'U') IS NOT NULL
-  DROP TABLE Score;
+BEGIN
+  DROP TABLE Score
+END
 GO
 
 IF OBJECT_ID('ReleasedGames', 'U') IS NOT NULL
-  DROP TABLE ReleasedGames;
+BEGIN
+  DROP TABLE ReleasedGames
+END
 GO
 
 IF OBJECT_ID('BetaGames', 'U') IS NOT NULL
-  DROP TABLE BetaGames;
+BEGIN
+  DROP TABLE BetaGames
+END
 GO
 
 IF OBJECT_ID('PreOrderGames', 'U') IS NOT NULL
-  DROP TABLE PreOrderGames;
+BEGIN
+  DROP TABLE PreOrderGames
+END
 GO
 
 IF OBJECT_ID('UpcomingGames', 'U') IS NOT NULL
-  DROP TABLE UpcomingGames;
+BEGIN
+  DROP TABLE UpcomingGames
+END
 GO
 
 IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
-  DROP TABLE GamePlatforms;
+BEGIN
+  DROP TABLE GamePlatforms
+END
 GO
 
 IF OBJECT_ID('Platforms', 'U') IS NOT NULL
-  DROP TABLE Platforms;
+BEGIN
+  DROP TABLE Platforms
+END
 GO
 
 IF OBJECT_ID('GameGenres', 'U') IS NOT NULL
-  DROP TABLE GameGenres;
+BEGIN
+  DROP TABLE GameGenres
+END
 GO
 
 IF OBJECT_ID('Games', 'U') IS NOT NULL
-  DROP TABLE Games;
+BEGIN
+  DROP TABLE Games
+END
 GO
 
 IF OBJECT_ID('Users', 'U') IS NOT NULL
-  DROP TABLE Users;
+BEGIN
+  DROP TABLE Users
+END
 GO
 
 -- 1
@@ -95,6 +139,7 @@ CREATE TABLE Users (
   Email VARCHAR(255) NOT NULL UNIQUE,
   Password VARCHAR(255) NOT NULL
 );
+GO
 
 INSERT INTO Users (Id, Username, Email, Password)
 VALUES
@@ -103,6 +148,7 @@ VALUES
   (3, 'jim_smith', 'jim_smith@example.com', 'password3'),
   (4, 'sara_lee', 'sara_lee@example.com', 'password4'),
   (5, 'tom_jones', 'tom_jones@example.com', 'password5');
+GO
 
 -- 2
 CREATE TABLE Games (
@@ -112,6 +158,7 @@ CREATE TABLE Games (
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
 );
+GO
 
 INSERT INTO Games (Id, Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
@@ -120,6 +167,7 @@ VALUES
   (3, 'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
   (4, 'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
   (5, 'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
+GO
 
 -- 3
 CREATE TABLE GameGenres (
@@ -128,6 +176,7 @@ CREATE TABLE GameGenres (
   Genre VARCHAR(255) NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO GameGenres (Id, GameId, Genre)
 VALUES
@@ -136,12 +185,14 @@ VALUES
   (3, 2, 'First-Person'),
   (4, 2, 'Shooter'),
   (5, 3, 'Adventure');
+GO
 
 -- 4
 CREATE TABLE Platforms (
   Id INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL
 );
+GO
 
 INSERT INTO Platforms (Id, Name) 
 VALUES 
@@ -150,6 +201,7 @@ VALUES
   (3, 'Nintendo Switch'),
   (4, 'PC'),
   (5, 'Mobile');
+GO
 
 -- 5
 CREATE TABLE GamePlatforms (
@@ -159,6 +211,7 @@ CREATE TABLE GamePlatforms (
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PlatformId) REFERENCES Platforms (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO GamePlatforms (Id, GameId, PlatformId) 
 VALUES 
@@ -167,6 +220,7 @@ VALUES
   (3, 3, 3),
   (4, 4, 4),
   (5, 5, 5);
+GO
 
 -- 6
 CREATE TABLE UpcomingGames (
@@ -176,6 +230,7 @@ CREATE TABLE UpcomingGames (
   ExpectedDeliveryDate DATE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO UpcomingGames (Id, GameId, TrailerUrl, ExpectedDeliveryDate)
 VALUES
@@ -184,6 +239,7 @@ VALUES
   (3, 5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
   (4, 4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
   (5, 2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+GO
 
 -- 7
 CREATE TABLE PreOrderGames (
@@ -193,6 +249,7 @@ CREATE TABLE PreOrderGames (
   PreOrderDiscount DECIMAL(5,2),
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO PreOrderGames (Id, GameId, PreOrderBonus, PreOrderDiscount)
 VALUES
@@ -201,6 +258,7 @@ VALUES
   (3, 2, 'Bonus story mission', 5.00),
   (4, 3, 'Exclusive in-game item', 5.00),
   (5, 5, 'Bonus skin pack', 5.00);
+GO
 
 -- 8
 CREATE TABLE BetaGames (
@@ -210,6 +268,7 @@ CREATE TABLE BetaGames (
   BetaEndDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO BetaGames (Id, GameId, BetaStartDate, BetaEndDate)
 VALUES
@@ -218,6 +277,7 @@ VALUES
   (3, 3, '2018-02-01', '2018-03-15'),
   (4, 4, '2015-08-01', '2015-10-27'),
   (5, 5, '2011-10-01', '2011-11-18');
+GO
 
 -- 9
 CREATE TABLE ReleasedGames (
@@ -226,6 +286,7 @@ CREATE TABLE ReleasedGames (
   ReleaseDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO ReleasedGames (Id, GameId, ReleaseDate)
 VALUES
@@ -234,6 +295,7 @@ VALUES
   (3, 4, '2015-10-27'),
   (4, 5, '2011-11-18'),
   (5, 2, '2018-10-26');
+GO
 
 -- 10
 CREATE TABLE Score (
@@ -244,6 +306,7 @@ CREATE TABLE Score (
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO Score (Id, UserId, GameId, Score) 
 VALUES 
@@ -252,6 +315,7 @@ VALUES
   (3, 3, 2, 7),
   (4, 4, 3, 6),
   (5, 5, 4, 9);
+GO
 
 -- 11
 CREATE TABLE Reviews (
@@ -262,6 +326,7 @@ CREATE TABLE Reviews (
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO Reviews (Id, UserId, GameId, Review) 
 VALUES 
@@ -270,6 +335,7 @@ VALUES
   (3, 3, 2, 'Not the best game I have played, but it is still fun.'),
   (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+GO
 
 -- 12
 CREATE TABLE GameAwards (
@@ -279,6 +345,7 @@ CREATE TABLE GameAwards (
   Year INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
 VALUES 
@@ -287,6 +354,7 @@ VALUES
   (3, 3, 'Best Adventure Game of the Year', 2019),
   (4, 4, 'Best Shooter of the Year', 2016),
   (5, 5, 'Best Multiplayer Game of the Year', 2011);
+GO
 
 -- 13
 CREATE TABLE Developers (
@@ -295,6 +363,7 @@ CREATE TABLE Developers (
   Description TEXT,
   Website VARCHAR(255)
 );
+GO
 
 INSERT INTO Developers (Id, Name, Description, Website)
 VALUES
@@ -303,6 +372,7 @@ VALUES
   (3, 'Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', 'sms.playstation.com'),
   (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
   (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
+GO
 
 -- 14
 CREATE TABLE GameDevelopers (
@@ -312,6 +382,7 @@ CREATE TABLE GameDevelopers (
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (DeveloperId) REFERENCES Developers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO GameDevelopers (Id, GameId, DeveloperId) 
 VALUES 
@@ -320,6 +391,7 @@ VALUES
   (3, 3, 3),
   (4, 4, 4),
   (5, 5, 5);
+GO
 
 -- 15
 CREATE TABLE Publishers (
@@ -328,6 +400,7 @@ CREATE TABLE Publishers (
   Description TEXT,
   Website VARCHAR(255)
 );
+GO
 
 INSERT INTO Publishers (Id, Name, Description, Website) 
 VALUES 
@@ -336,6 +409,7 @@ VALUES
   (3, 'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
   (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
   (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
+GO
 
 -- 16
 CREATE TABLE GamePublishers (
@@ -345,6 +419,7 @@ CREATE TABLE GamePublishers (
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PublisherId) REFERENCES Publishers (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO GamePublishers (Id, GameId, PublisherId) 
 VALUES 
@@ -353,6 +428,7 @@ VALUES
   (3, 3, 3),
   (4, 4, 4),
   (5, 5, 5);
+GO
 
 -- 17
 CREATE TABLE Wishlist (
@@ -362,6 +438,7 @@ CREATE TABLE Wishlist (
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO Wishlist (Id, UserId, GameId) 
 VALUES 
@@ -370,6 +447,7 @@ VALUES
   (3, 3, 4),
   (4, 4, 5),
   (5, 5, 1);
+GO
 
 -- 18
 CREATE TABLE Cart (
@@ -380,6 +458,7 @@ CREATE TABLE Cart (
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO Cart (Id, UserId, GameId, Quantity) 
 VALUES 
@@ -388,15 +467,17 @@ VALUES
   (3, 3, 4, 3),
   (4, 4, 5, 4),
   (5, 5, 1, 5);
+GO
 
 -- 19
 CREATE TABLE Orders (
   Id INT PRIMARY KEY,
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
-  [Total amount in USD] MONEY NOT NULL,
+  [Total amount in USD] MONEY NOT NULL CHECK ([Total amount in USD] >= 0),
   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO Orders (Id, UserId, OrderDate, [Total amount in USD]) 
 VALUES 
@@ -405,6 +486,7 @@ VALUES
   (3, 3, '2022-10-31', 100.00),
   (4, 4, '2022-09-15', 75.00),
   (5, 5, '2022-08-01', 50.00);
+GO
 
 -- 20
 CREATE TABLE OrderItems (
@@ -416,6 +498,7 @@ CREATE TABLE OrderItems (
   FOREIGN KEY (OrderId) REFERENCES Orders (Id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (Id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 INSERT INTO OrderItems (Id, OrderId, GameId, Quantity, [Price in USD]) 
 VALUES 
@@ -424,12 +507,14 @@ VALUES
   (3, 3, 3, 3, 39.99),
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
+GO
 
 -- 21
 CREATE TABLE ExchangeRate (
   Currency NVARCHAR(3) PRIMARY KEY,
-  [Equal 1 USD] MONEY NOT NULL
-)
+  [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
+);
+GO
 
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
@@ -440,20 +525,74 @@ VALUES
   ('PLN', 4.45);
 GO
 
-IF OBJECT_ID('dbo.HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION dbo.HowMuch
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION HowMuch
+END
 GO
-CREATE FUNCTION HowMuch (
-	@GameID INT, 
-	@Currency CHAR(3))
-	RETURNS MONEY
 
-	BEGIN
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency CHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SELECT @Price = [Price in USD] FROM Games WHERE ID = @GameID
+  SELECT @ExchangeRate = [Equal 1 USD] FROM [ExchangeRate] WHERE [Currency] = @Currency
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
 
-		DECLARE @Price MONEY 
-		DECLARE @ExchRate MONEY 
-		SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = ID)
-		SET @ExchRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-		RETURN ROUND((@Price * @ExchRate), 2)
-	END
+SELECT dbo.HowMuch(2, 'PLN')
+
+IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW GameGenresView
+END
+GO
+
+CREATE VIEW GameGenresView AS
+SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
+FROM GameGenres
+GROUP BY GameId;
+GO
+
+IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW MostActiveUsers
+END
+GO
+
+CREATE VIEW MostActiveUsers AS
+SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+FROM Users U
+JOIN Reviews R ON U.Id = R.UserId
+GROUP BY U.Username
+ORDER BY NumberOfReviews DESC;
+GO
+
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION CalculateTotalPrice
+END
+GO
+
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserId INT
+)
+RETURNS MONEY
+AS
+BEGIN
+    DECLARE @TotalPrice MONEY;
+    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+    FROM Cart C
+    JOIN Games G ON C.GameId = G.Id
+    WHERE C.UserId = @UserId;
+    RETURN @TotalPrice;
+END;
 GO
