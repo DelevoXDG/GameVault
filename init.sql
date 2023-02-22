@@ -153,14 +153,14 @@ VALUES
 
 -- 5
 CREATE TABLE GamePlatforms (
-  Id INT PRIMARY KEY,
+  GamePlatformId INT PRIMARY KEY,
   GameId INT NOT NULL,
   PlatformId INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PlatformId) REFERENCES Platforms (PlatformId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GamePlatforms (Id, GameId, PlatformId) 
+INSERT INTO GamePlatforms (GamePlatformId, GameId, PlatformId) 
 VALUES 
   (1, 1, 1),
   (2, 2, 2),
@@ -170,14 +170,14 @@ VALUES
 
 -- 6
 CREATE TABLE UpcomingGames (
-  Id INT PRIMARY KEY,
+  UpcomingGameId INT PRIMARY KEY,
   GameId INT NOT NULL,
   TrailerUrl VARCHAR(255),
   ExpectedDeliveryDate DATE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO UpcomingGames (Id, GameId, TrailerUrl, ExpectedDeliveryDate)
+INSERT INTO UpcomingGames (UpcomingGameId, GameId, TrailerUrl, ExpectedDeliveryDate)
 VALUES
   (1, 1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
   (2, 3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
@@ -187,14 +187,14 @@ VALUES
 
 -- 7
 CREATE TABLE PreOrderGames (
-  Id INT PRIMARY KEY,
+  PreOrderGameId INT PRIMARY KEY,
   GameId INT NOT NULL,
   PreOrderBonus VARCHAR(255),
   PreOrderDiscount DECIMAL(5,2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO PreOrderGames (Id, GameId, PreOrderBonus, PreOrderDiscount)
+INSERT INTO PreOrderGames (PreOrderGameId, GameId, PreOrderBonus, PreOrderDiscount)
 VALUES
   (1, 1, 'Bonus skin pack', 5.00),
   (2, 4, 'Bonus weapon pack', 10.00),
@@ -204,14 +204,14 @@ VALUES
 
 -- 8
 CREATE TABLE BetaGames (
-  Id INT PRIMARY KEY,
+  BetaGameId INT PRIMARY KEY,
   GameId INT NOT NULL,
   BetaStartDate DATE NOT NULL,
   BetaEndDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO BetaGames (Id, GameId, BetaStartDate, BetaEndDate)
+INSERT INTO BetaGames (BetaGameId, GameId, BetaStartDate, BetaEndDate)
 VALUES
   (1, 1, '2020-05-19', '2020-06-19'),
   (2, 2, '2018-06-01', '2018-07-01'),
@@ -221,13 +221,13 @@ VALUES
 
 -- 9
 CREATE TABLE ReleasedGames (
-  Id INT PRIMARY KEY,
+  ReleasedGameId INT PRIMARY KEY,
   GameId INT NOT NULL,
   ReleaseDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO ReleasedGames (Id, GameId, ReleaseDate)
+INSERT INTO ReleasedGames (ReleasedGameId, GameId, ReleaseDate)
 VALUES
   (1, 1, '2020-06-19'),
   (2, 3, '2018-04-20'),
@@ -237,7 +237,7 @@ VALUES
 
 -- 10
 CREATE TABLE Score (
-  Id INT PRIMARY KEY,
+  ScoreId INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
@@ -245,7 +245,7 @@ CREATE TABLE Score (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Score (Id, UserId, GameId, Score) 
+INSERT INTO Score (ScoreId, UserId, GameId, Score) 
 VALUES 
   (1, 1, 1, 9),
   (2, 2, 1, 8),
@@ -257,7 +257,7 @@ VALUES
 
 -- 11
 CREATE TABLE Reviews (
-  Id INT PRIMARY KEY,
+  ReviewId INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Review TEXT NOT NULL,
@@ -265,7 +265,7 @@ CREATE TABLE Reviews (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Reviews (Id, UserId, GameId, Review) 
+INSERT INTO Reviews (ReviewId, UserId, GameId, Review) 
 VALUES 
   (1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
   (2, 2, 1, 'Loved the storyline and the character development.'),
@@ -275,14 +275,14 @@ VALUES
 
 -- 12
 CREATE TABLE GameAwards (
-  Id INT PRIMARY KEY,
+  GameAwardsId INT PRIMARY KEY,
   GameId INT NOT NULL,
   AwardName VARCHAR(255) NOT NULL,
   Year INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GameAwards (Id, GameId, AwardName, Year) 
+INSERT INTO GameAwards (GameAwardsId, GameId, AwardName, Year) 
 VALUES 
   (1, 1, 'Best Game of the Year', 2020),
   (2, 2, 'Best RPG of the Year', 2019),
@@ -341,14 +341,14 @@ VALUES
 
 -- 16
 CREATE TABLE GamePublishers (
-  Id INT PRIMARY KEY,
+  GamePublisherId INT PRIMARY KEY,
   GameId INT NOT NULL,
   PublisherId INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PublisherId) REFERENCES Publishers (PublisherId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO GamePublishers (Id, GameId, PublisherId) 
+INSERT INTO GamePublishers (GamePublisherId, GameId, PublisherId) 
 VALUES 
   (1, 1, 1),
   (2, 2, 2),
@@ -358,14 +358,14 @@ VALUES
 
 -- 17
 CREATE TABLE Wishlist (
-  Id INT PRIMARY KEY,
+  WishlistId INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Wishlist (Id, UserId, GameId) 
+INSERT INTO Wishlist (WishlistId, UserId, GameId) 
 VALUES 
   (1, 1, 2),
   (2, 2, 3),
@@ -375,7 +375,7 @@ VALUES
 
 -- 18
 CREATE TABLE Cart (
-  Id INT PRIMARY KEY,
+  CartId INT PRIMARY KEY,
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
@@ -383,7 +383,7 @@ CREATE TABLE Cart (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-INSERT INTO Cart (Id, UserId, GameId, Quantity) 
+INSERT INTO Cart (CartId, UserId, GameId, Quantity) 
 VALUES 
   (1, 1, 2, 1),
   (2, 2, 3, 2),
@@ -427,7 +427,8 @@ VALUES
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
 
--- 21
+--21 
+
 CREATE TABLE ExchangeRate (
   Currency NVARCHAR(3) PRIMARY KEY,
   [Equal 1 USD] MONEY NOT NULL
