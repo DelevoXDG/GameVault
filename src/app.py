@@ -177,7 +177,7 @@ class TableModel(QSqlRelationalTableModel):
                         1: 'Title',
                         2: 'Last Updated',
                         3: 'Description',
-                        4: 'USD',
+                        4: CONFIG.DEFAULT_CURRENCY,
                         5: self.currency
                     }
             
@@ -408,12 +408,16 @@ class MainWidget(QWidget):
         cur_combo.setFixedSize(QSize(100, 35))
 
         search = QLineEdit(self)
-        search.setPlaceholderText('Search games')
+        search.setPlaceholderText('Search titles')
+        search.setToolTip('Search titles')
         search.textChanged.connect(self.search_changed)
         search.setMinimumHeight(35)
-        search.setMinimumWidth(260)
+        search.setMinimumWidth(230)
         search.setFont(QFont('Arial', 13))
-        search.setStyleSheet("padding-left: 12px;")
+        search.setStyleSheet('''
+                    QLineEdit {
+                        padding-left: 8px;
+                             }''')
         self.search = search 
         self.model.search = search
 
@@ -429,6 +433,8 @@ class MainWidget(QWidget):
         cur_combo.setToolTip('Select the currency to convert prices to')
 
         button_box.layout.addWidget(help_btn)
+        button_box.layout.addSpacing(5)
+
         button_box.layout.addWidget(search)
         button_box.layout.addSpacing(300)
         button_box.layout.addWidget(cur_combo)
@@ -439,10 +445,10 @@ class MainWidget(QWidget):
         return layout
 
     def search_changed(self):
-        name = self.search.text().lower()
+        searched_title = self.search.text().lower()
         for row in range(self.model.rowCount()):
             item = self.model.data(self.model.index(row, 1), Qt.ItemDataRole.DisplayRole)
-            self.view.setRowHidden(row, name not in str(item).lower())
+            self.view.setRowHidden(row, searched_title not in str(item).lower())
 
     def changed_currency(self, text):
         print('Set currency to {}'.format(text))
@@ -486,10 +492,10 @@ class MainWidget(QWidget):
         else:
             row_num = int(self.model.index(last_row_num, 0).data())+1
 
-
+        default_title = self.search.text().lower()
         r = self.model.record()
         r.setValue(0, row_num)
-        r.setValue(1, '')
+        r.setValue(1, default_title)
         dt = str(datetime.datetime.now().date())
         r.setValue(2, dt)
         r.setValue(3, '')
