@@ -411,8 +411,9 @@ class MainWidget(QWidget):
         search.setPlaceholderText('Search games')
         search.textChanged.connect(self.search_changed)
         search.setMinimumHeight(35)
-        search.setMinimumWidth(200)
+        search.setMinimumWidth(260)
         search.setFont(QFont('Arial', 13))
+        search.setStyleSheet("padding-left: 12px;")
         self.search = search 
         self.model.search = search
 
