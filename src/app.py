@@ -1,7 +1,7 @@
 
 from PyQt6.QtSql import QSqlRelationalTableModel, QSqlDatabase, QSqlQuery
-from PyQt6.QtWidgets import QApplication, QProxyStyle, QTableView, QAbstractItemView, QHeaderView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QStyle, QDialog, QLabel, QDialogButtonBox, QAbstractButton, QMessageBox, QComboBox
-from PyQt6.QtGui import QPalette, QColor, QIcon, QBrush, QPixmap, QPainter, QDesktopServices
+from PyQt6.QtWidgets import QApplication, QProxyStyle, QTableView, QAbstractItemView, QHeaderView, QVBoxLayout, QWidget, QHBoxLayout, QPushButton, QStyle, QDialog, QLabel, QDialogButtonBox, QAbstractButton, QMessageBox, QComboBox, QLineEdit
+from PyQt6.QtGui import QPalette, QColor, QIcon, QBrush, QPixmap, QPainter, QDesktopServices, QFont
 from PyQt6.QtCore import Qt, QDate, QSize, QUrl
 import sys
 import connect 
@@ -190,7 +190,7 @@ class TableModel(QSqlRelationalTableModel):
             return ordinal(num)+' row'
         
         return super().headerData(section, orientation, role)
-    
+        
  
 
 class HelpDialogue(QWidget):
@@ -407,6 +407,14 @@ class MainWidget(QWidget):
             ''')
         cur_combo.setFixedSize(QSize(100, 35))
 
+        search = QLineEdit(self)
+        search.setPlaceholderText('Search games')
+        search.textChanged.connect(self.search_changed)
+        search.setMinimumHeight(35)
+        search.setMinimumWidth(200)
+        search.setFont(QFont('Arial', 13))
+        self.search = search 
+        self.model.search = search
 
         font = insert_btn.font()
         font.setBold(True)
@@ -420,6 +428,7 @@ class MainWidget(QWidget):
         cur_combo.setToolTip('Select the currency to convert prices to')
 
         button_box.layout.addWidget(help_btn)
+        button_box.layout.addWidget(search)
         button_box.layout.addSpacing(300)
         button_box.layout.addWidget(cur_combo)
         button_box.layout.addWidget(insert_btn)
@@ -427,6 +436,12 @@ class MainWidget(QWidget):
 
         layout.addWidget(button_box)
         return layout
+
+    def search_changed(self):
+        name = self.search.text().lower()
+        for row in range(self.model.rowCount()):
+            item = self.model.data(self.model.index(row, 1), Qt.ItemDataRole.DisplayRole)
+            self.view.setRowHidden(row, name not in str(item).lower())
 
     def changed_currency(self, text):
         print('Set currency to {}'.format(text))
