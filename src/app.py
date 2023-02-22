@@ -112,9 +112,13 @@ class TableModel(QSqlRelationalTableModel):
         if(role == Qt.ItemDataRole.ForegroundRole):
             return QBrush(Qt.GlobalColor.black)
         
+        # if(role == Qt.ItemDataRole.DecorationRole):
+            # print('DecorationRole')
+            # value = super().data(index, Qt.ItemDataRole.DisplayRole)
+            # if index.column() == 2:
         
-        if index.column() >= super().columnCount():
-            if (role == Qt.ItemDataRole.DisplayRole):
+        if (role == Qt.ItemDataRole.DisplayRole):
+            if index.column() >= super().columnCount():
                 if (self.currency == self.default_currency()):
                     return ''
                 else:
@@ -129,6 +133,7 @@ class TableModel(QSqlRelationalTableModel):
                     qry.next()
                     res = qry.record().value(0)
                     return res
+        
         return super().data(index, role)
     def index(self, row, column, parent=None):
         if column >= super(TableModel, self).columnCount() and row <= super().rowCount():
@@ -142,7 +147,15 @@ class TableModel(QSqlRelationalTableModel):
 
     def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
         default = super().headerData(section, orientation, Qt.ItemDataRole.DisplayRole)
-    
+
+        if(role == Qt.ItemDataRole.DecorationRole):
+            # print('DecorationRole')
+            if orientation == Qt.Orientation.Horizontal:
+                if section == 4:
+                    return QIcon(full_path(ASSETS.CURRENCY_ICON_FORMAT.format(self.default_currency())))
+                if section == 5:
+                    return QIcon(full_path(ASSETS.CURRENCY_ICON_FORMAT.format(self.currency)))
+
         if role == Qt.ItemDataRole.ToolTipRole and orientation == Qt.Orientation.Horizontal:
             if section == 5:
                 res = 'Price in {}'.format(self.currency)
@@ -275,13 +288,23 @@ class MainWidget(QWidget):
         self.view = QTableView()
         self.view.setModel(self.model)
         self.view.resizeColumnsToContents()
+        # self.view.setAlternatingRowColors(True)
+
         self.view.setSelectionBehavior(
             QAbstractItemView.SelectionBehavior.SelectRows)
+        # self.view.setStyleSheet(
+        #     '''
+        #     QTableCornerButton::section {
+        #         background-color: #f2f2f2;
+        #         border: 2px outset #f2f2f2;
+        #     }
+        #     ''')
 
         self.selection_model = self.view.selectionModel()
     
         self.hh = self.setup_horizontal_header()
         self.vh = self.setup_vertical_header()
+        
         self.model.hh=self.hh
         self.model.vh=self.vh
 
@@ -309,12 +332,14 @@ class MainWidget(QWidget):
         self.view.setColumnWidth(4, 70)
         if self.model.columnCount() ==6:
             self.view.setColumnWidth(5, 70)
+        hh.setMinimumHeight(30)
         
 
         bold_font = hh.font()
         bold_font.setBold(True)
         hh.setFont(bold_font)
         hh.setHighlightSections(True)
+
 
         return hh
 
@@ -325,7 +350,12 @@ class MainWidget(QWidget):
         vh.setMinimumWidth(25)
         # self.vh.setAutoFillBackground(True)
         vh.setStyleSheet(
-            'QHeaderView {background-color: #f2f2f2;}')
+            ''' 
+            QHeaderView {
+                background-color: #f2f2f2;
+            }'''
+        )
+        
         return vh
     
     def setup_layout(self):
