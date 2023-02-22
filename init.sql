@@ -306,7 +306,6 @@ CREATE FUNCTION HowMuch (
 	RETURNS MONEY
 
 	BEGIN
-
 		DECLARE @Price MONEY 
 		DECLARE @ExchRate MONEY 
 		SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
@@ -332,7 +331,7 @@ GO
 EXEC GetTopRatedGames
 GO
 
--- Przykladowe dane
+-- Sample data
 INSERT INTO Users (UserId, Username, Email, Password)
 VALUES
   (1, 'john_doe', 'john_doe@example.com', 'password1'),
@@ -472,7 +471,7 @@ VALUES
   (4, 4, '2022-09-15', 75.00),
   (5, 5, '2022-08-01', 50.00);
 
-INSERT INTO OrderItems (OrderId, OrderId, GameId, Quantity, [Price in USD]) 
+INSERT INTO OrderItems (OrderItemId, OrderId, GameId, Quantity, [Price in USD]) 
 VALUES 
   (1, 1, 1, 2, 59.99),
   (2, 2, 2, 1, 49.99),
