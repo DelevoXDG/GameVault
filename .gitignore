@@ -452,3 +452,4 @@ samples/features/sql-management-objects/src/out/CodeCoverage/CodeCoverage.config
 todo.todo
 **/drafts/
 **.DS_Store
+**_[Rr][Ee][Ff]
