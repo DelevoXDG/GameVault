@@ -343,7 +343,6 @@ CREATE TABLE OrderItems (
 GO
 
 --21 
-
 CREATE TABLE ExchangeRate (
   CurrencyId INT PRIMARY KEY,
   Currency NVARCHAR(3) NOT NULL,
@@ -351,101 +350,8 @@ CREATE TABLE ExchangeRate (
 );
 GO
 
-INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
-VALUES 
-  (1, 'USD', 1.00),
-  (2, 'EUR', 0.93),
-  (3, 'GBP', 0.83),
-  (4, 'JPY', 134.15),
-  (5, 'PLN', 4.45);
-GO
 
-IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-BEGIN
-  DROP FUNCTION HowMuch
-END
-GO
 
-CREATE FUNCTION HowMuch
-(
-  @GameID INT,
-  @Currency CHAR(3)
-)
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @Price MONEY = 0
-  DECLARE @ExchangeRate MONEY = 0
-  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
-		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-  RETURN ROUND((@Price * @ExchangeRate), 2)
-END;
-GO
-
-IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
-BEGIN
-  DROP VIEW GameGenresView
-END
-GO
-
-CREATE VIEW GameGenresView AS
-SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
-FROM GameGenres
-GROUP BY GameId;
-GO
-
-IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-BEGIN
-  DROP VIEW MostActiveUsers
-END
-GO
-
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
-FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
-GROUP BY U.Username
-ORDER BY NumberOfReviews DESC;
-GO
-
-IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
-BEGIN
-  DROP FUNCTION CalculateTotalPrice
-END
-GO
-
-CREATE FUNCTION CalculateTotalPrice
-(
-  @UserId INT
-)
-RETURNS MONEY
-AS
-BEGIN
-    DECLARE @TotalPrice MONEY;
-    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
-    FROM Cart C
-    JOIN Games G ON C.GameId = G.GameId
-    WHERE C.UserId = @UserId;
-    RETURN @TotalPrice;
-END;
-GO
-
-IF OBJECT_ID('dbo.GetTopRatedGames', 'P') IS NOT NULL
-  DROP PROCEDURE dbo.GetTopRatedGames
-GO
-CREATE PROCEDURE GetTopRatedGames 
-AS
-BEGIN
-  SELECT TOP 10 g.Title, AVG(S.Score) AS AverageRating
-  FROM Games g
-  JOIN Score S ON g.GameID = S.GameID
-  GROUP BY g.Title
-  ORDER BY AverageRating DESC
-END
-GO
-
-EXEC GetTopRatedGames
-GO
 
 -- Sample data
 INSERT INTO Users (UserId, Username, Email, Password)
@@ -611,4 +517,92 @@ VALUES
   (3, 'GBP', 0.83),
   (4, 'JPY', 134.15),
   (5, 'PLN', 4.45);
+GO
+
+
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION HowMuch
+END
+GO
+
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency CHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
+		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
+
+IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW GameGenresView
+END
+GO
+
+CREATE VIEW GameGenresView AS
+SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
+FROM GameGenres
+GROUP BY GameId;
+GO
+
+IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW MostActiveUsers
+END
+GO
+
+CREATE VIEW MostActiveUsers AS
+SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+FROM Users U
+JOIN Reviews R ON U.UserId = R.UserId
+GROUP BY U.Username
+ORDER BY NumberOfReviews DESC;
+GO
+
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION CalculateTotalPrice
+END
+GO
+
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserId INT
+)
+RETURNS MONEY
+AS
+BEGIN
+    DECLARE @TotalPrice MONEY;
+    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+    FROM Cart C
+    JOIN Games G ON C.GameId = G.GameId
+    WHERE C.UserId = @UserId;
+    RETURN @TotalPrice;
+END;
+GO
+
+IF OBJECT_ID('dbo.GetTopRatedGames', 'P') IS NOT NULL
+  DROP PROCEDURE dbo.GetTopRatedGames
+GO
+CREATE PROCEDURE GetTopRatedGames 
+AS
+BEGIN
+  SELECT TOP 10 g.Title, AVG(S.Score) AS AverageRating
+  FROM Games g
+  JOIN Score S ON g.GameID = S.GameID
+  GROUP BY g.Title
+  ORDER BY AverageRating DESC
+END
+GO
+
+EXEC GetTopRatedGames
 GO
