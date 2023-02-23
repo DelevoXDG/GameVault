@@ -604,11 +604,11 @@ VALUES
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
 
-INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
+INSERT INTO ExchangeRate (CurrencyID, Currency, [Equal 1 USD]) 
 VALUES 
-  ('USD', 1.00),
-  ('EUR', 0.93),
-  ('GBP', 0.83),
-  ('JPY', 134.15),
-  ('PLN', 4.45);
+  (1, 'USD', 1.00),
+  (2, 'EUR', 0.93),
+  (3, 'GBP', 0.83),
+  (4, 'JPY', 134.15),
+  (5, 'PLN', 4.45);
 GO
