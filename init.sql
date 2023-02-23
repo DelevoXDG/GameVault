@@ -593,16 +593,17 @@ GO
 IF OBJECT_ID('dbo.GetTopRatedGames', 'P') IS NOT NULL
   DROP PROCEDURE dbo.GetTopRatedGames
 GO
-CREATE PROCEDURE GetTopRatedGames 
+CREATE PROCEDURE GetTopRatedGames (@TOP_COUNT INTEGER) 
 AS
 BEGIN
-  SELECT TOP 10 g.Title, AVG(S.Score) AS AverageRating
-  FROM Games g
-  JOIN Score S ON g.GameID = S.GameID
-  GROUP BY g.Title
+  SELECT TOP (@TOP_COUNT) g.Title, AVG(S.Score) AS AverageRating
+  FROM Games G
+  JOIN Score S 
+  ON g.GameID = S.GameID
+  GROUP BY G.Title
   ORDER BY AverageRating DESC
 END
 GO
 
-EXEC GetTopRatedGames
+EXEC GetTopRatedGames 10
 GO
