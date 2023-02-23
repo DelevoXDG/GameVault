@@ -1,91 +1,135 @@
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
-  CREATE DATABASE Steam;
+BEGIN
+  CREATE DATABASE Steam
+END
 GO
 
 USE Steam;
 
 IF OBJECT_ID('ExchangeRate', 'U') IS NOT NULL
-  DROP TABLE ExchangeRate;
+BEGIN
+  DROP TABLE ExchangeRate
+END
 GO
 
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
-  DROP TABLE OrderItems;
+BEGIN
+  DROP TABLE OrderItems
+END
 GO
 
 IF OBJECT_ID('Orders', 'U') IS NOT NULL
-  DROP TABLE Orders;
+BEGIN
+  DROP TABLE Orders
+END
 GO
 
 IF OBJECT_ID('Cart', 'U') IS NOT NULL
-  DROP TABLE Cart;
+BEGIN
+  DROP TABLE Cart
+END
 GO
 
 IF OBJECT_ID('Wishlist', 'U') IS NOT NULL
-  DROP TABLE Wishlist;
+BEGIN
+  DROP TABLE Wishlist
+END
 GO
 
 IF OBJECT_ID('GamePublishers', 'U') IS NOT NULL
-  DROP TABLE GamePublishers;
+BEGIN
+  DROP TABLE GamePublishers
+END
 GO
 
 IF OBJECT_ID('Publishers', 'U') IS NOT NULL
-  DROP TABLE Publishers;
+BEGIN
+  DROP TABLE Publishers
+END
 GO
 
 IF OBJECT_ID('GameDevelopers', 'U') IS NOT NULL
-  DROP TABLE GameDevelopers;
+BEGIN
+  DROP TABLE GameDevelopers
+END
 GO
 
 IF OBJECT_ID('Developers', 'U') IS NOT NULL
-  DROP TABLE Developers;
+BEGIN
+  DROP TABLE Developers
+END
 GO
 
 IF OBJECT_ID('GameAwards', 'U') IS NOT NULL
-  DROP TABLE GameAwards;
+BEGIN
+  DROP TABLE GameAwards
+END
 GO
 
 IF OBJECT_ID('Reviews', 'U') IS NOT NULL
-  DROP TABLE Reviews;
+BEGIN
+  DROP TABLE Reviews
+END
 GO
 
 IF OBJECT_ID('Score', 'U') IS NOT NULL
-  DROP TABLE Score;
+BEGIN
+  DROP TABLE Score
+END
 GO
 
 IF OBJECT_ID('ReleasedGames', 'U') IS NOT NULL
-  DROP TABLE ReleasedGames;
+BEGIN
+  DROP TABLE ReleasedGames
+END
 GO
 
 IF OBJECT_ID('BetaGames', 'U') IS NOT NULL
-  DROP TABLE BetaGames;
+BEGIN
+  DROP TABLE BetaGames
+END
 GO
 
 IF OBJECT_ID('PreOrderGames', 'U') IS NOT NULL
-  DROP TABLE PreOrderGames;
+BEGIN
+  DROP TABLE PreOrderGames
+END
 GO
 
 IF OBJECT_ID('UpcomingGames', 'U') IS NOT NULL
-  DROP TABLE UpcomingGames;
+BEGIN
+  DROP TABLE UpcomingGames
+END
 GO
 
 IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
-  DROP TABLE GamePlatforms;
+BEGIN
+  DROP TABLE GamePlatforms
+END
 GO
 
 IF OBJECT_ID('Platforms', 'U') IS NOT NULL
-  DROP TABLE Platforms;
+BEGIN
+  DROP TABLE Platforms
+END
 GO
 
 IF OBJECT_ID('GameGenres', 'U') IS NOT NULL
-  DROP TABLE GameGenres;
+BEGIN
+  DROP TABLE GameGenres
+END
 GO
 
 IF OBJECT_ID('Games', 'U') IS NOT NULL
-  DROP TABLE Games;
+BEGIN
+  DROP TABLE Games
+END
 GO
 
 IF OBJECT_ID('Users', 'U') IS NOT NULL
-  DROP TABLE Users;
+BEGIN
+  DROP TABLE Users
+END
 GO
 
 -- 1
@@ -95,6 +139,7 @@ CREATE TABLE Users (
   Email VARCHAR(255) NOT NULL UNIQUE,
   Password VARCHAR(255) NOT NULL
 );
+GO
 
 -- 2
 CREATE TABLE Games (
@@ -104,6 +149,7 @@ CREATE TABLE Games (
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
 );
+GO
 
 -- 3
 CREATE TABLE GameGenres (
@@ -112,12 +158,14 @@ CREATE TABLE GameGenres (
   Genre VARCHAR(255) NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 -- 4
 CREATE TABLE Platforms (
   PlatformId INT PRIMARY KEY,
   Name VARCHAR(255) NOT NULL
 );
+GO
 
 
 -- 5
@@ -128,6 +176,7 @@ CREATE TABLE GamePlatforms (
   FOREIGN KEY (GameId) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PlatformId) REFERENCES Platforms (PlatformId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 6
@@ -138,6 +187,7 @@ CREATE TABLE UpcomingGames (
   ExpectedDeliveryDate DATE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 7
@@ -148,6 +198,7 @@ CREATE TABLE PreOrderGames (
   PreOrderDiscount DECIMAL(5,2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 8
@@ -158,6 +209,7 @@ CREATE TABLE BetaGames (
   BetaEndDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 -- 9
 CREATE TABLE ReleasedGames (
@@ -166,6 +218,7 @@ CREATE TABLE ReleasedGames (
   ReleaseDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 -- 10
 CREATE TABLE Score (
@@ -176,6 +229,7 @@ CREATE TABLE Score (
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 -- 11
 CREATE TABLE Reviews (
@@ -186,6 +240,7 @@ CREATE TABLE Reviews (
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 12
@@ -196,7 +251,7 @@ CREATE TABLE GameAwards (
   Year INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
+GO
 
 
 -- 13
@@ -206,7 +261,7 @@ CREATE TABLE Developers (
   Description TEXT,
   Website VARCHAR(255)
 );
-
+GO
 
 
 -- 14
@@ -217,6 +272,7 @@ CREATE TABLE GameDevelopers (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (DeveloperId) REFERENCES Developers (DeveloperId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 15
@@ -226,14 +282,8 @@ CREATE TABLE Publishers (
   Description TEXT,
   Website VARCHAR(255)
 );
+GO
 
-INSERT INTO Publishers (PublisherId, Name, Description, Website) 
-VALUES 
-  (1, 'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
-  (2, 'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
-  (3, 'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
-  (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
-  (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 
 -- 16
 CREATE TABLE GamePublishers (
@@ -243,6 +293,7 @@ CREATE TABLE GamePublishers (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (PublisherId) REFERENCES Publishers (PublisherId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 17
@@ -253,6 +304,7 @@ CREATE TABLE Wishlist (
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 18
@@ -264,6 +316,7 @@ CREATE TABLE Cart (
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 
 -- 19
@@ -271,10 +324,10 @@ CREATE TABLE Orders (
   OrderId INT PRIMARY KEY,
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
-  [Total amount in USD] MONEY NOT NULL,
+  [Total amount in USD] MONEY NOT NULL CHECK ([Total amount in USD] >= 0),
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
+GO
 
 
 -- 20
@@ -287,31 +340,94 @@ CREATE TABLE OrderItems (
   FOREIGN KEY (OrderId) REFERENCES Orders (OrderId) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
 --21 
 
 CREATE TABLE ExchangeRate (
-  Currency NVARCHAR(3) PRIMARY KEY,
-  [Equal 1 USD] MONEY NOT NULL
-)
-
-
-
-IF OBJECT_ID('dbo.HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION dbo.HowMuch
+  CurrencyId INT PRIMARY KEY,
+  Currency NVARCHAR(3) NOT NULL,
+  [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
+);
 GO
-CREATE FUNCTION HowMuch (
-	@GameID INT, 
-	@Currency CHAR(3))
-	RETURNS MONEY
 
-	BEGIN
-		DECLARE @Price MONEY 
-		DECLARE @ExchRate MONEY 
-		SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
-		SET @ExchRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-		RETURN ROUND((@Price * @ExchRate), 2)
-	END
+INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
+VALUES 
+  (1, 'USD', 1.00),
+  (2, 'EUR', 0.93),
+  (3, 'GBP', 0.83),
+  (4, 'JPY', 134.15),
+  (5, 'PLN', 4.45);
+GO
+
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION HowMuch
+END
+GO
+
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency CHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
+		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
+
+IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW GameGenresView
+END
+GO
+
+CREATE VIEW GameGenresView AS
+SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
+FROM GameGenres
+GROUP BY GameId;
+GO
+
+IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
+BEGIN
+  DROP VIEW MostActiveUsers
+END
+GO
+
+CREATE VIEW MostActiveUsers AS
+SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+FROM Users U
+JOIN Reviews R ON U.UserId = R.UserId
+GROUP BY U.Username
+ORDER BY NumberOfReviews DESC;
+GO
+
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+BEGIN
+  DROP FUNCTION CalculateTotalPrice
+END
+GO
+
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserId INT
+)
+RETURNS MONEY
+AS
+BEGIN
+    DECLARE @TotalPrice MONEY;
+    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+    FROM Cart C
+    JOIN Games G ON C.GameId = G.GameId
+    WHERE C.UserId = @UserId;
+    RETURN @TotalPrice;
+END;
 GO
 
 IF OBJECT_ID('dbo.GetTopRatedGames', 'P') IS NOT NULL
@@ -439,6 +555,15 @@ VALUES
   (4, 4, 4),
   (5, 5, 5);
 
+INSERT INTO Publishers (PublisherId, Name, Description, Website) 
+VALUES 
+  (1, 'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
+  (2, 'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
+  (3, 'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
+  (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
+  (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
+GO
+
 
 INSERT INTO GamePublishers (GamePublisherId, GameId, PublisherId) 
 VALUES 
@@ -479,11 +604,11 @@ VALUES
   (4, 4, 4, 4, 29.99),
   (5, 5, 5, 5, 19.99);
 
-INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
+INSERT INTO ExchangeRate (CurrencyID, Currency, [Equal 1 USD]) 
 VALUES 
-  ('USD', 1.00),
-  ('EUR', 0.93),
-  ('GBP', 0.83),
-  ('JPY', 134.15),
-  ('PLN', 4.45);
+  (1, 'USD', 1.00),
+  (2, 'EUR', 0.93),
+  (3, 'GBP', 0.83),
+  (4, 'JPY', 134.15),
+  (5, 'PLN', 4.45);
 GO
