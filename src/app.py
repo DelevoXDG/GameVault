@@ -16,8 +16,43 @@ class CONFIG:
     APP_NAME = 'Management Studio'
     FULL_APP_NAME = DATABASE_NAME + ' BD ' + APP_NAME 
     TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
-    FN_CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+    
     DEFAULT_CURRENCY = 'USD'
+    class FN:
+        CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+    
+    @staticmethod
+    def convert_currency(price, currency):
+        CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+        statement = CONVERT_CURRENCY.format(price, "'"+currency+"'")
+        return SQL.execute_query(statement)[0]
+    @staticmethod
+    def add_game(title, lastupdateddate, description, price):
+        statement = f"INSERT INTO {CONFIG.TABLE_NAME} (Title, LastUpdatedDate, Description, [Price In USD]) VALUES ('{title}', '{lastupdateddate}', '{description}', {price})"
+        SQL.execute_query(statement) 
+    
+    @staticmethod
+    def get_currency_list():
+        statement = f"SELECT Currency FROM {CONFIG.TABLE_EXCHANGE_RATE} ORDER BY CurrencyId ASC"
+        res = SQL.execute_query(statement)
+        return res
+        
+
+class SQL:
+    @staticmethod
+    def execute_query(statement):
+        qry = QSqlQuery(db)
+        qry.prepare(statement)
+        qry.exec()
+        res = []
+        while qry.next() is True:
+            res.append(qry.record().value(0))
+        # res.reverse()
+        return res
+
+        
+
+
     
 
 
@@ -121,18 +156,9 @@ class TableModel(QSqlRelationalTableModel):
             if index.column() >= super().columnCount():
                 if (self.currency == self.default_currency()):
                     return ''
-                else:
-                    qry = QSqlQuery(db)
-                    
-                    statement = CONFIG.FN_CONVERT_CURRENCY.format(
-                        self.data(self.index(index.row(), 0), role),
-                        "'"+self.currency+"'"
-                    )
-                    qry.prepare(statement) 
-                    qry.exec()
-                    qry.next()
-                    res = qry.record().value(0)
-                    return res
+                else:       
+                    price = self.data(self.index(index.row(), 0), Qt.ItemDataRole.DisplayRole)
+                    return CONFIG.convert_currency(price, self.currency)
         
         return super().data(index, role)
     def index(self, row, column, parent=None):
@@ -392,7 +418,7 @@ class MainWidget(QWidget):
         self.selection_model.selectionChanged.connect(self.toggle_delete_btn)
 
         cur_combo = QComboBox()
-        currencies = self.get_currency_list()
+        currencies = CONFIG.get_currency_list()
         for cur in currencies:
             icon_path = full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur))
             cur_icon = QIcon(icon_path)
@@ -457,18 +483,7 @@ class MainWidget(QWidget):
             5, Qt.Orientation.Horizontal, self.model.currency)
         self.model.select()
 
-    def get_currency_list(self):
-        qry = QSqlQuery(db)
-        statement = "SELECT Currency FROM {} ORDER BY CurrencyId ".format(
-           CONFIG.TABLE_EXCHANGE_RATE)
-
-        qry.prepare(statement)
-        qry.exec()
-        res = []
-        while qry.next() is True:
-            res.append(qry.record().value(0))
-        # res.reverse()
-        return res
+    
 
 
     def setup_help(self):
@@ -479,36 +494,42 @@ class MainWidget(QWidget):
 
 
     def insert_record(self):
-        self.model.set_pk_edit(True)
-        last_row_num = self.model.rowCount() - 1
+        # self.model.set_pk_edit(True)
+        # last_row_num = self.model.rowCount() - 1
 
-        cur_sort_col = self.hh.sortIndicatorSection()
-        cur_sort_order = self.hh.sortIndicatorOrder()
+        # cur_sort_col = self.hh.sortIndicatorSection()
+        # cur_sort_order = self.hh.sortIndicatorOrder()
 
-        self.model.sort(0, Qt.SortOrder.AscendingOrder)
+        # self.model.sort(0, Qt.SortOrder.AscendingOrder)
 
-        if last_row_num == -1:
-            row_num = 1
-        else:
-            row_num = int(self.model.index(last_row_num, 0).data())+1
+        # if last_row_num == -1:
+        #     row_num = 1
+        # else:
+        #     row_num = int(self.model.index(last_row_num, 0).data())+1
 
-        default_title = self.search.text().lower()
-        r = self.model.record()
-        r.setValue(0, row_num)
-        r.setValue(1, default_title)
-        dt = str(datetime.datetime.now().date())
-        r.setValue(2, dt)
-        r.setValue(3, '')
-        r.setValue(4, 0.00)
+        title = self.search.text().lower()
+        cur_date = str(datetime.datetime.now().date())
+        description = ''
+        price = 0.00
 
-        success = self.model.insertRecord(-1, r)
-        self.model.set_pk_edit(False)
-        self.model.sort(cur_sort_col, cur_sort_order)
+        # r = self.model.record()
+        # r.setValue(0, row_num)
+        # r.setValue(1, default_title)
+        # r.setValue(2, cur_date)
+        # r.setValue(3, '')
+        # r.setValue(4, 0.00)
 
-        if success is False:
-            print('Insert failed')
-        else:
-            print('Insert successful')
+        # success = self.model.insertRecord(-1, r)
+        # self.model.set_pk_edit(False)
+        # self.model.sort(cur_sort_col, cur_sort_order)
+        
+        
+        # if success is False:
+        #     print('Insert failed')
+        # else:
+        #     print('Insert successful')
+        
+        CONFIG.add_game(title, cur_date, description, price)
 
         self.model.select()
 

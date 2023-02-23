@@ -135,7 +135,7 @@ GO
 
 -- 1
 CREATE TABLE Users (
-  UserId INT PRIMARY KEY,
+  UserId INT PRIMARY KEY IDENTITY(1,1),
   Username VARCHAR(255) NOT NULL,
   Email VARCHAR(255) NOT NULL UNIQUE,
   Password VARCHAR(255) NOT NULL
@@ -144,7 +144,7 @@ GO
 
 -- 2
 CREATE TABLE Games (
-  GameId INT PRIMARY KEY,
+  GameId INT PRIMARY KEY IDENTITY(1,1),
   Title VARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
@@ -154,7 +154,7 @@ GO
 
 -- 3
 CREATE TABLE GameGenres (
-  GameGenreId INT PRIMARY KEY,
+  GameGenreId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   Genre VARCHAR(255) NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
@@ -163,7 +163,7 @@ GO
 
 -- 4
 CREATE TABLE Platforms (
-  PlatformId INT PRIMARY KEY,
+  PlatformId INT PRIMARY KEY IDENTITY(1,1),
   Name VARCHAR(255) NOT NULL
 );
 GO
@@ -171,7 +171,7 @@ GO
 
 -- 5
 CREATE TABLE GamePlatforms (
-  GamePlatformId INT PRIMARY KEY,
+  GamePlatformId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   PlatformId INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -182,7 +182,7 @@ GO
 
 -- 6
 CREATE TABLE UpcomingGames (
-  UpcomingGameId INT PRIMARY KEY,
+  UpcomingGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   TrailerUrl VARCHAR(255),
   ExpectedDeliveryDate DATE,
@@ -193,10 +193,10 @@ GO
 
 -- 7
 CREATE TABLE PreOrderGames (
-  PreOrderGameId INT PRIMARY KEY,
+  PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   PreOrderBonus VARCHAR(255),
-  PreOrderDiscount DECIMAL(5,2),
+  PreOrderDiscount DECIMAL(2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
@@ -204,7 +204,7 @@ GO
 
 -- 8
 CREATE TABLE BetaGames (
-  BetaGameId INT PRIMARY KEY,
+  BetaGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   BetaStartDate DATE NOT NULL,
   BetaEndDate DATE NOT NULL,
@@ -214,7 +214,7 @@ GO
 
 -- 9
 CREATE TABLE ReleasedGames (
-  ReleasedGameId INT PRIMARY KEY,
+  ReleasedGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   ReleaseDate DATE NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
@@ -223,7 +223,7 @@ GO
 
 -- 10
 CREATE TABLE Score (
-  ScoreId INT PRIMARY KEY,
+  ScoreId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
@@ -234,7 +234,7 @@ GO
 
 -- 11
 CREATE TABLE Reviews (
-  ReviewId INT PRIMARY KEY,
+  ReviewId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Review TEXT NOT NULL,
@@ -246,7 +246,7 @@ GO
 
 -- 12
 CREATE TABLE GameAwards (
-  GameAwardsId INT PRIMARY KEY,
+  GameAwardsId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   AwardName VARCHAR(255) NOT NULL,
   Year INT NOT NULL,
@@ -257,7 +257,7 @@ GO
 
 -- 13
 CREATE TABLE Developers (
-  DeveloperId INT PRIMARY KEY,
+  DeveloperId INT PRIMARY KEY IDENTITY(1,1),
   Name VARCHAR(255) NOT NULL,
   Description TEXT,
   Website VARCHAR(255)
@@ -267,7 +267,7 @@ GO
 
 -- 14
 CREATE TABLE GameDevelopers (
-  GameDeveloperId INT PRIMARY KEY,
+  GameDeveloperId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   DeveloperId INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -278,7 +278,7 @@ GO
 
 -- 15
 CREATE TABLE Publishers (
-  PublisherId INT PRIMARY KEY,
+  PublisherId INT PRIMARY KEY IDENTITY(1,1),
   Name VARCHAR(255) NOT NULL,
   Description TEXT,
   Website VARCHAR(255)
@@ -288,7 +288,7 @@ GO
 
 -- 16
 CREATE TABLE GamePublishers (
-  GamePublisherId INT PRIMARY KEY,
+  GamePublisherId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
   PublisherId INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -299,7 +299,7 @@ GO
 
 -- 17
 CREATE TABLE Wishlist (
-  WishlistId INT PRIMARY KEY,
+  WishlistId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -310,7 +310,7 @@ GO
 
 -- 18
 CREATE TABLE Cart (
-  CartId INT PRIMARY KEY,
+  CartId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
@@ -322,7 +322,7 @@ GO
 
 -- 19
 CREATE TABLE Orders (
-  OrderId INT PRIMARY KEY,
+  OrderId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
   [Total amount in USD] MONEY NOT NULL CHECK ([Total amount in USD] >= 0),
@@ -333,7 +333,7 @@ GO
 
 -- 20
 CREATE TABLE OrderItems (
-  OrderItemId INT PRIMARY KEY,
+  OrderItemId INT PRIMARY KEY IDENTITY(1,1),
   OrderId INT NOT NULL,
   GameId INT NOT NULL,
   Quantity INT NOT NULL,
@@ -345,7 +345,7 @@ GO
 
 --21 
 CREATE TABLE ExchangeRate (
-  CurrencyId INT PRIMARY KEY,
+  CurrencyId INT PRIMARY KEY IDENTITY(1,1),
   Currency NVARCHAR(3) NOT NULL,
   [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
 );
@@ -355,169 +355,169 @@ GO
 
 
 -- Sample data
-INSERT INTO Users (UserId, Username, Email, Password)
+INSERT INTO Users (Username, Email, Password)
 VALUES
-  (1, 'john_doe', 'john_doe@example.com', 'password1'),
-  (2, 'jane_doe', 'jane_doe@example.com', 'password2'),
-  (3, 'jim_smith', 'jim_smith@example.com', 'password3'),
-  (4, 'sara_lee', 'sara_lee@example.com', 'password4'),
-  (5, 'tom_jones', 'tom_jones@example.com', 'password5');
+  ('john_doe', 'john_doe@example.com', 'password1'),
+  ('jane_doe', 'jane_doe@example.com', 'password2'),
+  ('jim_smith', 'jim_smith@example.com', 'password3'),
+  ('sara_lee', 'sara_lee@example.com', 'password4'),
+  ('tom_jones', 'tom_jones@example.com', 'password5');
   
-INSERT INTO Games (GameId, Title, LastUpdatedDate, Description, [Price in USD])
+INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
-  (1, 'The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
-  (2, 'Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
-  (3, 'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
-  (4, 'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
-  (5, 'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
+  ('The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  ('Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  ('God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  ('Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  ('Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95);
 
-INSERT INTO GameGenres (GameGenreId, GameId, Genre)
+INSERT INTO GameGenres (GameId, Genre)
 VALUES
-  (1, 1, 'Multiplayer'),
-  (2, 1, 'Open-World'),
-  (3, 2, 'First-Person'),
-  (4, 2, 'Shooter'),
-  (5, 3, 'Adventure');
-INSERT INTO Platforms (PlatformId, Name) 
+  (1, 'Multiplayer'),
+  (1, 'Open-World'),
+  (2, 'First-Person'),
+  (2, 'Shooter'),
+  (3, 'Adventure');
+INSERT INTO Platforms (Name) 
 VALUES 
-  (1, 'PlayStation 4'),
-  (2, 'Xbox One'),
-  (3, 'Nintendo Switch'),
-  (4, 'PC'),
-  (5, 'Mobile');
-INSERT INTO GamePlatforms (GamePlatformId, GameId, PlatformId) 
+  ('PlayStation 4'),
+  ('Xbox One'),
+  ('Nintendo Switch'),
+  ('PC'),
+  ('Mobile');
+INSERT INTO GamePlatforms (GameId, PlatformId) 
 VALUES 
-  (1, 1, 1),
-  (2, 2, 2),
-  (3, 3, 3),
-  (4, 4, 4),
-  (5, 5, 5);
-INSERT INTO UpcomingGames (UpcomingGameId, GameId, TrailerUrl, ExpectedDeliveryDate)
+  (1, 1),
+  (2, 2),
+  (3, 3),
+  (4, 4),
+  (5, 5);
+INSERT INTO UpcomingGames (GameId, TrailerUrl, ExpectedDeliveryDate)
 VALUES
-  (1, 1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
-  (2, 3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
-  (3, 5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
-  (4, 4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
-  (5, 2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
-INSERT INTO PreOrderGames (PreOrderGameId, GameId, PreOrderBonus, PreOrderDiscount)
+  (1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
+  (3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
+  (5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
+  (4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
+  (2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+INSERT INTO PreOrderGames (GameId, PreOrderBonus, PreOrderDiscount)
 VALUES
-  (1, 1, 'Bonus skin pack', 5.00),
-  (2, 4, 'Bonus weapon pack', 10.00),
-  (3, 2, 'Bonus story mission', 5.00),
-  (4, 3, 'Exclusive in-game item', 5.00),
-  (5, 5, 'Bonus skin pack', 5.00);
-INSERT INTO BetaGames (BetaGameId, GameId, BetaStartDate, BetaEndDate)
+  (1, 'Bonus skin pack', 5.00),
+  (4, 'Bonus weapon pack', 10.00),
+  (2, 'Bonus story mission', 5.00),
+  (3, 'Exclusive in-game item', 5.00),
+  (5, 'Bonus skin pack', 5.00);
+INSERT INTO BetaGames (GameId, BetaStartDate, BetaEndDate)
 VALUES
-  (1, 1, '2020-05-19', '2020-06-19'),
-  (2, 2, '2018-06-01', '2018-07-01'),
-  (3, 3, '2018-02-01', '2018-03-15'),
-  (4, 4, '2015-08-01', '2015-10-27'),
-  (5, 5, '2011-10-01', '2011-11-18');
-INSERT INTO ReleasedGames (ReleasedGameId, GameId, ReleaseDate)
+  (1, '2020-05-19', '2020-06-19'),
+  (2, '2018-06-01', '2018-07-01'),
+  (3, '2018-02-01', '2018-03-15'),
+  (4, '2015-08-01', '2015-10-27'),
+  (5, '2011-10-01', '2011-11-18');
+INSERT INTO ReleasedGames (GameId, ReleaseDate)
 VALUES
-  (1, 1, '2020-06-19'),
-  (2, 3, '2018-04-20'),
-  (3, 4, '2015-10-27'),
-  (4, 5, '2011-11-18'),
-  (5, 2, '2018-10-26');
-INSERT INTO Score (ScoreId, UserId, GameId, Score) 
+  (1, '2020-06-19'),
+  (3, '2018-04-20'),
+  (4, '2015-10-27'),
+  (5, '2011-11-18'),
+  (2, '2018-10-26');
+INSERT INTO Score (UserId, GameId, Score) 
 VALUES 
-  (1, 1, 1, 9),
-  (2, 2, 1, 8),
-  (3, 3, 2, 7),
-  (4, 4, 3, 10),
-  (5, 5, 4, 8),
-  (6, 4, 3, 6),
-  (7, 5, 4, 9);
+  (1, 1, 9),
+  (2, 1, 8),
+  (3, 2, 7),
+  (4, 3, 10),
+  (5, 4, 8),
+  (4, 3, 6),
+  (5, 4, 9);
 
-INSERT INTO Reviews (ReviewId, UserId, GameId, Review) 
+INSERT INTO Reviews (UserId, GameId, Review) 
 VALUES 
-  (1, 1, 1, 'Great game with fantastic graphics and gameplay!'),
-  (2, 2, 1, 'Loved the storyline and the character development.'),
-  (3, 3, 2, 'Not the best game I have played, but it is still fun.'),
-  (4, 4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
-  (5, 5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+  (1, 1, 'Great game with fantastic graphics and gameplay!'),
+  (2, 1, 'Loved the storyline and the character development.'),
+  (3, 2, 'Not the best game I have played, but it is still fun.'),
+  (4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
+  (5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
-INSERT INTO GameAwards (GameAwardsId, GameId, AwardName, Year) 
+INSERT INTO GameAwards (GameId, AwardName, Year) 
 VALUES 
-  (1, 1, 'Best Game of the Year', 2020),
-  (2, 2, 'Best RPG of the Year', 2019),
-  (3, 3, 'Best Adventure Game of the Year', 2019),
-  (4, 4, 'Best Shooter of the Year', 2016),
-  (5, 5, 'Best Multiplayer Game of the Year', 2011);
+  (1, 'Best Game of the Year', 2020),
+  (2, 'Best RPG of the Year', 2019),
+  (3, 'Best Adventure Game of the Year', 2019),
+  (4, 'Best Shooter of the Year', 2016),
+  (5, 'Best Multiplayer Game of the Year', 2011);
 
-INSERT INTO Developers (DeveloperId, Name, Description, Website)
+INSERT INTO Developers (Name, Description, Website)
 VALUES
-  (1, 'Naughty Dog', 'A first-party video game developer based in Santa Monica, California', 'naughtydog.com'),
-  (2, 'Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
-  (3, 'Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', 'sms.playstation.com'),
-  (4, '343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
-  (5, 'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
+  ('Naughty Dog', 'A first-party video game developer based in Santa Monica, California', 'naughtydog.com'),
+  ('Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
+  ('Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', 'sms.playstation.com'),
+  ('343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
+  ('Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
 
-INSERT INTO GameDevelopers (GameDeveloperId, GameId, DeveloperId) 
+INSERT INTO GameDevelopers (GameId, DeveloperId) 
 VALUES 
-  (1, 1, 1),
-  (2, 2, 2),
-  (3, 3, 3),
-  (4, 4, 4),
-  (5, 5, 5);
+  (1, 1),
+  (2, 2),
+  (3, 3),
+  (4, 4),
+  (5, 5);
 
-INSERT INTO Publishers (PublisherId, Name, Description, Website) 
+INSERT INTO Publishers (Name, Description, Website) 
 VALUES 
-  (1, 'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
-  (2, 'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
-  (3, 'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
-  (4, 'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
-  (5, 'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
+  ('Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
+  ('Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
+  ('Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
+  ('Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
+  ('Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
 GO
 
 
-INSERT INTO GamePublishers (GamePublisherId, GameId, PublisherId) 
+INSERT INTO GamePublishers (GameId, PublisherId) 
 VALUES 
-  (1, 1, 1),
-  (2, 2, 2),
-  (3, 3, 3),
-  (4, 4, 4),
-  (5, 5, 5);
+  (1, 1),
+  (2, 2),
+  (3, 3),
+  (4, 4),
+  (5, 5);
 
-INSERT INTO Wishlist (WishlistId, UserId, GameId) 
+INSERT INTO Wishlist (UserId, GameId) 
 VALUES 
-  (1, 1, 2),
-  (2, 2, 3),
-  (3, 3, 4),
-  (4, 4, 5),
-  (5, 5, 1);
-INSERT INTO Cart (CartId, UserId, GameId, Quantity) 
+  (1, 2),
+  (2, 3),
+  (3, 4),
+  (4, 5),
+  (5, 1);
+INSERT INTO Cart (UserId, GameId, Quantity) 
 VALUES 
-  (1, 1, 2, 1),
-  (2, 2, 3, 2),
-  (3, 3, 4, 3),
-  (4, 4, 5, 4),
-  (5, 5, 1, 5);
+  (1, 2, 1),
+  (2, 3, 2),
+  (3, 4, 3),
+  (4, 5, 4),
+  (5, 1, 5);
 
-INSERT INTO Orders (OrderId, UserId, OrderDate, [Total amount in USD]) 
+INSERT INTO Orders (UserId, OrderDate, [Total amount in USD]) 
 VALUES 
-  (1, 1, '2022-12-01', 200.00),
-  (2, 2, '2022-11-15', 150.00),
-  (3, 3, '2022-10-31', 100.00),
-  (4, 4, '2022-09-15', 75.00),
-  (5, 5, '2022-08-01', 50.00);
+  (1, '2022-12-01', 200.00),
+  (2, '2022-11-15', 150.00),
+  (3, '2022-10-31', 100.00),
+  (4, '2022-09-15', 75.00),
+  (5, '2022-08-01', 50.00);
 
-INSERT INTO OrderItems (OrderItemId, OrderId, GameId, Quantity, [Price in USD]) 
+INSERT INTO OrderItems (OrderId, GameId, Quantity, [Price in USD]) 
 VALUES 
-  (1, 1, 1, 2, 59.99),
-  (2, 2, 2, 1, 49.99),
-  (3, 3, 3, 3, 39.99),
-  (4, 4, 4, 4, 29.99),
-  (5, 5, 5, 5, 19.99);
+  (1, 1, 2, 59.99),
+  (2, 2, 1, 49.99),
+  (3, 3, 3, 39.99),
+  (4, 4, 4, 29.99),
+  (5, 5, 5, 19.99);
 
-INSERT INTO ExchangeRate (CurrencyID, Currency, [Equal 1 USD]) 
+INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
-  (1, 'USD', 1.00),
-  (2, 'EUR', 0.93),
-  (3, 'GBP', 0.83),
-  (4, 'JPY', 134.15),
-  (5, 'PLN', 4.45);
+  ('USD', 1.00),
+  ('EUR', 0.93),
+  ('GBP', 0.83),
+  ('JPY', 134.15),
+  ('PLN', 4.45);
 GO
 
 
@@ -608,27 +608,3 @@ GO
 -- EXEC GetTopRatedGames 10
 -- GO
 
-IF OBJECT_ID('AddGame', 'P') IS NOT NULL
-  DROP PROCEDURE AddGame
-GO
-
-CREATE PROCEDURE AddGame
-    @Title VARCHAR(255),
-    @LastUpdatedDate DATE,
-    @Description TEXT,
-    @Price MONEY
-AS
-BEGIN
-    DECLARE @NewGameId INT
-
-    -- Generate new GameId that does not exist in the Games table
-    SET @NewGameId = (SELECT ISNULL(MAX(GameId), 0) + 1 FROM Games)
-    PRINT(@NewGameId)
-    INSERT INTO Games (GameId, Title, LastUpdatedDate, Description, [Price in USD])
-    VALUES (@NewGameId, @Title, @LastUpdatedDate, @Description, @Price)
-END
-GO
-
-EXEC AddGame 'Minecraft 2', '2022-12-01', 'Minecraft 2 is a sandbox video game created and designed by Swedish game designer Markus Persson, and later fully developed and published by Mojang.', 59.99
--- GO
-SELECT * FROM Games 
