@@ -1,3 +1,4 @@
+
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
 BEGIN
   CREATE DATABASE Steam
@@ -604,6 +605,30 @@ BEGIN
   ORDER BY AverageRating DESC
 END
 GO
+-- EXEC GetTopRatedGames 10
+-- GO
 
-EXEC GetTopRatedGames 10
+IF OBJECT_ID('AddGame', 'P') IS NOT NULL
+  DROP PROCEDURE AddGame
 GO
+
+CREATE PROCEDURE AddGame
+    @Title VARCHAR(255),
+    @LastUpdatedDate DATE,
+    @Description TEXT,
+    @Price MONEY
+AS
+BEGIN
+    DECLARE @NewGameId INT
+
+    -- Generate new GameId that does not exist in the Games table
+    SET @NewGameId = (SELECT ISNULL(MAX(GameId), 0) + 1 FROM Games)
+    PRINT(@NewGameId)
+    INSERT INTO Games (GameId, Title, LastUpdatedDate, Description, [Price in USD])
+    VALUES (@NewGameId, @Title, @LastUpdatedDate, @Description, @Price)
+END
+GO
+
+EXEC AddGame 'Minecraft 2', '2022-12-01', 'Minecraft 2 is a sandbox video game created and designed by Swedish game designer Markus Persson, and later fully developed and published by Mojang.', 59.99
+-- GO
+SELECT * FROM Games 
