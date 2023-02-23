@@ -104,7 +104,7 @@ GO
 -- 2
 CREATE TABLE Games (
   GameId INT PRIMARY KEY IDENTITY(1,1),
-  Title NVARCHAR(255) NOT NULL,
+  Title NVARCHAR(255) NOT NULL UNIQUE,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
@@ -123,7 +123,7 @@ GO
 -- 4
 CREATE TABLE Platforms (
   PlatformId INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL
+  Name NVARCHAR(255) NOT NULL UNIQUE
 );
 GO
 
@@ -151,7 +151,7 @@ GO
 CREATE TABLE PreOrderGames (
   PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  PreOrderBonus NVARCHAR(255),
+  PreOrderBonus TEXT,
   PreOrderDiscount DECIMAL(2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -211,9 +211,9 @@ GO
 -- 13
 CREATE TABLE Developers (
   DeveloperId INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL UNIQUE,
   Description TEXT,
-  Website NVARCHAR(255)
+  Website NVARCHAR(255) UNIQUE
 );
 GO
 
@@ -230,9 +230,9 @@ GO
 -- 15
 CREATE TABLE Publishers (
   PublisherId INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL UNIQUE,
   Description TEXT,
-  Website NVARCHAR(255)
+  Website NVARCHAR(255) UNIQUE
 );
 GO
 
@@ -291,7 +291,7 @@ GO
 --21 
 CREATE TABLE ExchangeRate (
   ExchangeRateId INT PRIMARY KEY IDENTITY(1,1),
-  Currency NVARCHAR(3) NOT NULL,
+  Currency NVARCHAR(3) NOT NULL UNIQUE,
   [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
 );
 GO
@@ -569,11 +569,11 @@ VALUES
 -- 7
 INSERT INTO PreOrderGames (GameId, PreOrderBonus, PreOrderDiscount)
 VALUES
-  (1, N'Bonus skin pack', 5.00),
-  (4, N'Bonus weapon pack', 10.00),
-  (2, N'Bonus story mission', 5.00),
-  (3, N'Exclusive in-game item', 5.00),
-  (5, N'Bonus skin pack', 5.00);
+  (1, 'Bonus skin pack', 5.00),
+  (4, 'Bonus weapon pack', 10.00),
+  (2, 'Bonus story mission', 5.00),
+  (3, 'Exclusive in-game item', 5.00),
+  (5, 'Bonus skin pack', 5.00);
 
 -- 8
 INSERT INTO BetaGames (GameId, BetaStartDate, BetaEndDate)
