@@ -95,16 +95,16 @@ GO
 -- 1
 CREATE TABLE Users (
   UserId INT PRIMARY KEY IDENTITY(1,1),
-  Username VARCHAR(255) NOT NULL,
-  Email VARCHAR(255) NOT NULL UNIQUE,
-  Password VARCHAR(255) NOT NULL
+  Username NVARCHAR(255) NOT NULL,
+  Email NVARCHAR(255) NOT NULL UNIQUE,
+  Password NVARCHAR(255) NOT NULL
 );
 GO
 
 -- 2
 CREATE TABLE Games (
   GameId INT PRIMARY KEY IDENTITY(1,1),
-  Title VARCHAR(255) NOT NULL,
+  Title NVARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
@@ -115,7 +115,7 @@ GO
 CREATE TABLE GameGenres (
   GameGenreId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  Genre VARCHAR(255) NOT NULL,
+  Genre NVARCHAR(255) NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
@@ -123,10 +123,9 @@ GO
 -- 4
 CREATE TABLE Platforms (
   PlatformId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL
+  Name NVARCHAR(255) NOT NULL
 );
 GO
-
 
 -- 5
 CREATE TABLE GamePlatforms (
@@ -138,28 +137,25 @@ CREATE TABLE GamePlatforms (
 );
 GO
 
-
 -- 6
 CREATE TABLE UpcomingGames (
   UpcomingGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  TrailerUrl VARCHAR(255),
+  TrailerUrl NVARCHAR(255),
   ExpectedDeliveryDate DATE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
-
 -- 7
 CREATE TABLE PreOrderGames (
   PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  PreOrderBonus VARCHAR(255),
+  PreOrderBonus NVARCHAR(255),
   PreOrderDiscount DECIMAL(2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
-
 
 -- 8
 CREATE TABLE BetaGames (
@@ -202,27 +198,24 @@ CREATE TABLE Reviews (
 );
 GO
 
-
 -- 12
 CREATE TABLE GameAwards (
   GameAwardsId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  AwardName VARCHAR(255) NOT NULL,
+  AwardName NVARCHAR(255) NOT NULL,
   Year INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
-
 -- 13
 CREATE TABLE Developers (
   DeveloperId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website VARCHAR(255)
+  Website NVARCHAR(255)
 );
 GO
-
 
 -- 14
 CREATE TABLE GameDevelopers (
@@ -234,16 +227,14 @@ CREATE TABLE GameDevelopers (
 );
 GO
 
-
 -- 15
 CREATE TABLE Publishers (
   PublisherId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website VARCHAR(255)
+  Website NVARCHAR(255)
 );
 GO
-
 
 -- 16
 CREATE TABLE GamePublishers (
@@ -255,7 +246,6 @@ CREATE TABLE GamePublishers (
 );
 GO
 
-
 -- 17
 CREATE TABLE Wishlist (
   WishlistId INT PRIMARY KEY IDENTITY(1,1),
@@ -265,7 +255,6 @@ CREATE TABLE Wishlist (
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
-
 
 -- 18
 CREATE TABLE Cart (
@@ -278,17 +267,14 @@ CREATE TABLE Cart (
 );
 GO
 
-
 -- 19
 CREATE TABLE Orders (
   OrderId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
-
   FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
-
 
 -- 20
 CREATE TABLE OrderItems (
@@ -397,17 +383,31 @@ GO
 
 --- FUNCTIONS
 
-
-
-
-
-
-
--- 1
 IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
   DROP FUNCTION GetGamesByGenre
 GO
 
+IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
+  DROP FUNCTION GetGamesByPlatform
+GO
+
+IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
+  DROP FUNCTION DeveloperGames
+GO
+
+IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
+  DROP FUNCTION PublisherGames
+GO
+
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalPrice
+GO
+
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+  DROP FUNCTION HowMuch
+GO
+
+-- 1
 CREATE FUNCTION GetGamesByGenre
 (
   @Genre NVARCHAR(255)
@@ -423,10 +423,6 @@ RETURN (
 GO
 
 -- 2
-IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
-  DROP FUNCTION GetGamesByPlatform
-GO
-
 CREATE FUNCTION GetGamesByPlatform
 (
   @Platform NVARCHAR(255)
@@ -443,10 +439,6 @@ RETURN (
 GO
 
 -- 3
-IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
-  DROP FUNCTION DeveloperGames
-GO
-
 CREATE FUNCTION DeveloperGames
 (
   @Name NVARCHAR(255)
@@ -465,10 +457,6 @@ END;
 GO
 
 -- 4
-IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
-  DROP FUNCTION PublisherGames
-GO
-
 CREATE FUNCTION PublisherGames
 (
   @Name NVARCHAR(255)
@@ -487,42 +475,80 @@ END;
 GO
 
 -- 5
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserId INT
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @TotalPrice MONEY;
+  SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+  FROM Cart C
+  JOIN Games G ON C.GameId = G.GameId
+  WHERE C.UserId = @UserId;
+  RETURN @TotalPrice;
+END;
+GO
 
+-- 6
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency NVARCHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SELECT @Price = [Price in USD] FROM Games WHERE GameID = @GameID
+  SELECT @ExchangeRate = [Equal 1 USD] FROM [ExchangeRate] WHERE [Currency] = @Currency
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
 
+--- INSERT DATA
 
--- Sample data
+-- 1
 INSERT INTO Users (Username, Email, Password)
 VALUES
-  ('john_doe', 'john_doe@example.com', 'password1'),
-  ('jane_doe', 'jane_doe@example.com', 'password2'),
-  ('jim_smith', 'jim_smith@example.com', 'password3'),
-  ('sara_lee', 'sara_lee@example.com', 'password4'),
-  ('tom_jones', 'tom_jones@example.com', 'password5'),
-  ('jimmy_johns', 'big_jimmy@example.com', 'password6');
-  
+  (N'john_doe', N'john_doe@example.com', N'password1'),
+  (N'jane_doe', N'jane_doe@example.com', N'password2'),
+  (N'jim_smith', N'jim_smith@example.com', N'password3'),
+  (N'sara_lee', N'sara_lee@example.com', N'password4'),
+  (N'tom_jones', N'tom_jones@example.com', N'password5'),
+  (N'jimmy_johns', N'big_jimmy@example.com', N'password6');
+
+-- 2
 INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
-  ('The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
-  ('Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
-  ('God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
-  ('Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
-  ('Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
-  ('Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
+  (N'The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  (N'Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  (N'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  (N'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  (N'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
+  (N'Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
 
+-- 3
 INSERT INTO GameGenres (GameId, Genre)
 VALUES
-  (1, 'Multiplayer'),
-  (1, 'Open-World'),
-  (2, 'First-Person'),
-  (2, 'Shooter'),
-  (3, 'Adventure');
+  (1, N'Multiplayer'),
+  (1, N'Open-World'),
+  (2, N'First-Person'),
+  (2, N'Shooter'),
+  (3, N'Adventure');
+
+-- 4
 INSERT INTO Platforms (Name) 
 VALUES 
-  ('PlayStation 4'),
-  ('Xbox One'),
-  ('Nintendo Switch'),
-  ('PC'),
-  ('Mobile');
+  (N'PlayStation 4'),
+  (N'Xbox One'),
+  (N'Nintendo Switch'),
+  (N'PC'),
+  (N'Mobile');
+
+-- 5
 INSERT INTO GamePlatforms (GameId, PlatformId) 
 VALUES 
   (1, 1),
@@ -530,20 +556,26 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+
+-- 6
 INSERT INTO UpcomingGames (GameId, TrailerUrl, ExpectedDeliveryDate)
 VALUES
-  (1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
-  (3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
-  (5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
-  (4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
-  (2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+  (1, N'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
+  (3, N'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
+  (5, N'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
+  (4, N'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
+  (2, N'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+
+-- 7
 INSERT INTO PreOrderGames (GameId, PreOrderBonus, PreOrderDiscount)
 VALUES
-  (1, 'Bonus skin pack', 5.00),
-  (4, 'Bonus weapon pack', 10.00),
-  (2, 'Bonus story mission', 5.00),
-  (3, 'Exclusive in-game item', 5.00),
-  (5, 'Bonus skin pack', 5.00);
+  (1, N'Bonus skin pack', 5.00),
+  (4, N'Bonus weapon pack', 10.00),
+  (2, N'Bonus story mission', 5.00),
+  (3, N'Exclusive in-game item', 5.00),
+  (5, N'Bonus skin pack', 5.00);
+
+-- 8
 INSERT INTO BetaGames (GameId, BetaStartDate, BetaEndDate)
 VALUES
   (1, '2020-05-19', '2020-06-19'),
@@ -551,6 +583,8 @@ VALUES
   (3, '2018-02-01', '2018-03-15'),
   (4, '2015-08-01', '2015-10-27'),
   (5, '2011-10-01', '2011-11-18');
+
+-- 9
 INSERT INTO ReleasedGames (GameId, ReleaseDate)
 VALUES
   (1, '2020-06-19'),
@@ -558,6 +592,8 @@ VALUES
   (4, '2015-10-27'),
   (5, '2011-11-18'),
   (2, '2018-10-26');
+
+-- 10
 INSERT INTO Score (UserId, GameId, Score) 
 VALUES 
   (1, 1, 9),
@@ -568,6 +604,7 @@ VALUES
   (4, 3, 6),
   (5, 4, 9);
 
+-- 11
 INSERT INTO Reviews (UserId, GameId, Review) 
 VALUES 
   (1, 1, 'Great game with fantastic graphics and gameplay!'),
@@ -576,22 +613,25 @@ VALUES
   (4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
+-- 12
 INSERT INTO GameAwards (GameId, AwardName, Year) 
 VALUES 
-  (1, 'Best Game of the Year', 2020),
-  (2, 'Best RPG of the Year', 2019),
-  (3, 'Best Adventure Game of the Year', 2019),
-  (4, 'Best Shooter of the Year', 2016),
-  (5, 'Best Multiplayer Game of the Year', 2011);
+  (1, N'Best Game of the Year', 2020),
+  (2, N'Best RPG of the Year', 2019),
+  (3, N'Best Adventure Game of the Year', 2019),
+  (4, N'Best Shooter of the Year', 2016),
+  (5, N'Best Multiplayer Game of the Year', 2011);
 
+-- 13
 INSERT INTO Developers (Name, Description, Website)
 VALUES
-  ('Naughty Dog', 'A first-party video game developer based in Santa Monica, California', 'naughtydog.com'),
-  ('Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
-  ('Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', 'sms.playstation.com'),
-  ('343 Industries', 'An American video game development studio located in Redmond, Washington', '343industries.com'),
-  ('Mojang Studios', 'A video game development studio based in Stockholm, Sweden', 'mojang.com');
+  (N'Naughty Dog', 'A first-party video game developer based in Santa Monica, California', N'naughtydog.com'),
+  (N'Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', N'rockstargames.com'),
+  (N'Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', N'sms.playstation.com'),
+  (N'343 Industries', 'An American video game development studio located in Redmond, Washington', N'343industries.com'),
+  (N'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', N'mojang.com');
 
+-- 14
 INSERT INTO GameDevelopers (GameId, DeveloperId) 
 VALUES 
   (1, 1),
@@ -600,16 +640,17 @@ VALUES
   (4, 4),
   (5, 5);
 
+-- 15
 INSERT INTO Publishers (Name, Description, Website) 
 VALUES 
-  ('Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', 'ea.com'),
-  ('Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', 'activisionblizzard.com'),
-  ('Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', 'ubisoft.com'),
-  ('Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', 'take2games.com'),
-  ('Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', 'microsoft.com');
+  (N'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', N'ea.com'),
+  (N'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', N'activisionblizzard.com'),
+  (N'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', N'ubisoft.com'),
+  (N'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', N'take2games.com'),
+  (N'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', N'microsoft.com');
 GO
 
-
+-- 16
 INSERT INTO GamePublishers (GameId, PublisherId) 
 VALUES 
   (1, 1),
@@ -618,6 +659,7 @@ VALUES
   (4, 4),
   (5, 5);
 
+-- 17
 INSERT INTO Wishlist (UserId, GameId) 
 VALUES 
   (1, 2),
@@ -625,6 +667,8 @@ VALUES
   (3, 4),
   (4, 5),
   (5, 1);
+
+-- 18
 INSERT INTO Cart (UserId, GameId, Quantity) 
 VALUES 
   (1, 2, 1),
@@ -633,6 +677,7 @@ VALUES
   (4, 5, 4),
   (5, 1, 5);
 
+-- 19
 INSERT INTO Orders (UserId, OrderDate) 
 VALUES 
   (1, '2023-01-07'),
@@ -642,6 +687,7 @@ VALUES
   (5, '2022-08-01'),
   (6, '2022-07-15');
 
+-- 20
 INSERT INTO OrderItems (OrderId, GameId, Quantity, [Price in USD]) 
 VALUES 
   (1, 1, 2, 29.99),
@@ -666,142 +712,76 @@ VALUES
   (5, 4, 2, 39.98),
   (5, 6, 1, 49.99);
   
-
+-- 21
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
-  ('USD', 1.00),
-  ('EUR', 0.93),
-  ('GBP', 0.83),
-  ('JPY', 134.15),
-  ('PLN', 4.45);
+  (N'USD', 1.00),
+  (N'EUR', 0.93),
+  (N'GBP', 0.83),
+  (N'JPY', 134.15),
+  (N'PLN', 4.45);
 GO
 
+--- PROCEDURES
 
-
-IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION HowMuch
-GO
-
-CREATE FUNCTION HowMuch
-(
-  @GameID INT,
-  @Currency CHAR(3)
-)
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @Price MONEY = 0
-  DECLARE @ExchangeRate MONEY = 0
-  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
-		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-  RETURN ROUND((@Price * @ExchangeRate), 2)
-END;
-GO
-
-IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
-  DROP VIEW GameGenresView
-GO
-
-CREATE VIEW GameGenresView AS
-SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
-FROM GameGenres
-GROUP BY GameId;
-GO
-
-IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-  DROP VIEW MostActiveUsers
-GO
-
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
-FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
-GROUP BY U.Username
-ORDER BY NumberOfReviews DESC;
-GO
-
-IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalPrice
-GO
-
-CREATE FUNCTION CalculateTotalPrice
-(
-  @UserId INT
-)
-RETURNS MONEY
-AS
-BEGIN
-    DECLARE @TotalPrice MONEY;
-    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
-    FROM Cart C
-    JOIN Games G ON C.GameId = G.GameId
-    WHERE C.UserId = @UserId;
-    RETURN @TotalPrice;
-END;
-GO
-
-IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
-  DROP VIEW TopRatedGames
-GO
-
-CREATE VIEW TopRatedGames AS
-  SELECT TOP 100 PERCENT G.GameID, G.Title, AVG(S.Score) AS [Average Score], COUNT(R.GameId) AS [Number of Reviews]
-  FROM Games AS G
-  LEFT JOIN Score AS S 
-  ON G.GameID = S.GameID
-  LEFT JOIN Reviews AS R
-  ON G.GameID = R.GameID
-  GROUP BY 
-    G.GameId, 
-    G.Title
-  ORDER BY 
-    [Average Score] DESC,
-    [Number of Reviews] DESC; 
-GO
-
-
-
-IF OBJECT_ID('GetRecommendedGames') IS NOT NULL
+IF OBJECT_ID('GetRecommendedGames', 'P') IS NOT NULL
   DROP PROCEDURE GetRecommendedGames
 GO
 
-  CREATE PROCEDURE GetRecommendedGames (@UserId INT)
-  AS
-  BEGIN
-  WITH UserOrders AS (
-    SELECT OrderId
-    FROM Orders
-    WHERE UserId = @UserId
-  ),
-  UserGames AS (
-    SELECT DISTINCT GameId
-    FROM OrderItems
-    WHERE OrderId IN (SELECT OrderId FROM UserOrders)
-  ),
-  MatchingUsers AS (
-    SELECT 
-      UserId, 
-      COUNT(DISTINCT GameId) AS [Matching Games Num]
-    FROM OrderItems AS OI
-    JOIN Orders AS O
-    ON OI.OrderId = O.OrderId
-    WHERE 
-      GameId IN (SELECT GameId FROM UserGames)
-      AND UserId <> @UserId
-    GROUP BY UserId
-  )
-  , MatchingGames AS (
+IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
+  DROP PROCEDURE CalculateTotalSales
+GO
+
+IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalRevenue
+GO
+
+IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
+  DROP PROCEDURE SearchUsers
+GO
+
+IF OBJECT_ID('GetMostActiveUsers', 'P') IS NOT NULL
+  DROP PROCEDURE GetMostActiveUsers
+GO
+
+-- 1
+CREATE PROCEDURE GetRecommendedGames (@UserId INT)
+AS
+BEGIN
+WITH UserOrders AS (
+  SELECT OrderId
+  FROM Orders
+  WHERE UserId = @UserId
+),
+UserGames AS (
+  SELECT DISTINCT GameId
+  FROM OrderItems
+  WHERE OrderId IN (SELECT OrderId FROM UserOrders)
+),
+MatchingUsers AS (
   SELECT 
-      G.GameID,
-      G.Title,
-      U.[Matching Games Num] ,
-      ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
-    FROM MatchingUsers U
-    JOIN Orders AS O ON U.UserId = O.UserId
-    JOIN OrderItems AS OI ON O.OrderId = OI.OrderId
-    JOIN Games AS G ON OI.GameId = G.GameId
-    WHERE U.[Matching Games Num] >= 1
-    GROUP BY G.GameId, G.Title, U.[Matching Games Num], U.UserId
+    UserId, 
+    COUNT(DISTINCT GameId) AS [Matching Games Num]
+  FROM OrderItems AS OI
+  JOIN Orders AS O
+  ON OI.OrderId = O.OrderId
+  WHERE 
+    GameId IN (SELECT GameId FROM UserGames)
+    AND UserId <> @UserId
+  GROUP BY UserId
+)
+, MatchingGames AS (
+  SELECT 
+    G.GameID,
+    G.Title,
+    U.[Matching Games Num] ,
+    ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
+  FROM MatchingUsers U
+  JOIN Orders AS O ON U.UserId = O.UserId
+  JOIN OrderItems AS OI ON O.OrderId = OI.OrderId
+  JOIN Games AS G ON OI.GameId = G.GameId
+  WHERE U.[Matching Games Num] >= 1
+  GROUP BY G.GameId, G.Title, U.[Matching Games Num], U.UserId
 )
 SELECT GameId, Title
 FROM MatchingGames
@@ -811,10 +791,8 @@ END;
 GO
 
 -- EXEC GetRecommendedGames 4
-IF OBJECT_ID('CalculateTotalSales') IS NOT NULL
-  DROP PROCEDURE CalculateTotalSales
-GO
 
+-- 2
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
   @EndDate DATE = NULL, 
@@ -838,15 +816,14 @@ BEGIN
     TotalSales DESC;
 END;
 GO
+
 -- EXEC GetTopRatedGames 10
 -- GO
 
 -- EXEC CalculateTotalSales 
 -- GO
-IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalRevenue
-GO
 
+-- 3
 CREATE FUNCTION CalculateTotalRevenue ()
 RETURNS MONEY
 AS
@@ -857,32 +834,30 @@ BEGIN
   LEFT JOIN Games G ON OI.GameId = G.GameId
   LEFT JOIN Orders O ON OI.OrderId = O.OrderId
   WHERE O.OrderDate IS NOT NULL
-  
   RETURN @TotalRevenue
 END;
 GO
+
 -- SELECT dbo.CalculateTotalRevenue()
 -- GO
 
-IF OBJECT_ID('SearchUsers') IS NOT NULL
-  DROP PROCEDURE SearchUsers
-GO
+-- 4
 CREATE PROCEDURE SearchUsers
-  @Username VARCHAR(255)
+  @Username NVARCHAR(255)
 AS
   SELECT UserID, Username 
   FROM Users
-  WHERE Username LIKE '%'+@Username+'%'
+  WHERE Username LIKE '%' + @Username + '%'
 GO
+
 -- EXEC SearchUsers 'jo'
 -- GO
-IF OBJECT_ID('GetMostActiveUsers', 'P') IS NOT NULL
-  DROP PROCEDURE GetMostActiveUsers
-GO
+
+-- 5
 CREATE PROCEDURE GetMostActiveUsers
   @StartDate DATE = NULL,
   @EndDate DATE = NULL,
-  @OrderBy VARCHAR(20) = 'TotalSpent' -- Default to sorting by TotalSpent in descending order
+  @OrderBy NVARCHAR(20) = N'TotalSpent' -- Default to sorting by TotalSpent in descending order
 AS
 BEGIN
   WITH UserPurchaseInfo AS (
@@ -916,4 +891,3 @@ GO
 
 -- EXEC GetMostActiveUsers '2022-12-01', '2022-12-31', 'GamesBought';
 -- GO
-
