@@ -312,43 +312,37 @@ GO
 
 --- VIEWS
 
+
+
+
+
+
+
+
+
+
+
+-- 1
 IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
   DROP VIEW GameGenresView
 GO
 
+CREATE VIEW GameGenresView AS
+  SELECT GameId, CONVERT(NVARCHAR(MAX), (
+    SELECT Genre + ', '
+    FROM GameGenres
+    WHERE GameId = G.GameId
+    FOR XML PATH('')
+  ), 1) AS Genres
+  FROM GameGenres G
+  GROUP BY GameId;
+GO
+
+-- 2
 IF OBJECT_ID('GameDevelopersAndPublishers', 'V') IS NOT NULL
   DROP VIEW GameDevelopersAndPublishers;
 GO
 
-IF OBJECT_ID('ReleasedGamesWithPublishers', 'V') IS NOT NULL
-  DROP VIEW ReleasedGamesWithPublishers
-GO
-
-IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
-  DROP VIEW TopRatedGames
-GO
-
-IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
-  DROP VIEW TopSellingGames
-GO
-
-IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-  DROP VIEW MostActiveUsers
-GO
-
--- 1
-CREATE VIEW GameGenresView AS
-SELECT GameId, CONVERT(NVARCHAR(MAX), (
-  SELECT Genre + ', '
-  FROM GameGenres
-  WHERE GameId = G.GameId
-  FOR XML PATH('')
-), 1) AS Genres
-FROM GameGenres G
-GROUP BY GameId;
-GO
-
--- 2
 CREATE VIEW GameDevelopersAndPublishers AS
 SELECT GameDevelopers.GameId, Developers.Name AS Developers, Publishers.Name AS Publishers
 FROM GameDevelopers
@@ -359,6 +353,10 @@ GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
 GO
 
 -- 3
+IF OBJECT_ID('ReleasedGamesWithPublishers', 'V') IS NOT NULL
+  DROP VIEW ReleasedGamesWithPublishers
+GO
+
 CREATE VIEW ReleasedGamesWithPublishers AS
 SELECT R.GameId, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
 FROM ReleasedGames R
@@ -368,18 +366,31 @@ JOIN Publishers P ON GP.PublisherId = P.PublisherId;
 GO
 
 -- 4
+IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
+  DROP VIEW TopRatedGames
+GO
 CREATE VIEW TopRatedGames AS
-SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameId) AS NumberOfReviews
-FROM Games G
-LEFT JOIN Score S ON G.GameID = S.GameID
-LEFT JOIN Reviews R ON G.GameID = R.GameID
-GROUP BY G.GameId, G.Title
-ORDER BY AverageScore DESC, NumberOfReviews DESC;
+  SELECT TOP 100 PERCENT G.GameID, G.Title, AVG(S.Score) AS [Average Score], COUNT(R.GameId) AS [Number of Reviews]
+  FROM Games AS G
+  LEFT JOIN Score AS S 
+  ON G.GameID = S.GameID
+  LEFT JOIN Reviews AS R
+  ON G.GameID = R.GameID
+  GROUP BY 
+    G.GameId, 
+    G.Title
+  ORDER BY 
+    [Average Score] DESC,
+    [Number of Reviews] DESC; 
 GO
 
+
 -- 5
+IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
+  DROP VIEW TopSellingGames
+GO
 CREATE VIEW TopSellingGames AS
-SELECT TOP 10 G.GameId, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
+SELECT TOP 100 PERCENT G.GameId, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
 FROM Games G
 JOIN OrderItems OI ON G.GameId = OI.GameId
 GROUP BY G.GameId, G.Title
@@ -387,8 +398,11 @@ ORDER BY TotalRevenue DESC;
 GO
 
 -- 6
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+IF OBJECT_ID('MostReviewingUsers', 'V') IS NOT NULL
+  DROP VIEW MostReviewingUsers
+GO
+CREATE VIEW MostReviewingUsers AS
+SELECT TOP 100 PERCENT U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
 JOIN Reviews R ON U.UserId = R.UserId
 GROUP BY U.Username
@@ -396,12 +410,6 @@ ORDER BY NumberOfReviews DESC;
 GO
 
 --- FUNCTIONS
-
-
-
-
-
-
 
 -- 1
 IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
@@ -486,9 +494,66 @@ BEGIN
 END;
 GO
 
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalPrice
+GO
+
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserId INT
+)
+RETURNS MONEY
+AS
+BEGIN
+    DECLARE @TotalPrice MONEY;
+    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+    FROM Cart C
+    JOIN Games G ON C.GameId = G.GameId
+    WHERE C.UserId = @UserId;
+    RETURN @TotalPrice;
+END;
+GO
+
+IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalRevenue
+GO
+
+CREATE FUNCTION CalculateTotalRevenue ()
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @TotalRevenue MONEY
+  SELECT @TotalRevenue = SUM(OI.Quantity * OI.[Price in USD])
+  FROM OrderItems OI
+  LEFT JOIN Games G ON OI.GameId = G.GameId
+  LEFT JOIN Orders O ON OI.OrderId = O.OrderId
+  WHERE O.OrderDate IS NOT NULL
+  
+  RETURN @TotalRevenue
+END;
+GO
+
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+  DROP FUNCTION HowMuch
+GO
+
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency CHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
+		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
+
 -- 5
-
-
 
 -- Sample data
 INSERT INTO Users (Username, Email, Password)
@@ -678,94 +743,19 @@ GO
 
 
 
-IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION HowMuch
-GO
-
-CREATE FUNCTION HowMuch
-(
-  @GameID INT,
-  @Currency CHAR(3)
-)
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @Price MONEY = 0
-  DECLARE @ExchangeRate MONEY = 0
-  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
-		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
-  RETURN ROUND((@Price * @ExchangeRate), 2)
-END;
-GO
-
-IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
-  DROP VIEW GameGenresView
-GO
-
-CREATE VIEW GameGenresView AS
-SELECT GameId, STRING_AGG(Genre, ', ') AS Genres
-FROM GameGenres
-GROUP BY GameId;
-GO
-
-IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-  DROP VIEW MostActiveUsers
-GO
-
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
-FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
-GROUP BY U.Username
-ORDER BY NumberOfReviews DESC;
-GO
-
-IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalPrice
-GO
-
-CREATE FUNCTION CalculateTotalPrice
-(
-  @UserId INT
-)
-RETURNS MONEY
-AS
-BEGIN
-    DECLARE @TotalPrice MONEY;
-    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
-    FROM Cart C
-    JOIN Games G ON C.GameId = G.GameId
-    WHERE C.UserId = @UserId;
-    RETURN @TotalPrice;
-END;
-GO
-
-IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
-  DROP VIEW TopRatedGames
-GO
-
-CREATE VIEW TopRatedGames AS
-  SELECT TOP 100 PERCENT G.GameID, G.Title, AVG(S.Score) AS [Average Score], COUNT(R.GameId) AS [Number of Reviews]
-  FROM Games AS G
-  LEFT JOIN Score AS S 
-  ON G.GameID = S.GameID
-  LEFT JOIN Reviews AS R
-  ON G.GameID = R.GameID
-  GROUP BY 
-    G.GameId, 
-    G.Title
-  ORDER BY 
-    [Average Score] DESC,
-    [Number of Reviews] DESC; 
-GO
 
 
 
-IF OBJECT_ID('GetRecommendedGames') IS NOT NULL
+
+
+
+
+
+
+IF OBJECT_ID('GetRecommendedGames', 'P') IS NOT NULL
   DROP PROCEDURE GetRecommendedGames
 GO
-
-  CREATE PROCEDURE GetRecommendedGames (@UserId INT)
+CREATE PROCEDURE GetRecommendedGames (@UserId INT)
   AS
   BEGIN
   WITH UserOrders AS (
@@ -789,8 +779,8 @@ GO
       GameId IN (SELECT GameId FROM UserGames)
       AND UserId <> @UserId
     GROUP BY UserId
-  )
-  , MatchingGames AS (
+  ), 
+  MatchingGames AS (
   SELECT 
       G.GameID,
       G.Title,
@@ -802,16 +792,16 @@ GO
     JOIN Games AS G ON OI.GameId = G.GameId
     WHERE U.[Matching Games Num] >= 1
     GROUP BY G.GameId, G.Title, U.[Matching Games Num], U.UserId
-)
-SELECT GameId, Title
-FROM MatchingGames
-WHERE RowNum = 1
-ORDER BY [Matching Games Num] DESC
+  )
+  SELECT GameId, Title
+  FROM MatchingGames
+  WHERE RowNum = 1
+  ORDER BY [Matching Games Num] DESC
 END;
 GO
 
 -- EXEC GetRecommendedGames 4
-IF OBJECT_ID('CalculateTotalSales') IS NOT NULL
+IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
   DROP PROCEDURE CalculateTotalSales
 GO
 
@@ -843,28 +833,11 @@ GO
 
 -- EXEC CalculateTotalSales 
 -- GO
-IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalRevenue
-GO
 
-CREATE FUNCTION CalculateTotalRevenue ()
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @TotalRevenue MONEY
-  SELECT @TotalRevenue = SUM(OI.Quantity * OI.[Price in USD])
-  FROM OrderItems OI
-  LEFT JOIN Games G ON OI.GameId = G.GameId
-  LEFT JOIN Orders O ON OI.OrderId = O.OrderId
-  WHERE O.OrderDate IS NOT NULL
-  
-  RETURN @TotalRevenue
-END;
-GO
 -- SELECT dbo.CalculateTotalRevenue()
 -- GO
 
-IF OBJECT_ID('SearchUsers') IS NOT NULL
+IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
   DROP PROCEDURE SearchUsers
 GO
 CREATE PROCEDURE SearchUsers
@@ -876,10 +849,10 @@ AS
 GO
 -- EXEC SearchUsers 'jo'
 -- GO
-IF OBJECT_ID('GetMostActiveUsers', 'P') IS NOT NULL
-  DROP PROCEDURE GetMostActiveUsers
+IF OBJECT_ID('GetBiggestConsumers', 'P') IS NOT NULL
+  DROP PROCEDURE GetBiggestConsumers
 GO
-CREATE PROCEDURE GetMostActiveUsers
+CREATE PROCEDURE GetBiggestConsumers
   @StartDate DATE = NULL,
   @EndDate DATE = NULL,
   @OrderBy VARCHAR(20) = 'TotalSpent' -- Default to sorting by TotalSpent in descending order
@@ -914,6 +887,6 @@ BEGIN
 END;
 GO
 
--- EXEC GetMostActiveUsers '2022-12-01', '2022-12-31', 'GamesBought';
+-- EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 -- GO
 
