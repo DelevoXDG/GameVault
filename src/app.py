@@ -459,7 +459,7 @@ class MainWidget(QWidget):
 
     def get_currency_list(self):
         qry = QSqlQuery(db)
-        statement = "SELECT * FROM {}".format(
+        statement = "SELECT Currency FROM {} ORDER BY CurrencyId ".format(
            CONFIG.TABLE_EXCHANGE_RATE)
 
         qry.prepare(statement)
@@ -467,7 +467,7 @@ class MainWidget(QWidget):
         res = []
         while qry.next() is True:
             res.append(qry.record().value(0))
-        res.reverse()
+        # res.reverse()
         return res
 
 
