@@ -1,4 +1,5 @@
 
+
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
 BEGIN
   CREATE DATABASE Steam
@@ -436,9 +437,9 @@ INSERT INTO Reviews (UserId, GameId, Review)
 VALUES 
   (1, 1, 'Great game with fantastic graphics and gameplay!'),
   (2, 1, 'Loved the storyline and the character development.'),
-  (3, 2, 'Not the best game OI have played, but it is still fun.'),
+  (3, 2, 'Not the best game I have played, but it is still fun.'),
   (4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
-  (5, 4, 'OI would recommend this game to anyone looking for a challenging experience.');
+  (5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
 
 INSERT INTO GameAwards (GameId, AwardName, Year) 
 VALUES 
@@ -539,6 +540,7 @@ VALUES
   ('JPY', 134.15),
   ('PLN', 4.45);
 GO
+
 
 
 IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
@@ -709,6 +711,8 @@ BEGIN
     TotalSales DESC;
 END;
 GO
+-- EXEC GetTopRatedGames 10
+-- GO
 
 -- EXEC CalculateTotalSales 
 -- GO
