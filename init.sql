@@ -1,137 +1,95 @@
-
+--- DATABASE
 
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
-BEGIN
   CREATE DATABASE Steam
-END
 GO
 
 USE Steam;
 
+--- TABLES
+
 IF OBJECT_ID('ExchangeRate', 'U') IS NOT NULL
-BEGIN
   DROP TABLE ExchangeRate
-END
 GO
 
 IF OBJECT_ID('OrderItems', 'U') IS NOT NULL
-BEGIN
   DROP TABLE OrderItems
-END
 GO
 
 IF OBJECT_ID('Orders', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Orders
-END
 GO
 
 IF OBJECT_ID('Cart', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Cart
-END
 GO
 
 IF OBJECT_ID('Wishlist', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Wishlist
-END
 GO
 
 IF OBJECT_ID('GamePublishers', 'U') IS NOT NULL
-BEGIN
   DROP TABLE GamePublishers
-END
 GO
 
 IF OBJECT_ID('Publishers', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Publishers
-END
 GO
 
 IF OBJECT_ID('GameDevelopers', 'U') IS NOT NULL
-BEGIN
   DROP TABLE GameDevelopers
-END
 GO
 
 IF OBJECT_ID('Developers', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Developers
-END
 GO
 
 IF OBJECT_ID('GameAwards', 'U') IS NOT NULL
-BEGIN
   DROP TABLE GameAwards
-END
 GO
 
 IF OBJECT_ID('Reviews', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Reviews
-END
 GO
 
 IF OBJECT_ID('Score', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Score
-END
 GO
 
 IF OBJECT_ID('ReleasedGames', 'U') IS NOT NULL
-BEGIN
   DROP TABLE ReleasedGames
-END
 GO
 
 IF OBJECT_ID('BetaGames', 'U') IS NOT NULL
-BEGIN
   DROP TABLE BetaGames
-END
 GO
 
 IF OBJECT_ID('PreOrderGames', 'U') IS NOT NULL
-BEGIN
   DROP TABLE PreOrderGames
-END
 GO
 
 IF OBJECT_ID('UpcomingGames', 'U') IS NOT NULL
-BEGIN
   DROP TABLE UpcomingGames
-END
 GO
 
 IF OBJECT_ID('GamePlatforms', 'U') IS NOT NULL
-BEGIN
   DROP TABLE GamePlatforms
-END
 GO
 
 IF OBJECT_ID('Platforms', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Platforms
-END
 GO
 
 IF OBJECT_ID('GameGenres', 'U') IS NOT NULL
-BEGIN
   DROP TABLE GameGenres
-END
 GO
 
 IF OBJECT_ID('Games', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Games
-END
 GO
 
 IF OBJECT_ID('Users', 'U') IS NOT NULL
-BEGIN
   DROP TABLE Users
-END
 GO
 
 -- 1
@@ -346,12 +304,189 @@ GO
 
 --21 
 CREATE TABLE ExchangeRate (
-  CurrencyId INT PRIMARY KEY IDENTITY(1,1),
+  ExchangeRateId INT PRIMARY KEY IDENTITY(1,1),
   Currency NVARCHAR(3) NOT NULL,
   [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
 );
 GO
 
+--- VIEWS
+
+IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
+  DROP VIEW GameGenresView
+GO
+
+IF OBJECT_ID('GameDevelopersAndPublishers', 'V') IS NOT NULL
+  DROP VIEW GameDevelopersAndPublishers;
+GO
+
+IF OBJECT_ID('ReleasedGamesWithPublishers', 'V') IS NOT NULL
+  DROP VIEW ReleasedGamesWithPublishers
+GO
+
+IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
+  DROP VIEW TopRatedGames
+GO
+
+IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
+  DROP VIEW TopSellingGames
+GO
+
+IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
+  DROP VIEW MostActiveUsers
+GO
+
+-- 1
+CREATE VIEW GameGenresView AS
+SELECT GameId, CONVERT(NVARCHAR(MAX), (
+  SELECT Genre + ', '
+  FROM GameGenres
+  WHERE GameId = G.GameId
+  FOR XML PATH('')
+), 1) AS Genres
+FROM GameGenres G
+GROUP BY GameId;
+GO
+
+-- 2
+CREATE VIEW GameDevelopersAndPublishers AS
+SELECT GameDevelopers.GameId, Developers.Name AS Developers, Publishers.Name AS Publishers
+FROM GameDevelopers
+JOIN Developers ON GameDevelopers.DeveloperId = Developers.DeveloperId
+JOIN GamePublishers ON GameDevelopers.GameId = GamePublishers.GameId
+JOIN Publishers ON GamePublishers.PublisherId = Publishers.PublisherId
+GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
+GO
+
+-- 3
+CREATE VIEW ReleasedGamesWithPublishers AS
+SELECT R.GameId, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
+FROM ReleasedGames R
+JOIN Games G ON R.GameId = G.GameId
+JOIN GamePublishers GP ON G.GameId = GP.GameId
+JOIN Publishers P ON GP.PublisherId = P.PublisherId;
+GO
+
+-- 4
+CREATE VIEW TopRatedGames AS
+SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameId) AS NumberOfReviews
+FROM Games G
+LEFT JOIN Score S ON G.GameID = S.GameID
+LEFT JOIN Reviews R ON G.GameID = R.GameID
+GROUP BY G.GameId, G.Title
+ORDER BY AverageScore DESC, NumberOfReviews DESC;
+GO
+
+-- 5
+CREATE VIEW TopSellingGames AS
+SELECT TOP 10 G.GameId, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
+FROM Games G
+JOIN OrderItems OI ON G.GameId = OI.GameId
+GROUP BY G.GameId, G.Title
+ORDER BY TotalRevenue DESC;
+GO
+
+-- 6
+CREATE VIEW MostActiveUsers AS
+SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+FROM Users U
+JOIN Reviews R ON U.UserId = R.UserId
+GROUP BY U.Username
+ORDER BY NumberOfReviews DESC;
+GO
+
+--- FUNCTIONS
+
+
+
+
+
+
+
+-- 1
+IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
+  DROP FUNCTION GetGamesByGenre
+GO
+
+CREATE FUNCTION GetGamesByGenre
+(
+  @Genre NVARCHAR(255)
+)
+RETURNS TABLE
+AS 
+RETURN (
+  SELECT G.*
+  FROM Games G
+  JOIN GameGenres GG ON G.GameId = GG.GameId
+  WHERE GG.Genre = @Genre
+);
+GO
+
+-- 2
+IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
+  DROP FUNCTION GetGamesByPlatform
+GO
+
+CREATE FUNCTION GetGamesByPlatform
+(
+  @Platform NVARCHAR(255)
+)
+RETURNS TABLE
+AS
+RETURN (
+  SELECT G.*
+  FROM Games G
+  JOIN GamePlatforms GP ON G.GameId = GP.GameId
+  JOIN Platforms P ON GP.PlatformId = P.PlatformId
+  WHERE P.Name = @Platform
+);
+GO
+
+-- 3
+IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
+  DROP FUNCTION DeveloperGames
+GO
+
+CREATE FUNCTION DeveloperGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GameDevelopers.GameId, Games.Title
+  FROM Developers
+  JOIN GameDevelopers ON Developers.DeveloperId = GameDevelopers.DeveloperID
+  JOIN Games ON Games.GameId = GameDevelopers.GameId
+  WHERE Developers.Name = @Name
+  RETURN
+END;
+GO
+
+-- 4
+IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
+  DROP FUNCTION PublisherGames
+GO
+
+CREATE FUNCTION PublisherGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GamePublishers.GameId, Games.Title
+  FROM Publishers
+  JOIN GamePublishers ON Publishers.PublisherId = GamePublishers.PublisherId
+  JOIN Games ON Games.GameId = GamePublishers.GameId
+  WHERE Publishers.Name = @Name
+  RETURN
+END;
+GO
+
+-- 5
 
 
 
@@ -544,9 +679,7 @@ GO
 
 
 IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-BEGIN
   DROP FUNCTION HowMuch
-END
 GO
 
 CREATE FUNCTION HowMuch
@@ -566,9 +699,7 @@ END;
 GO
 
 IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
-BEGIN
   DROP VIEW GameGenresView
-END
 GO
 
 CREATE VIEW GameGenresView AS
@@ -578,9 +709,7 @@ GROUP BY GameId;
 GO
 
 IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-BEGIN
   DROP VIEW MostActiveUsers
-END
 GO
 
 CREATE VIEW MostActiveUsers AS
@@ -592,9 +721,7 @@ ORDER BY NumberOfReviews DESC;
 GO
 
 IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
-BEGIN
   DROP FUNCTION CalculateTotalPrice
-END
 GO
 
 CREATE FUNCTION CalculateTotalPrice
