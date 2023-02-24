@@ -28,7 +28,7 @@ W związku z tym, że sklep internetowy jest skomplikową instytucją finansową
 
 <h3> Dodatkowe więzy integralności danych </h3>
 
-W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy integralności (NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK) dla każdej tabeli istniejącej w zaprojektowanej bazie danych.
+W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy integralności (NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK, DEFAULT, CREATE INDEX) dla każdej tabeli istniejącej w zaprojektowanej bazie danych.
 
 ```tsql
 CREATE TABLE Users (
@@ -36,6 +36,21 @@ CREATE TABLE Users (
   Username NVARCHAR(255) NOT NULL,
   Email NVARCHAR(255) NOT NULL UNIQUE,
   Password NVARCHAR(255) NOT NULL
+);
+
+CREATE TABLE LoginAttempts (
+  LoginAttemptID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  Time DATETIME NOT NULL,
+  Success BIT NOT NULL DEFAULT 0,
+  FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE UserBans (
+  BanID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  BanStart DATETIME NOT NULL,
+  BanEnd DATETIME NOT NULL
 );
 
 CREATE TABLE Games (
