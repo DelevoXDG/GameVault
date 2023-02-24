@@ -582,7 +582,7 @@ def set_style(app: QApplication):
     app.setPalette(palette)
 
 
-def start():
+def run():
     print('Starting app')
     app = QApplication(sys.argv)
     set_style(app)
