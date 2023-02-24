@@ -227,6 +227,11 @@ FROM GameGenres G
 GROUP BY GameId;
 ```
 
+Przykładowe zastosowanie:
+```tsql
+SELECT * FROM GameGenresView;
+```
+
 Wyświetlanie wszystkich deweloperów i wydawców dla każdej gry:
 
 ```tsql
@@ -237,6 +242,11 @@ JOIN Developers ON GameDevelopers.DeveloperId = Developers.DeveloperId
 JOIN GamePublishers ON GameDevelopers.GameId = GamePublishers.GameId
 JOIN Publishers ON GamePublishers.PublisherId = Publishers.PublisherId
 GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
+```
+
+Przykładowe zastosowanie:
+```tsql
+SELECT * FROM GameDevelopersAndPublishers;
 ```
 
 Wyświetlanie odpowiedniej informacji o grach wydanych na rynku wraz z nazwami ich wszystkich wydawców:
@@ -269,6 +279,12 @@ CREATE VIEW TopRatedGames AS
 GO
 ```
 
+
+Przykładowe zastosowanie:
+```tsql
+SELECT * FROM TopRatedGames;
+```
+
 Wyświetlanie najlepiej sprzedających się gier, sortując malejąco po TotalRevenue:
 
 ```tsql
@@ -281,19 +297,25 @@ ORDER BY TotalRevenue DESC;
 GO
 ```
 
-Wyświetlanie użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
+Przykładowe zastosowanie:
+```tsql
+SELECT * FROM TopSellingGames;
+```
+
+Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
 
 ```tsql
-IF OBJECT_ID('MostReviewingUsers', 'V') IS NOT NULL
-  DROP VIEW MostReviewingUsers
-GO
-CREATE VIEW MostReviewingUsers AS
-SELECT TOP 100 PERCENT U.Username, COUNT(*) AS NumberOfReviews
+CREATE VIEW MostActiveUsers AS
+SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
-JOIN Reviews R ON U.UserID = R.UserID
+JOIN Reviews R ON U.UserId = R.UserId
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
-GO
+```
+
+Przykładowe zastosowanie:
+```tsql
+SELECT * FROM MostActiveUsers;
 ```
 
 <h3> Opis procedur składowanych </h3>
@@ -344,11 +366,11 @@ REATE PROCEDURE GetRecommendedGames (@UserID INT)
   WHERE RowNum = 1
   ORDER BY [Matching Games Num] DESC
 END;
-GO
 ```
-Przykładowe zastosowanie
+
+Przykładowe zastosowanie:
 ```tsql
-EXEC GetRecommendedGames 4
+EXEC GetRecommendedGames 4;
 ```
 
 Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego dane są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
@@ -387,12 +409,11 @@ BEGIN
 	VALUES (@userID, GETDATE(), @isAuthenticated)
     END
 	RETURN @isAuthenticated
-END
-GO
+END;
 ```
 <a name = "user_login_use">Przykładowe zastosowanie
 </a><br>
-*Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowaniaę si nawet z poprawnym hasłem kończy się niepowodzeniem*
+*Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania się nawet z poprawnym hasłem kończy się niepowodzeniem.*
 ```tsql
 BEGIN
   DECLARE @ok BIT
@@ -407,8 +428,7 @@ BEGIN
   EXEC @ok = dbo.userLogin 'jim_smith', 'passw0rd'
   SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
 SELECT * FROM UserBans
-END
-GO
+END;
 ```
 
 Procedura `CalculateTotalSales` po uruchomieniu pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
@@ -435,12 +455,11 @@ BEGIN
   ORDER BY 
     TotalSales DESC;
 END;
-GO
 ```
-Przykładowe zastosowanie
+
+Przykładowe zastosowanie:
 ```tsql
-EXEC CalculateTotalSales 
-GO
+EXEC CalculateTotalSales;
 ```
 Procedura `SearchUsers` po uruchomieniu wyszukiwa wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
 ```tsql
@@ -449,13 +468,12 @@ CREATE PROCEDURE SearchUsers
 AS
   SELECT UserID, Username 
   FROM Users
-  WHERE Username LIKE '%' + @Username + '%'
-GO
+  WHERE Username LIKE '%' + @Username + '%';
 ```
-Przykładowe zastosowanie
+
+Przykładowe zastosowanie:
 ```tsql
-EXEC SearchUsers 'jo'
-GO
+EXEC SearchUsers 'jo';
 ```
 
 Procedura `GetBiggestConsumers` po uruchomieniu wyszukiwa największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
@@ -494,12 +512,11 @@ BEGIN
       ELSE PI.TotalSpent
     END DESC;
 END;
-GO
 ```
-Przykładowe zastosowanie
+
+Przykładowe zastosowanie:
 ```tsql
 EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
-GO
 ```
 
 Procedura `GetUserPurchaseHistory` po uruchomieniu wyśwetlaja historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
@@ -522,13 +539,11 @@ BEGIN
   ORDER BY
     O.OrderDate ASC, O.OrderID ASC;
 END;
-GO
 ```
 
-Przykładowe zastosowanie
+Przykładowe zastosowanie:
 ```tsql
-EXEC GetUserPurchaseHistory 2
-GO
+EXEC GetUserPurchaseHistory 2;
 ```
 
 <h3> Opis wyzwalaczy </h3>
