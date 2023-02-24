@@ -1,6 +1,6 @@
 Herman Lazarchyk, Maksim Zdobnikau
 
-<h1><img align="right" src="src/assets/logo_200.png" alt="GameVault Logo" width="80"/> Baza Danych Sklepu Internetowego<br>Gier Komputerowych</h1>
+<h1><img align="right" src="src/assets/logo_200.png" alt="GameVault Logo" width="110"/> Baza Danych<br>Sklepu Internetowego<br>Gier Komputerowych</h1>
 
 <h3> Cel i możliwości </h3>
 
