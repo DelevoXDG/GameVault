@@ -55,7 +55,7 @@ CREATE TABLE UserBans (
 
 CREATE TABLE Games (
   GameID INT PRIMARY KEY IDENTITY(1,1),
-  Title NVARCHAR(255) NOT NULL UNIQUE,
+  Title NVARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
