@@ -961,7 +961,6 @@ CREATE VIEW TopRatedGames AS
     [Number of Reviews] DESC; 
 GO
 
-
 -- 5
 IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
   DROP VIEW TopSellingGames
