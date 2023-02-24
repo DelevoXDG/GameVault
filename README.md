@@ -430,7 +430,7 @@ BEGIN
 SELECT * FROM UserBans
 END;
 ```
-
+---
 Procedura `CalculateTotalSales` po uruchomieniu pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
 ```tsql
 CREATE PROCEDURE CalculateTotalSales 
@@ -461,6 +461,7 @@ Przykładowe zastosowanie:
 ```tsql
 EXEC CalculateTotalSales;
 ```
+---
 Procedura `SearchUsers` po uruchomieniu wyszukiwa wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
 ```tsql
 CREATE PROCEDURE SearchUsers
@@ -475,7 +476,7 @@ Przykładowe zastosowanie:
 ```tsql
 EXEC SearchUsers 'jo';
 ```
-
+---
 Procedura `GetBiggestConsumers` po uruchomieniu wyszukiwa największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
 ```tsql
 CREATE PROCEDURE GetBiggestConsumers
@@ -513,12 +514,11 @@ BEGIN
     END DESC;
 END;
 ```
-
 Przykładowe zastosowanie:
 ```tsql
 EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 ```
-
+---
 Procedura `GetUserPurchaseHistory` po uruchomieniu wyśwetlaja historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
 ```tsql
 CREATE PROCEDURE GetUserPurchaseHistory
@@ -547,7 +547,7 @@ EXEC GetUserPurchaseHistory 2;
 ```
 
 <h3> Opis wyzwalaczy </h3>
-
+---
 Wyzwalacz `Tr_EncryptPasswordsTrigger` jest uruchamiany zamiast operacji wstawiania w tabeli Users. Szyfruje wartość kolumny hasła wstawionego wiersza za pomocą algorytmu haszującego SHA i wstawia wiersz z zaszyfrowanym hasłem do tabeli.
 
 ```tsql
@@ -562,7 +562,7 @@ GO
 ```
 Przykładowe zastosowanie<br>
 [Procedura logowania](#user_login_use)
-
+---
 Wyzwalacz `Tr_UserBanTrigger` jest uruchomiany po dodaniu nowego rekordu do tabeli `LoginAttempts` i automatycznie blokuje użytkownikowi możliwości zalogowania się na okres 5 minut, jeśli nie udało mu się zalogować 5 lub więcej razy w ciągu ostatnich 5 minut. Wyzwalacz wstawia nowy wiersz do tabeli UserBans, określając identyfikator użytkownika, czas rozpoczęcia bana i czas zakończenia bana.
 ```tsql
 CREATE TRIGGER Tr_UserBanTrigger 
@@ -600,7 +600,7 @@ GO
 ```
 Przykładowe zastosowanie<br>
 [Procedura logowania](#user_login_use)
-
+---
 Wyzwalacz o nazwie `Tr_RemoveFromCartAndWishlist` usuwa grę zarówno z koszyka użytkownika, jak iz listy życzeń po zakupie tej gry.
 ```tslq
 CREATE TRIGGER Tr_RemoveFromCartAndWishlist
@@ -633,7 +633,7 @@ SELECT * FROM Cart WHERE UserID = 1
 END
 GO
 ```
-
+---
 Wyzwalacz `Tr_AutoGameAwards` jest uruchamiany po dodaniu nowego rekordu do tabeli OrderItems i automatycznie przyznaje grze nagrodę o nazwie `'Community's Favorite'` ('Ulubiony przez społeczność'), jeśli co najmniej 10 unikalnych użytkowników kupiło grę.
 ```tsql
 CREATE TRIGGER Tr_AutoGameAwards
@@ -666,8 +666,6 @@ END;
 GO
 ```
 Przykładowe zastosowanie:
-
-Wyzwalacz o nazwie Tr_DeleteAwardsOnGenreDelete usuwa nagrody w grach powiązane z usuniętym gatunkiem gier.
 ```tsql
 BEGIN
 BEGIN
@@ -717,6 +715,20 @@ JOIN Games G ON g.GameID = GA.GameID
 WHERE GA.GameID = 5
 
 END
+```
+---
+Wyzwalacz o nazwie Tr_DeleteAwardsOnGenreDelete usuwa nagrody w grach powiązane z usuniętym gatunkiem gier.
+```tsql
+CREATE TRIGGER Tr_DeleteAwardsOnGenreDelete
+ON GameGenres
+AFTER DELETE
+AS
+BEGIN
+  DELETE ga
+  FROM GameAwards ga
+  JOIN deleted d ON CHARINDEX(d.Genre, ga.AwardName) > 0;
+END
+
 ```
 Przykładowe zastosowanie:
 ```tsql
