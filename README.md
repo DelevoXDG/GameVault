@@ -411,7 +411,7 @@ BEGIN
 	RETURN @isAuthenticated
 END;
 ```
-<a name = "user_login_use">Przykładowe zastosowanie
+<a name = "user_login_use">Przykładowe zastosowanie:
 </a><br>
 *Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania się nawet z poprawnym hasłem kończy się niepowodzeniem.*
 ```tsql
@@ -621,7 +621,7 @@ BEGIN
 END
 GO
 ```
-Przykładowe zastosowanie
+Przykładowe zastosowanie:
 ```tsql
 BEGIN
 SELECT * FROM Wishlist WHERE UserID = 1
@@ -665,7 +665,7 @@ BEGIN
 END;
 GO
 ```
-Przykładowe zastosowanie
+Przykładowe zastosowanie:
 
 Wyzwalacz o nazwie Tr_DeleteAwardsOnGenreDelete usuwa nagrody w grach powiązane z usuniętym gatunkiem gier.
 ```tsql
@@ -718,7 +718,7 @@ WHERE GA.GameID = 5
 
 END
 ```
-Przykładowe zastosowanie
+Przykładowe zastosowanie:
 ```tsql
 BEGIN
   SELECT AwardName FROM GameAwards
