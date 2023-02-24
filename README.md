@@ -965,7 +965,7 @@ Program kliencki jest realizowany w języku Python. W programie są wykorzystywa
 - Edytowanie rekordu;
 - Wyszykiwanie rekordu przez wyszukiwanie nazwy gry;
 - Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
-<img src="assets/demo.gif" alt="App demo" height="400" />
+<img src="assets/demo.gif" alt="App demo" height="500" />
 
 <h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
 Znajduje się w pliku <a href="init.sql">init.sql</a>.
