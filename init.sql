@@ -102,6 +102,25 @@ CREATE TABLE Users (
 GO
 
 -- 2
+CREATE TABLE LoginAttempts (
+  LoginAttemptID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  Time DATETIME NOT NULL,
+  Success BIT NOT NULL DEFAULT 0,
+  FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+GO
+
+-- 3
+CREATE TABLE UserBans (
+  BanID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  BanStart DATETIME NOT NULL,
+  BanEnd DATETIME NOT NULL
+);
+GO
+
+-- 4
 CREATE TABLE Games (
   GameId INT PRIMARY KEY IDENTITY(1,1),
   Title NVARCHAR(255) NOT NULL UNIQUE,
@@ -111,7 +130,7 @@ CREATE TABLE Games (
 );
 GO
 
--- 3
+-- 5
 CREATE TABLE GameGenres (
   GameGenreId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -120,14 +139,14 @@ CREATE TABLE GameGenres (
 );
 GO
 
--- 4
+-- 6
 CREATE TABLE Platforms (
   PlatformId INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE
 );
 GO
 
--- 5
+-- 7
 CREATE TABLE GamePlatforms (
   GamePlatformId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -137,7 +156,7 @@ CREATE TABLE GamePlatforms (
 );
 GO
 
--- 6
+-- 8
 CREATE TABLE UpcomingGames (
   UpcomingGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -147,7 +166,7 @@ CREATE TABLE UpcomingGames (
 );
 GO
 
--- 7
+-- 9
 CREATE TABLE PreOrderGames (
   PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -157,7 +176,7 @@ CREATE TABLE PreOrderGames (
 );
 GO
 
--- 8
+-- 10
 CREATE TABLE BetaGames (
   BetaGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -167,7 +186,7 @@ CREATE TABLE BetaGames (
 );
 GO
 
--- 9
+-- 11
 CREATE TABLE ReleasedGames (
   ReleasedGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -176,7 +195,7 @@ CREATE TABLE ReleasedGames (
 );
 GO
 
--- 10
+-- 12
 CREATE TABLE Score (
   ScoreId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
@@ -187,7 +206,7 @@ CREATE TABLE Score (
 );
 GO
 
--- 11
+-- 13
 CREATE TABLE Reviews (
   ReviewId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
@@ -198,7 +217,7 @@ CREATE TABLE Reviews (
 );
 GO
 
--- 12
+-- 14
 CREATE TABLE GameAwards (
   GameAwardsId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -208,7 +227,7 @@ CREATE TABLE GameAwards (
 );
 GO
 
--- 13
+-- 15
 CREATE TABLE Developers (
   DeveloperId INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE,
@@ -217,7 +236,7 @@ CREATE TABLE Developers (
 );
 GO
 
--- 14
+-- 16
 CREATE TABLE GameDevelopers (
   GameDeveloperId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -227,7 +246,7 @@ CREATE TABLE GameDevelopers (
 );
 GO
 
--- 15
+-- 17
 CREATE TABLE Publishers (
   PublisherId INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE,
@@ -236,7 +255,7 @@ CREATE TABLE Publishers (
 );
 GO
 
--- 16
+-- 18
 CREATE TABLE GamePublishers (
   GamePublisherId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
@@ -246,7 +265,7 @@ CREATE TABLE GamePublishers (
 );
 GO
 
--- 17
+-- 19
 CREATE TABLE Wishlist (
   WishlistId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
@@ -256,7 +275,7 @@ CREATE TABLE Wishlist (
 );
 GO
 
--- 18
+-- 20
 CREATE TABLE Cart (
   CartId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
@@ -267,7 +286,7 @@ CREATE TABLE Cart (
 );
 GO
 
--- 19
+-- 21
 CREATE TABLE Orders (
   OrderId INT PRIMARY KEY IDENTITY(1,1),
   UserId INT NOT NULL,
@@ -276,7 +295,7 @@ CREATE TABLE Orders (
 );
 GO
 
--- 20
+-- 22
 CREATE TABLE OrderItems (
   OrderItemId INT PRIMARY KEY IDENTITY(1,1),
   OrderId INT NOT NULL,
@@ -288,7 +307,7 @@ CREATE TABLE OrderItems (
 );
 GO
 
---21 
+--23
 CREATE TABLE ExchangeRate (
   ExchangeRateId INT PRIMARY KEY IDENTITY(1,1),
   Currency NVARCHAR(3) NOT NULL UNIQUE,
@@ -519,6 +538,7 @@ VALUES
   (N'sara_lee', N'sara_lee@example.com', N'password4'),
   (N'tom_jones', N'tom_jones@example.com', N'password5'),
   (N'jimmy_johns', N'big_jimmy@example.com', N'password6');
+GO
 
 -- 2
 INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
@@ -529,6 +549,7 @@ VALUES
   (N'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
   (N'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
   (N'Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
+GO
 
 -- 3
 INSERT INTO GameGenres (GameId, Genre)
@@ -538,6 +559,7 @@ VALUES
   (2, N'First-Person'),
   (2, N'Shooter'),
   (3, N'Adventure');
+GO
 
 -- 4
 INSERT INTO Platforms (Name) 
@@ -547,6 +569,7 @@ VALUES
   (N'Nintendo Switch'),
   (N'PC'),
   (N'Mobile');
+GO
 
 -- 5
 INSERT INTO GamePlatforms (GameId, PlatformId) 
@@ -556,6 +579,7 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
 
 -- 6
 INSERT INTO UpcomingGames (GameId, TrailerUrl, ExpectedDeliveryDate)
@@ -565,6 +589,7 @@ VALUES
   (5, N'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
   (4, N'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
   (2, N'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+GO
 
 -- 7
 INSERT INTO PreOrderGames (GameId, PreOrderBonus, PreOrderDiscount)
@@ -574,6 +599,7 @@ VALUES
   (2, 'Bonus story mission', 5.00),
   (3, 'Exclusive in-game item', 5.00),
   (5, 'Bonus skin pack', 5.00);
+GO
 
 -- 8
 INSERT INTO BetaGames (GameId, BetaStartDate, BetaEndDate)
@@ -583,6 +609,7 @@ VALUES
   (3, '2018-02-01', '2018-03-15'),
   (4, '2015-08-01', '2015-10-27'),
   (5, '2011-10-01', '2011-11-18');
+GO
 
 -- 9
 INSERT INTO ReleasedGames (GameId, ReleaseDate)
@@ -592,6 +619,7 @@ VALUES
   (4, '2015-10-27'),
   (5, '2011-11-18'),
   (2, '2018-10-26');
+GO
 
 -- 10
 INSERT INTO Score (UserId, GameId, Score) 
@@ -603,6 +631,7 @@ VALUES
   (5, 4, 8),
   (4, 3, 6),
   (5, 4, 9);
+GO
 
 -- 11
 INSERT INTO Reviews (UserId, GameId, Review) 
@@ -612,6 +641,7 @@ VALUES
   (3, 2, 'Not the best game I have played, but it is still fun.'),
   (4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+GO
 
 -- 12
 INSERT INTO GameAwards (GameId, AwardName, Year) 
@@ -630,6 +660,7 @@ VALUES
   (N'Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', N'sms.playstation.com'),
   (N'343 Industries', 'An American video game development studio located in Redmond, Washington', N'343industries.com'),
   (N'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', N'mojang.com');
+GO
 
 -- 14
 INSERT INTO GameDevelopers (GameId, DeveloperId) 
@@ -639,6 +670,7 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
 
 -- 15
 INSERT INTO Publishers (Name, Description, Website) 
@@ -658,6 +690,7 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
 
 -- 17
 INSERT INTO Wishlist (UserId, GameId) 
@@ -667,6 +700,7 @@ VALUES
   (3, 4),
   (4, 5),
   (5, 1);
+GO
 
 -- 18
 INSERT INTO Cart (UserId, GameId, Quantity) 
@@ -676,6 +710,7 @@ VALUES
   (3, 4, 3),
   (4, 5, 4),
   (5, 1, 5);
+GO
 
 -- 19
 INSERT INTO Orders (UserId, OrderDate) 
@@ -686,6 +721,7 @@ VALUES
   (4, '2022-09-15'),
   (5, '2022-08-01'),
   (6, '2022-07-15');
+GO
 
 -- 20
 INSERT INTO OrderItems (OrderId, GameId, Quantity, [Price in USD]) 
@@ -711,7 +747,8 @@ VALUES
   (5, 2, 1, 9.99),
   (5, 4, 2, 39.98),
   (5, 6, 1, 49.99);
-  
+GO
+
 -- 21
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
