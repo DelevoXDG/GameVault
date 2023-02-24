@@ -11,10 +11,10 @@ import datetime
 class CONFIG:
     DRIVER_NAME = 'SQL SERVER'
     SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
-    DATABASE_NAME = 'STEAM'
+    DATABASE_NAME = 'GameVault'
     TABLE_NAME = 'dbo.Games'
     APP_NAME = 'Management Studio'
-    FULL_APP_NAME = DATABASE_NAME + ' BD ' + APP_NAME 
+    FULL_APP_NAME = DATABASE_NAME + ' DB ' + APP_NAME 
     TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
     
     DEFAULT_CURRENCY = 'USD'
@@ -419,6 +419,12 @@ class MainWidget(QWidget):
 
         cur_combo = QComboBox()
         currencies = CONFIG.get_currency_list()
+        default_currency = self.model.default_currency()
+        if default_currency not in currencies:
+            pass
+        else:
+            currencies.remove(default_currency)
+            currencies = [default_currency] + currencies
         for cur in currencies:
             icon_path = full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur))
             cur_icon = QIcon(icon_path)

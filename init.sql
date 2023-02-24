@@ -1,10 +1,10 @@
 --- DATABASE
 
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
-  CREATE DATABASE Steam
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'GameVault')
+  CREATE DATABASE GameVault
 GO
 
-USE Steam;
+USE GameVault;
 
 --- TABLES
 
@@ -105,7 +105,7 @@ GO
 CREATE TABLE Users (
   UserID INT PRIMARY KEY IDENTITY(1,1),
   Username NVARCHAR(255) NOT NULL,
-  Email NVARCHAR(255) NOT NULL UNIQUE,
+  Email NVARCHAR(255) NOT NULL UNIQUE CHECK (Email LIKE '%[@]%'),
   Password NVARCHAR(255) NOT NULL
 );
 GO
@@ -413,7 +413,9 @@ BEGIN
   FROM inserted i;
   
   DECLARE @AWARD_1_NAME NVARCHAR(255);
+  DECLARE @AWARD_1_USER_TRESHOLD INT;
   SET @AWARD_1_NAME= 'Community''s Favorite'
+  SET @AWARD_1_USER_TRESHOLD= 10;
   IF @AWARD_1_NAME NOT IN (SELECT AwardName FROM GameAwards WHERE GameID = @GameID)
     BEGIN
     SELECT @Count = COUNT(DISTINCT o.UserID)
@@ -422,7 +424,7 @@ BEGIN
     WHERE oi.GameID = @GameID;
     
     
-    IF @Count >= 10
+    IF @Count >= @AWARD_1_USER_TRESHOLD
     BEGIN
       INSERT INTO GameAwards (GameID, AwardName, Year)
       VALUES (@GameID, @AWARD_1_NAME, YEAR(GETDATE()));
@@ -448,22 +450,22 @@ GO
 -- SAMPLE DATA
 INSERT INTO Users (Username, Email, Password)
 VALUES
-  ('john_doe', 'john_doe@example.com', '12345678'),
-  ('jane_doe', 'jane_doe@example.com', 'qwerty'),
-  ('jim_smith', 'jim_smith@example.com', 'passw0rd'),
-  ('sara_lee', 'sara_lee@example.com', 'letmein'),
-  ('tom_jones', 'tom_jones@example.com', 'abc123'),
-  ('jimmy_johns', 'big_jimmy@example.com', 'admin');
+  (N'john_doe', N'john_doe@example.com', N'12345678'),
+  (N'jane_doe', N'jane_doe@example.com', N'qwerty'),
+  (N'jim_smith', N'jim_smith@example.com', N'passw0rd'),
+  (N'sara_lee', N'sara_lee@example.com', N'letmein'),
+  (N'tom_jones', N'tom_jones@example.com', N'abc123'),
+  (N'jimmy_johns', N'big_jimmy@example.com', N'admin');
 -- SELECT * FROM USERS
 -- GO;
 INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
-  ('The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
-  ('Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
-  ('God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
-  ('Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
-  ('Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
-  ('Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
+  (N'The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  (N'Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  (N'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  (N'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  (N'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
+  (N'Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
 INSERT INTO GameGenres (GameID, Genre)
 VALUES
   (1, N'Multiplayer'),
@@ -506,11 +508,11 @@ GO
 -- 7
 INSERT INTO PreOrderGames (GameID, PreOrderBonus, PreOrderDiscount)
 VALUES
-  (1, 'Bonus skin pack', 5.00),
-  (4, 'Bonus weapon pack', 10.00),
-  (2, 'Bonus story mission', 5.00),
-  (3, 'Exclusive in-game item', 5.00),
-  (5, 'Bonus skin pack', 5.00);
+  (1, N'Bonus skin pack', 5.00),
+  (4, N'Bonus weapon pack', 10.00),
+  (2, N'Bonus story mission', 5.00),
+  (3, N'Exclusive in-game item', 5.00),
+  (5, N'Bonus skin pack', 5.00);
 GO
 
 -- 8
@@ -667,10 +669,10 @@ VALUES
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
   (N'USD', 1.00),
-  (N'EUR', 0.93),
+  (N'EUR', 0.95),
   (N'GBP', 0.83),
-  (N'JPY', 134.15),
-  (N'PLN', 4.45);
+  (N'JPY', 135.58),
+  (N'PLN', 4.47);
 GO
 
 --- PROCEDURES
@@ -1141,6 +1143,8 @@ GO
 -- VALUES (6, 2, 1, 1)
 -- SELECT * FROM Wishlist WHERE UserID = 1
 -- SELECT * FROM Cart WHERE UserID = 1
+-- END
+-- GO
 
 -- END
 
