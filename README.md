@@ -714,4 +714,4 @@ Program kliencki jest realizowany w języku Python. W programie są wykorzystywa
 - Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
 
 <h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
-Znajduje się w pliku [init.sql](../../init.sql)
+Znajduje się w pliku [init.sql](./init.sql)
