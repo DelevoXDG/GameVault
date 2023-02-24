@@ -88,23 +88,47 @@ IF OBJECT_ID('Games', 'U') IS NOT NULL
   DROP TABLE Games
 GO
 
+IF OBJECT_ID('UserBans', 'U') IS NOT NULL
+  DROP TABLE UserBans
+
+IF OBJECT_ID('LoginAttempts', 'U') IS NOT NULL
+  DROP TABLE LoginAttempts
+GO
+
 IF OBJECT_ID('Users', 'U') IS NOT NULL
   DROP TABLE Users
 GO
 
+
+
 -- 1
 CREATE TABLE Users (
   UserId INT PRIMARY KEY IDENTITY(1,1),
-  Username VARCHAR(255) NOT NULL,
-  Email VARCHAR(255) NOT NULL UNIQUE,
-  Password VARCHAR(255) NOT NULL
+  Username NVARCHAR(255) NOT NULL,
+  Email NVARCHAR(255) NOT NULL UNIQUE,
+  Password NVARCHAR(255) NOT NULL
 );
 GO
+
+CREATE TABLE LoginAttempts (
+    LoginAttemptID INT PRIMARY KEY IDENTITY(1,1),
+    UserID INT NOT NULL,
+    Time DATETIME NOT NULL,
+    Success BIT NOT NULL DEFAULT 0,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE UserBans (
+  BanID INT PRIMARY KEY IDENTITY,
+  UserID INT NOT NULL,
+  BanStart DATETIME NOT NULL,
+  BanEnd DATETIME NOT NULL
+);
 
 -- 2
 CREATE TABLE Games (
   GameId INT PRIMARY KEY IDENTITY(1,1),
-  Title VARCHAR(255) NOT NULL,
+  Title NVARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
@@ -115,7 +139,7 @@ GO
 CREATE TABLE GameGenres (
   GameGenreId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  Genre VARCHAR(255) NOT NULL,
+  Genre NVARCHAR(255) NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
@@ -123,7 +147,7 @@ GO
 -- 4
 CREATE TABLE Platforms (
   PlatformId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL
+  Name NVARCHAR(255) NOT NULL
 );
 GO
 
@@ -143,7 +167,7 @@ GO
 CREATE TABLE UpcomingGames (
   UpcomingGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  TrailerUrl VARCHAR(255),
+  TrailerUrl NVARCHAR(255),
   ExpectedDeliveryDate DATE,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -154,7 +178,7 @@ GO
 CREATE TABLE PreOrderGames (
   PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  PreOrderBonus VARCHAR(255),
+  PreOrderBonus NVARCHAR(255),
   PreOrderDiscount DECIMAL(2),
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -207,7 +231,7 @@ GO
 CREATE TABLE GameAwards (
   GameAwardsId INT PRIMARY KEY IDENTITY(1,1),
   GameId INT NOT NULL,
-  AwardName VARCHAR(255) NOT NULL,
+  AwardName NVARCHAR(255) NOT NULL,
   Year INT NOT NULL,
   FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -217,9 +241,9 @@ GO
 -- 13
 CREATE TABLE Developers (
   DeveloperId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website VARCHAR(255)
+  Website NVARCHAR(255)
 );
 GO
 
@@ -238,9 +262,9 @@ GO
 -- 15
 CREATE TABLE Publishers (
   PublisherId INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(255) NOT NULL,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website VARCHAR(255)
+  Website NVARCHAR(255)
 );
 GO
 
@@ -285,7 +309,7 @@ CREATE TABLE Orders (
   UserId INT NOT NULL,
   OrderDate DATE NOT NULL,
 
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
 );
 GO
 
@@ -298,7 +322,7 @@ CREATE TABLE OrderItems (
   Quantity INT NOT NULL,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0),
   FOREIGN KEY (OrderId) REFERENCES Orders (OrderId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameId) REFERENCES Games (GameId)  
 );
 GO
 
@@ -310,17 +334,123 @@ CREATE TABLE ExchangeRate (
 );
 GO
 
+-- TRIGGERS
 
--- Sample data
+-- 1
+IF OBJECT_ID('Tr_EncryptPasswordsTrigger', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_EncryptPasswordsTrigger
+GO
+CREATE TRIGGER Tr_EncryptPasswordsTrigger 
+ON users
+INSTEAD OF INSERT
+AS
+	INSERT INTO users
+	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
+  FROM inserted AS I
+GO
+
+-- 2
+IF OBJECT_ID('Tr_UserBanTrigger', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_UserBanTrigger
+GO
+CREATE TRIGGER Tr_UserBanTrigger 
+ON LoginAttempts
+AFTER INSERT
+AS
+BEGIN
+  DECLARE @UserID INT, @FailedLoginAttempts INT, @LastFailedLogin DATETIME, @BanStart DATETIME, @BanEnd DATETIME;
+
+  SELECT @UserID = UserID, @FailedLoginAttempts = COUNT(*) FROM LoginAttempts
+  WHERE UserID = (SELECT UserID FROM inserted)
+  AND Success = 0
+  AND Time BETWEEN DATEADD(MINUTE, -5, GETDATE()) AND GETDATE()
+  GROUP BY UserID;
+
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userId AND BanEnd >= GETDATE()
+
+  IF @FailedLoginAttempts >= 5 AND @ActiveBans = 0 
+  BEGIN
+    SELECT TOP 1 @LastFailedLogin = Time 
+    FROM LoginAttempts
+    WHERE UserID = @UserID
+    AND Success = 0
+    ORDER BY Time DESC;
+
+    SET @BanStart = @LastFailedLogin;
+    SET @BanEnd = DATEADD(MINUTE, 5, @BanStart);
+
+    INSERT INTO UserBans (UserID, BanStart, BanEnd)
+    VALUES (@UserID, @BanStart, @BanEnd);
+  END
+END;
+GO
+
+-- 3
+IF OBJECT_ID('Tr_RemoveFromCartAndWishlist', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_RemoveFromCartAndWishlist
+GO
+CREATE TRIGGER Tr_RemoveFromCartAndWishlist
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @gameId INT, @userId INT
+    SELECT @gameId = i.GameID, @userId = o.UserID
+    FROM inserted i
+    JOIN Orders o ON i.OrderID = o.OrderID
+    
+    DELETE FROM Cart
+    WHERE UserID = @userId AND GameID = @gameId
+    
+    DELETE FROM Wishlist
+    WHERE UserID = @userId AND GameID = @gameId
+END
+GO
+-- 4
+IF OBJECT_ID('Tr_AutoGameAwards', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_AutoGameAwards
+GO
+CREATE TRIGGER Tr_AutoGameAwards
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+  DECLARE @GameId INT, @Count INT;
+
+  SELECT @GameId = i.GameId
+  FROM inserted i;
+  
+  DECLARE @AWARD_1_NAME NVARCHAR(255);
+  SET @AWARD_1_NAME= 'Community''s favorite'
+  IF @AWARD_1_NAME NOT IN (SELECT AwardName FROM GameAwards WHERE GameId = @GameId)
+    BEGIN
+    SELECT @Count = COUNT(DISTINCT o.UserId)
+    FROM OrderItems oi
+    JOIN Orders o ON oi.OrderId = o.OrderId
+    WHERE oi.GameId = @GameId;
+    
+    
+    IF @Count >= 10
+    BEGIN
+      INSERT INTO GameAwards (GameId, AwardName, Year)
+      VALUES (@GameId, @AWARD_1_NAME, YEAR(GETDATE()));
+    END
+  END
+END;
+
+GO
+-- SAMPLE DATA
 INSERT INTO Users (Username, Email, Password)
 VALUES
-  ('john_doe', 'john_doe@example.com', 'password1'),
-  ('jane_doe', 'jane_doe@example.com', 'password2'),
-  ('jim_smith', 'jim_smith@example.com', 'password3'),
-  ('sara_lee', 'sara_lee@example.com', 'password4'),
-  ('tom_jones', 'tom_jones@example.com', 'password5'),
-  ('jimmy_johns', 'big_jimmy@example.com', 'password6');
-  
+  ('john_doe', 'john_doe@example.com', '12345678'),
+  ('jane_doe', 'jane_doe@example.com', 'qwerty'),
+  ('jim_smith', 'jim_smith@example.com', 'passw0rd'),
+  ('sara_lee', 'sara_lee@example.com', 'letmein'),
+  ('tom_jones', 'tom_jones@example.com', 'abc123'),
+  ('jimmy_johns', 'big_jimmy@example.com', 'admin');
+-- SELECT * FROM USERS
+-- GO;
 INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
   ('The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
@@ -329,6 +459,9 @@ VALUES
   ('Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
   ('Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
   ('Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
+GO
+SELECT * FROM Games
+GO;
 
 INSERT INTO GameGenres (GameId, Genre)
 VALUES
@@ -583,7 +716,7 @@ IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
   DROP PROCEDURE SearchUsers
 GO
 CREATE PROCEDURE SearchUsers
-  @Username VARCHAR(255)
+  @Username NVARCHAR(255)
 AS
   SELECT UserID, Username 
   FROM Users
@@ -598,7 +731,7 @@ GO
 CREATE PROCEDURE GetBiggestConsumers
   @StartDate DATE = NULL,
   @EndDate DATE = NULL,
-  @OrderBy VARCHAR(20) = 'TotalSpent' -- Sorting by TotalSpent by default
+  @OrderBy NVARCHAR(20) = 'TotalSpent' -- Sorting by TotalSpent by default
 AS
 BEGIN
   WITH UserPurchaseInfo AS (
@@ -748,7 +881,53 @@ ORDER BY NumberOfReviews DESC;
 GO
 
 --- FUNCTIONS
+
 -- 1
+IF OBJECT_ID('userLogin', 'P') IS NOT NULL
+  DROP PROCEDURE userLogin
+GO
+CREATE PROCEDURE userLogin 
+	@userId INT, 
+	@password NVARCHAR(255)
+AS
+BEGIN
+	DECLARE @isAuthenticated BIT = 0
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userId AND BanEnd >= GETDATE()
+	IF @ActiveBans <> 0
+    BEGIN
+      SET @isAuthenticated = 0
+      DECLARE @BanExpiration DATETIME
+      SELECT @BanExpiration = MAX(BanEnd) FROM UserBans WHERE UserID = @userId AND BanEnd >= GETDATE()
+      PRINT 'USER id' + CONVERT(NVARCHAR, @userId) + ' IS BANNED UNTIL ' + CONVERT(NVARCHAR, @BanExpiration)
+    END
+  ELSE
+    BEGIN
+      IF EXISTS (SELECT password FROM Users WHERE UserID = @userId)
+        BEGIN
+          IF (SELECT password FROM Users WHERE UserID = @userId) = CONVERT(NVARCHAR,HASHBYTES('SHA',@password),2)
+          BEGIN
+            SET @isAuthenticated = 1
+        END
+    END
+  END
+	PRINT 'USER id' + CONVERT(NVARCHAR, @userId) + ' ATTEMPTED TO LOGIN AND THE LOGIN ' + CASE WHEN @isAuthenticated = 1 THEN 'WAS SUCCESSFUL' ELSE 'FAILED' END
+	INSERT INTO LoginAttempts(UserID, Time, Success) 
+	VALUES (@userId, GETDATE(), @isAuthenticated)
+
+	RETURN @isAuthenticated
+END
+GO
+
+-- SELECT * FROM UserBans
+-- BEGIN
+--   DECLARE @LoginIsSuccessful BIT
+--   EXEC @LoginIsSuccessful = dbo.userLogin 3, 'passw0rd'
+  
+--   SELECT IIF (@LoginIsSuccessful = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+-- END
+-- GO
+-- 2
 IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
   DROP FUNCTION GetGamesByGenre
 GO
@@ -767,7 +946,7 @@ RETURN (
 );
 GO
 
--- 2
+-- 3
 IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
   DROP FUNCTION GetGamesByPlatform
 GO
@@ -787,7 +966,7 @@ RETURN (
 );
 GO
 
--- 3
+-- 4
 IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
   DROP FUNCTION DeveloperGames
 GO
@@ -809,7 +988,7 @@ BEGIN
 END;
 GO
 
--- 4
+-- 5
 IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
   DROP FUNCTION PublisherGames
 GO
@@ -830,7 +1009,7 @@ BEGIN
   RETURN
 END;
 GO
--- 5
+-- 6
 IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
   DROP FUNCTION CalculateTotalPrice
 GO
@@ -850,7 +1029,7 @@ BEGIN
     RETURN @TotalPrice;
 END;
 GO
--- 6
+-- 7
 IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
   DROP FUNCTION CalculateTotalRevenue
 GO
@@ -872,7 +1051,7 @@ GO
 -- SELECT dbo.CalculateTotalRevenue()
 -- GO
 
--- 7
+-- 8
 IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
   DROP FUNCTION HowMuch
 GO
@@ -895,5 +1074,70 @@ GO
 -- SELECT dbo.HowMuch(1, 'PLN')
 -- GO
 
+-- TEST Tr_RemoveFromCartAndWishlist
+-- BEGIN
+-- INSERT OrderItems (OrderId, GameId, Quantity, [Price in USD]) 
+-- VALUES (6, 2, 1, 1)
+-- SELECT * FROM Wishlist WHERE UserID = 1
+-- SELECT * FROM Cart WHERE UserID = 1
 
+-- END
 
+-- TEST Tr_AutoGameAward
+-- BEGIN
+SELECT * FROM Games
+GO
+DELETE FROM Users WHERE 1=1;
+DELETE FROM Orders WHERE 1=1;
+DELETE FROM OrderItems WHERE 1=1;
+GO
+SELECT * FROM Games WHE
+GO
+
+INSERT INTO Users (Username, Email, Password)
+VALUES 
+('user1', 'user1@example.com', 'password1'),
+('user2', 'user2@example.com', 'password2'),
+('user3', 'user3@example.com', 'password3'),
+('user4', 'user4@example.com', 'password4'),
+('user5', 'user5@example.com', 'password5'),
+('user6', 'user6@example.com', 'password6'),
+('user7', 'user7@example.com', 'password7'),
+('user8', 'user8@example.com', 'password8'),
+('user9', 'user9@example.com', 'password9'),
+('user10', 'user10@example.com', 'password10');
+GO
+-- create orders for each user
+INSERT INTO Orders (UserId, OrderDate) 
+VALUES 
+  ((SELECT UserId FROM Users WHERE Username = 'username1'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username2'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username3'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username4'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username5'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username6'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username7'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username8'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username9'), '2023-01-20'),
+  ((SELECT UserId FROM Users WHERE Username = 'username10'), '2023-01-20')
+
+GO
+-- create order items for each order
+INSERT INTO OrderItems (OrderId, GameId, Quantity, [Price in USD])
+VALUES
+    (1, 5, 1, 19.99),
+    (2, 5, 1, 19.99),
+    (3, 5, 1, 19.99),
+    (4, 5, 1, 19.99),
+    (5, 5, 1, 19.99),
+    (6, 5, 1, 19.99),
+    (7, 5, 1, 19.99),
+    (8, 5, 1, 19.99),
+    (9, 5, 1, 19.99),
+    (10, 5, 1, 19.99);
+GO
+SELECT * FROM OrderItems WHERE GameID = 5
+
+SELECT * FROM GameAwards
+-- END
+GO

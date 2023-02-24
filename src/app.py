@@ -33,7 +33,7 @@ class CONFIG:
     
     @staticmethod
     def get_currency_list():
-        statement = f"SELECT Currency FROM {CONFIG.TABLE_EXCHANGE_RATE} ORDER BY CurrencyId ASC"
+        statement = f"SELECT Currency FROM {CONFIG.TABLE_EXCHANGE_RATE} ORDER BY ExchangeRateID ASC"
         res = SQL.execute_query(statement)
         return res
         
