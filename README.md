@@ -36,7 +36,7 @@ W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy int
  CREATE TABLE Users (
   UserID INT PRIMARY KEY IDENTITY(1,1),
   Username NVARCHAR(255) NOT NULL,
-  Email NVARCHAR(255) NOT NULL UNIQUE,
+  Email NVARCHAR(255) NOT NULL UNIQUE CHECK (Email LIKE '%[@]%'),
   Password NVARCHAR(255) NOT NULL
 );
 
