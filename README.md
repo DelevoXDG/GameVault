@@ -1,6 +1,6 @@
 Herman Lazarchyk, Maksim Zdobnikau
 
-<h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
+![Logo](logo.png) <h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
 
 <h3> Cel i możliwości </h3>
 
@@ -267,3 +267,19 @@ JOIN Reviews R ON U.UserId = R.UserId
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
 ```
+
+<h3> Opis procedur składowanych </h3>
+
+<h3> Opis wyzwalaczy </h3>
+
+<h3> Opis programu klienckiego </h3>
+
+Program kliencki jest realizowany w języku Python. W programie są wykorzystywane odpowiednie biblioteki pozwalające na wyświetlanie rekordów tabeli Games w czasie rzeczywistym wraz z możliwością realizacji nastepujących operujących się na tej samej tabele operacji:
+- Dodawanie rekordu;
+- Usuwanie rekordu;
+- Edytowanie rekordu;
+- Wyszykiwanie rekordu przez wyszukiwanie nazwy gry;
+- Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
+
+<h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
+
