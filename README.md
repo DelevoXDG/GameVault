@@ -320,9 +320,6 @@ SELECT * FROM TopSellingGames;
 Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
 
 ```tsql
-IF OBJECT_ID('MostReviewingUsers', 'V') IS NOT NULL
-  DROP VIEW MostReviewingUsers
-GO
 CREATE VIEW MostReviewingUsers AS
 SELECT TOP 100 PERCENT U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
