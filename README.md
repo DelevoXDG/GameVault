@@ -318,6 +318,157 @@ Przykładowe zastosowanie:
 SELECT * FROM MostActiveUsers;
 ```
 
+<h3> Opis stworzonych funkcji </h3>
+
+Wyświetlanie informacji o grach w sklepie, które należą do określonego gatunku:
+
+```tsql
+CREATE FUNCTION GetGamesByGenre
+(
+  @Genre NVARCHAR(255)
+)
+RETURNS TABLE
+AS 
+RETURN (
+  SELECT G.GameID, G.Title, GG.Genre
+  FROM Games G
+  JOIN GameGenres GG ON G.GameID = GG.GameID
+  WHERE GG.Genre = @Genre
+);
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM dbo.GetGamesByGenre(N'First-Person');
+```
+
+Wyświetlanie informacji o grach w sklepie, które należą do określonej platformy:
+
+```tsql
+CREATE FUNCTION GetGamesByPlatform
+(
+  @Platform NVARCHAR(255)
+)
+RETURNS TABLE
+AS
+RETURN (
+  SELECT G.*
+  FROM Games G
+  JOIN GamePlatforms GP ON G.GameID = GP.GameID
+  JOIN Platforms P ON GP.PlatformID = P.PlatformID
+  WHERE P.Name = @Platform
+);
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM dbo.GetGamesByPlatform(N'PC');
+```
+
+Wyświetlanie informacji o grach powiązanych z określonym deweloperem:
+
+```tsql
+CREATE FUNCTION DeveloperGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GameDevelopers.GameID, Games.Title
+  FROM Developers
+  JOIN GameDevelopers ON Developers.DeveloperID = GameDevelopers.DeveloperID
+  JOIN Games ON Games.GameID = GameDevelopers.GameID
+  WHERE Developers.Name = @Name
+  RETURN
+END;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM dbo.DeveloperGames(N'Naughty Dog');
+```
+
+Wyświetlanie informacji o grach powiązanych z określonym wydawcem:
+
+```tsql
+CREATE FUNCTION PublisherGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GamePublishers.GameID, Games.Title
+  FROM Publishers
+  JOIN GamePublishers ON Publishers.PublisherID = GamePublishers.PublisherID
+  JOIN Games ON Games.GameID = GamePublishers.GameID
+  WHERE Publishers.Name = @Name
+  RETURN
+END;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM dbo.DeveloperGames(N'Ubisoft');
+```
+
+Wyświetlanie obliczonej całkowitej kwoty w koszyku użytkownika na podstawie ilości każdej gry i jej ceny w USD:
+
+```tsql
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserID INT
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @TotalPrice MONEY;
+  SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+  FROM Cart C
+  JOIN Games G ON C.GameID = G.GameID
+  WHERE C.UserID = @UserID;
+  RETURN @TotalPrice;
+END;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT dbo.CalculateTotalPrice(2);
+```
+
+Wyświetlanie przeliczonej ceny gry na podaną walutę:
+
+```tsql
+CREATE FUNCTION ConvertPrice
+(
+  @GameID INT,
+  @Currency NVARCHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SELECT @Price = [Price in USD] FROM Games WHERE GameID = @GameID
+  SELECT @ExchangeRate = [Equal 1 USD] FROM [ExchangeRate] WHERE [Currency] = @Currency
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT dbo.ConvertPrice(4, 'PLN');
+```
+
 <h3> Opis procedur składowanych </h3>
 
 Procedura `GetRecommendedGames` zaleca gry danemu użytkownikowi na podstawie gier zakupionych przez innych użytkowników, którzy dzielą wspólne zakupy z danym użytkownikiem, przy czym w pierwszej kolejności występują gry, które są posiadane przez użytkówników o największej liczcbie wspólnych gier z danym użytkownikiem.
