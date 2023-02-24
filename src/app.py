@@ -19,11 +19,11 @@ class CONFIG:
     
     DEFAULT_CURRENCY = 'USD'
     class FN:
-        CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+        CONVERT_CURRENCY = f'SELECT dbo.ConvertPrice({{}},{{}})'
     
     @staticmethod
     def convert_currency(price, currency):
-        CONVERT_CURRENCY = f'SELECT dbo.howMuch({{}},{{}})'
+        CONVERT_CURRENCY = f'SELECT dbo.ConvertPrice({{}},{{}})'
         statement = CONVERT_CURRENCY.format(price, "'"+currency+"'")
         return SQL.execute_query(statement)[0]
     @staticmethod
