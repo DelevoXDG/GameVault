@@ -110,22 +110,26 @@ CREATE TABLE Users (
 );
 GO
 
+-- 2
 CREATE TABLE LoginAttempts (
-    LoginAttemptID INT PRIMARY KEY IDENTITY(1,1),
-    UserID INT NOT NULL,
-    Time DATETIME NOT NULL,
-    Success BIT NOT NULL DEFAULT 0,
-    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE
+  LoginAttemptID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  Time DATETIME NOT NULL,
+  Success BIT NOT NULL DEFAULT 0,
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
+GO
 
+-- 3
 CREATE TABLE UserBans (
   BanID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
   BanStart DATETIME NOT NULL,
   BanEnd DATETIME NOT NULL
 );
+GO
 
--- 2
+-- 4
 CREATE TABLE Games (
   GameID INT PRIMARY KEY IDENTITY(1,1),
   Title NVARCHAR(255) NOT NULL,
@@ -135,7 +139,7 @@ CREATE TABLE Games (
 );
 GO
 
--- 3
+-- 5
 CREATE TABLE GameGenres (
   GameGenreID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -144,15 +148,14 @@ CREATE TABLE GameGenres (
 );
 GO
 
--- 4
+-- 6
 CREATE TABLE Platforms (
   PlatformID INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL
+  Name NVARCHAR(255) NOT NULL UNIQUE
 );
 GO
 
-
--- 5
+-- 7
 CREATE TABLE GamePlatforms (
   GamePlatformID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -162,8 +165,7 @@ CREATE TABLE GamePlatforms (
 );
 GO
 
-
--- 6
+-- 8
 CREATE TABLE UpcomingGames (
   UpcomingGameID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -173,8 +175,7 @@ CREATE TABLE UpcomingGames (
 );
 GO
 
-
--- 7
+-- 9
 CREATE TABLE PreOrderGames (
   PreOrderGameID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -184,8 +185,7 @@ CREATE TABLE PreOrderGames (
 );
 GO
 
-
--- 8
+-- 10
 CREATE TABLE BetaGames (
   BetaGameID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE BetaGames (
 );
 GO
 
--- 9
+-- 11
 CREATE TABLE ReleasedGames (
   ReleasedGameID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -204,7 +204,7 @@ CREATE TABLE ReleasedGames (
 );
 GO
 
--- 10
+-- 12
 CREATE TABLE Score (
   ScoreID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE Score (
 );
 GO
 
--- 11
+-- 13
 CREATE TABLE Reviews (
   ReviewID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
@@ -226,8 +226,7 @@ CREATE TABLE Reviews (
 );
 GO
 
-
--- 12
+-- 14
 CREATE TABLE GameAwards (
   GameAwardsID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -237,8 +236,7 @@ CREATE TABLE GameAwards (
 );
 GO
 
-
--- 13
+-- 15
 CREATE TABLE Developers (
   DeveloperID INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL,
@@ -247,8 +245,7 @@ CREATE TABLE Developers (
 );
 GO
 
-
--- 14
+-- 16
 CREATE TABLE GameDevelopers (
   GameDeveloperID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -258,8 +255,7 @@ CREATE TABLE GameDevelopers (
 );
 GO
 
-
--- 15
+-- 17
 CREATE TABLE Publishers (
   PublisherID INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL,
@@ -268,8 +264,7 @@ CREATE TABLE Publishers (
 );
 GO
 
-
--- 16
+-- 18
 CREATE TABLE GamePublishers (
   GamePublisherID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
@@ -279,8 +274,7 @@ CREATE TABLE GamePublishers (
 );
 GO
 
-
--- 17
+-- 19
 CREATE TABLE Wishlist (
   WishlistID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
@@ -290,8 +284,7 @@ CREATE TABLE Wishlist (
 );
 GO
 
-
--- 18
+-- 20
 CREATE TABLE Cart (
   CartID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
@@ -302,8 +295,7 @@ CREATE TABLE Cart (
 );
 GO
 
-
--- 19
+-- 21
 CREATE TABLE Orders (
   OrderID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
@@ -313,8 +305,7 @@ CREATE TABLE Orders (
 );
 GO
 
-
--- 20
+-- 22
 CREATE TABLE OrderItems (
   OrderItemID INT PRIMARY KEY IDENTITY(1,1),
   OrderID INT NOT NULL,
@@ -322,14 +313,14 @@ CREATE TABLE OrderItems (
   Quantity INT NOT NULL,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0),
   FOREIGN KEY (OrderID) REFERENCES Orders (OrderID) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameID) REFERENCES Games (GameID)  
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE --- might need to change this
 );
 GO
 
---21 
+--23
 CREATE TABLE ExchangeRate (
   ExchangeRateID INT PRIMARY KEY IDENTITY(1,1),
-  Currency NVARCHAR(3) NOT NULL,
+  Currency NVARCHAR(3) NOT NULL UNIQUE,
   [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
 );
 GO
@@ -475,18 +466,24 @@ VALUES
   ('Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
 INSERT INTO GameGenres (GameID, Genre)
 VALUES
-  (1, 'Multiplayer'),
-  (1, 'Open-World'),
-  (2, 'First-Person'),
-  (2, 'Shooter'),
-  (3, 'Adventure');
+  (1, N'Multiplayer'),
+  (1, N'Open-World'),
+  (2, N'First-Person'),
+  (2, N'Shooter'),
+  (3, N'Adventure');
+GO
+
+-- 4
 INSERT INTO Platforms (Name) 
 VALUES 
-  ('PlayStation 4'),
-  ('Xbox One'),
-  ('Nintendo Switch'),
-  ('PC'),
-  ('Mobile');
+  (N'PlayStation 4'),
+  (N'Xbox One'),
+  (N'Nintendo Switch'),
+  (N'PC'),
+  (N'Mobile');
+GO
+
+-- 5
 INSERT INTO GamePlatforms (GameID, PlatformID) 
 VALUES 
   (1, 1),
@@ -494,13 +491,19 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
+
+-- 6
 INSERT INTO UpcomingGames (GameID, TrailerUrl, ExpectedDeliveryDate)
 VALUES
-  (1, 'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
-  (3, 'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
-  (5, 'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
-  (4, 'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
-  (2, 'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+  (1, N'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
+  (3, N'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
+  (5, N'https://www.youtube.com/watch?v=MmB9b5njVbA', '2011-11-18'),
+  (4, N'https://www.youtube.com/watch?v=Rh_NXwqFvHc', '2015-06-13'),
+  (2, N'https://www.youtube.com/watch?v=gmA6MrX81z4', '2017-10-18');
+GO
+
+-- 7
 INSERT INTO PreOrderGames (GameID, PreOrderBonus, PreOrderDiscount)
 VALUES
   (1, 'Bonus skin pack', 5.00),
@@ -508,6 +511,9 @@ VALUES
   (2, 'Bonus story mission', 5.00),
   (3, 'Exclusive in-game item', 5.00),
   (5, 'Bonus skin pack', 5.00);
+GO
+
+-- 8
 INSERT INTO BetaGames (GameID, BetaStartDate, BetaEndDate)
 VALUES
   (1, '2020-05-19', '2020-06-19'),
@@ -515,6 +521,9 @@ VALUES
   (3, '2018-02-01', '2018-03-15'),
   (4, '2015-08-01', '2015-10-27'),
   (5, '2011-10-01', '2011-11-18');
+GO
+
+-- 9
 INSERT INTO ReleasedGames (GameID, ReleaseDate)
 VALUES
   (1, '2020-06-19'),
@@ -522,6 +531,9 @@ VALUES
   (4, '2015-10-27'),
   (5, '2011-11-18'),
   (2, '2018-10-26');
+GO
+
+-- 10
 INSERT INTO Score (UserID, GameID, Score) 
 VALUES 
   (1, 1, 9),
@@ -531,7 +543,9 @@ VALUES
   (5, 4, 8),
   (4, 3, 6),
   (5, 4, 9);
+GO
 
+-- 11
 INSERT INTO Reviews (UserID, GameID, Review) 
 VALUES 
   (1, 1, 'Great game with fantastic graphics and gameplay!'),
@@ -539,23 +553,28 @@ VALUES
   (3, 2, 'Not the best game I have played, but it is still fun.'),
   (4, 3, 'The graphics are impressive, but the gameplay is a bit repetitive.'),
   (5, 4, 'I would recommend this game to anyone looking for a challenging experience.');
+GO
 
+-- 12
 INSERT INTO GameAwards (GameID, AwardName, Year) 
 VALUES 
-  (1, 'Best Game of the Year', 2020),
-  (2, 'Best RPG of the Year', 2019),
-  (3, 'Best Adventure Game of the Year', 2019),
-  (4, 'Best Shooter of the Year', 2016),
-  (5, 'Best Multiplayer Game of the Year', 2011);
+  (1, N'Best Game of the Year', 2020),
+  (2, N'Best RPG of the Year', 2019),
+  (3, N'Best Adventure Game of the Year', 2019),
+  (4, N'Best Shooter of the Year', 2016),
+  (5, N'Best Multiplayer Game of the Year', 2011);
 
+-- 13
 INSERT INTO Developers (Name, Description, Website)
 VALUES
-  ('Naughty Dog', 'A first-party vIDeo game developer based in Santa Monica, California', 'naughtydog.com'),
-  ('Rockstar Studios', 'A subsIDiary of Rockstar Games based in Edinburgh, Scotland', 'rockstargames.com'),
-  ('Santa Monica Studio', 'A first-party vIDeo game developer based in Santa Monica, California', 'sms.playstation.com'),
-  ('343 Industries', 'An American vIDeo game development studio located in Redmond, Washington', '343industries.com'),
-  ('Mojang Studios', 'A vIDeo game development studio based in Stockholm, Sweden', 'mojang.com');
+  (N'Naughty Dog', 'A first-party vIDeo game developer based in Santa Monica, California', N'naughtydog.com'),
+  (N'Rockstar Studios', 'A subsIDiary of Rockstar Games based in Edinburgh, Scotland', N'rockstargames.com'),
+  (N'Santa Monica Studio', 'A first-party vIDeo game developer based in Santa Monica, California', N'sms.playstation.com'),
+  (N'343 Industries', 'An American vIDeo game development studio located in Redmond, Washington', N'343industries.com'),
+  (N'Mojang Studios', 'A vIDeo game development studio based in Stockholm, Sweden', N'mojang.com');
+GO
 
+-- 14
 INSERT INTO GameDevelopers (GameID, DeveloperID) 
 VALUES 
   (1, 1),
@@ -563,14 +582,19 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
 
+-- 15
 INSERT INTO Publishers (Name, Description, Website) 
 VALUES 
-  ('Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and vIDeo games.', 'ea.com'),
-  ('Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and vIDeo games.', 'activisionblizzard.com'),
-  ('Ubisoft', 'Ubisoft is a leading publisher and developer of vIDeo games and interactive entertainment.', 'ubisoft.com'),
-  ('Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and vIDeo games.', 'take2games.com'),
-  ('Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of vIDeo games and interactive entertainment.', 'microsoft.com');
+  (N'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and vIDeo games.', N'ea.com'),
+  (N'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and vIDeo games.', N'activisionblizzard.com'),
+  (N'Ubisoft', 'Ubisoft is a leading publisher and developer of vIDeo games and interactive entertainment.', N'ubisoft.com'),
+  (N'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and vIDeo games.', N'take2games.com'),
+  (N'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of vIDeo games and interactive entertainment.', N'microsoft.com');
+GO
+
+-- 16
 INSERT INTO GamePublishers (GameID, PublisherID) 
 VALUES 
   (1, 1),
@@ -578,7 +602,9 @@ VALUES
   (3, 3),
   (4, 4),
   (5, 5);
+GO
 
+-- 17
 INSERT INTO Wishlist (UserID, GameID) 
 VALUES 
   (1, 2),
@@ -586,6 +612,9 @@ VALUES
   (3, 4),
   (4, 5),
   (5, 1);
+GO
+
+-- 18
 INSERT INTO Cart (UserID, GameID, Quantity) 
 VALUES 
   (1, 2, 1),
@@ -593,7 +622,9 @@ VALUES
   (3, 4, 3),
   (4, 5, 4),
   (5, 1, 5);
+GO
 
+-- 19
 INSERT INTO Orders (UserID, OrderDate) 
 VALUES 
   (6, '2022-07-15'),
@@ -632,16 +663,17 @@ VALUES
   (7, 3, 1, 14.99);
   
 
+-- 21
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
-  ('USD', 1.00),
-  ('EUR', 0.93),
-  ('GBP', 0.83),
-  ('JPY', 134.15),
-  ('PLN', 4.45);
+  (N'USD', 1.00),
+  (N'EUR', 0.93),
+  (N'GBP', 0.83),
+  (N'JPY', 134.15),
+  (N'PLN', 4.45);
 GO
 
--- PROCEDURES
+--- PROCEDURES
 
 IF OBJECT_ID('GetRecommendedGames', 'P') IS NOT NULL
   DROP PROCEDURE GetRecommendedGames
@@ -696,6 +728,7 @@ IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
   DROP PROCEDURE CalculateTotalSales
 GO
 
+-- 2
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
   @EndDate DATE = NULL, 
@@ -730,8 +763,9 @@ CREATE PROCEDURE SearchUsers
 AS
   SELECT UserID, Username 
   FROM Users
-  WHERE Username LIKE '%'+@Username+'%'
+  WHERE Username LIKE '%' + @Username + '%'
 GO
+
 -- EXEC SearchUsers 'jo'
 -- GO
 
@@ -1094,55 +1128,56 @@ GO
 -- END
 
 -- TEST Tr_AutoGameAward
-BEGIN
-BEGIN
-  DELETE FROM Users WHERE 1=1;
-  DELETE FROM Orders WHERE 1=1;
-  DELETE FROM OrderItems WHERE 1=1;
-END
-INSERT INTO Users (Username, Email, Password)
-VALUES 
-('user1', 'user1@example.com', 'password1'),
-('user2', 'user2@example.com', 'password2'),
-('user3', 'user3@example.com', 'password3'),
-('user4', 'user4@example.com', 'password4'),
-('user5', 'user5@example.com', 'password5'),
-('user6', 'user6@example.com', 'password6'),
-('user7', 'user7@example.com', 'password7'),
-('user8', 'user8@example.com', 'password8'),
-('user9', 'user9@example.com', 'password9'),
-('user10', 'user10@example.com', 'password10');
--- create orders for each user
-BEGIN
-  INSERT INTO Orders (UserID, OrderDate) 
-  VALUES 
-    ((SELECT UserID FROM Users WHERE Username = 'user1'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user2'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user3'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user4'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user5'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user6'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user7'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user8'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user9'), '2023-01-20'),
-    ((SELECT UserID FROM Users WHERE Username = 'user10'), '2023-01-20')
-END
-BEGIN
-  INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD])
-SELECT O.OrderID, 5, 1, G.[Price in USD]
-FROM Orders O
-JOIN Users u ON O.UserID = u.UserID
-JOIN Games G ON G.GameID = 5
-END
+-- BEGIN
+-- BEGIN
+--   DELETE FROM Users WHERE 1=1;
+--   DELETE FROM Orders WHERE 1=1;
+--   DELETE FROM OrderItems WHERE 1=1;
+-- END
+-- INSERT INTO Users (Username, Email, Password)
+-- VALUES 
+-- ('user1', 'user1@example.com', 'password1'),
+-- ('user2', 'user2@example.com', 'password2'),
+-- ('user3', 'user3@example.com', 'password3'),
+-- ('user4', 'user4@example.com', 'password4'),
+-- ('user5', 'user5@example.com', 'password5'),
+-- ('user6', 'user6@example.com', 'password6'),
+-- ('user7', 'user7@example.com', 'password7'),
+-- ('user8', 'user8@example.com', 'password8'),
+-- ('user9', 'user9@example.com', 'password9'),
+-- ('user10', 'user10@example.com', 'password10');
+-- -- create orders for each user
+-- BEGIN
+--   INSERT INTO Orders (UserID, OrderDate) 
+--   VALUES 
+--     ((SELECT UserID FROM Users WHERE Username = 'user1'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user2'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user3'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user4'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user5'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user6'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user7'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user8'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user9'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user10'), '2023-01-20')
+-- END
+-- BEGIN
+--   INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD])
+-- SELECT O.OrderID, 5, 1, G.[Price in USD]
+-- FROM Orders O
+-- JOIN Users u ON O.UserID = u.UserID
+-- JOIN Games G ON G.GameID = 5
+-- END
 
--- SELECT * FROM OrderItems WHERE GameID = 5
-SELECT G. Title, GA.AwardName, GA.[Year]
-FROM GameAwards GA
-JOIN Games G ON g.GameID = GA.GameID
-WHERE GA.GameID = 5
+-- -- SELECT * FROM OrderItems WHERE GameID = 5
+-- SELECT G. Title, GA.AwardName, GA.[Year]
+-- FROM GameAwards GA
+-- JOIN Games G ON g.GameID = GA.GameID
+-- WHERE GA.GameID = 5
 
-END
+-- END
 GO
+
 -- TEST Tr_Tr_DeleteAwardsOnGenreDelete
 -- BEGIN
 --   SELECT AwardName FROM GameAwards
