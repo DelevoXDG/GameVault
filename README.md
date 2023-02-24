@@ -1,7 +1,8 @@
 Herman Lazarchyk, Maksim Zdobnikau
 
 <h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
-![](/src/assets/logo_200.png)
+
+<img src="src/assets/logo_200.png" alt="GameVault Logo" width="200"/>
 <h3> Cel i możliwości </h3>
 
 Zaprojektowana baza danych sklepu internetowego gier komputerowych umożliwia użytkownikom przeglądanie, wybieranie i kupowanie gier. Dzięki odpowiednim tabelom w bazie danych, użytkownicy mogą przeglądać gry według różnych kryteriów, takich jak gatunek, platforma, wydawca, deweloper, a także korzystać z funkcjonalności takich jak przedsprzedaż, beta testy, recenzje i oceny użytkowników, również jak i  tworzenie list życzeń i koszyków zakupowych. Dodatkowo, baza danych umożliwia twórcom gier przeglądanie i aktualizowanie swoich danych, a także otrzymywanie nagród i wyróżnień. Wszystko to pozwala na łatwe i przyjemne korzystanie ze sklepu internetowego gier komputerowych oraz umożliwia na szybkie i wygodne kupowanie gier dla ich fanów.
@@ -25,6 +26,12 @@ Zaprojektowana baza danych ma kilka istotnych ograniczeń. Przede wszystkim brak
 W związku z tym, że sklep internetowy jest skomplikową instytucją finansową i nie może sobie pozwolić na utracenie takich ważnych danych, jak np. ilość spredanych towarów, dane użytkowników czy ich zamówień, dotyczące jest codziennie utworzenie różnicowej kopii zapasowej w godzinnach nocnych w związku z małym prawdopodobieństwem korzystania z serwisu w tym czasie. Również jest zalecone tworzenie cotygodniowej pełnej kopii zapasowej w nocnych godzinach weekendowych.
 
 <h3> Diagram ER wraz ze schematem bazy danych </h3>
+<object data="assets/ERD.pdf" type="application/pdf" width="700px">
+    <embed src="assets/ERD.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="http://yoursite.com/the.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
+
 
 <h3> Dodatkowe więzy integralności danych </h3>
 
@@ -712,6 +719,7 @@ Program kliencki jest realizowany w języku Python. W programie są wykorzystywa
 - Edytowanie rekordu;
 - Wyszykiwanie rekordu przez wyszukiwanie nazwy gry;
 - Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
+<img src="assets/demo.gif" alt="App demo" height="400" />
 
 <h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
 Znajduje się w pliku <a href="init.sql">init.sql</a>.
