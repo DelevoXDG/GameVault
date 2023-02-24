@@ -419,6 +419,12 @@ class MainWidget(QWidget):
 
         cur_combo = QComboBox()
         currencies = CONFIG.get_currency_list()
+        default_currency = self.model.default_currency()
+        if default_currency not in currencies:
+            pass
+        else:
+            currencies.remove(default_currency)
+            currencies = [default_currency] + currencies
         for cur in currencies:
             icon_path = full_path(ASSETS.CURRENCY_ICON_FORMAT.format(cur))
             cur_icon = QIcon(icon_path)
