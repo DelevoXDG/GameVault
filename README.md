@@ -31,7 +31,7 @@ W związku z tym, że sklep internetowy jest skomplikową instytucją finansową
 W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy integralności (NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK, DEFAULT, CREATE INDEX) dla każdej tabeli istniejącej w zaprojektowanej bazie danych.
 
 ```tsql
-CREATE TABLE Users (
+ CREATE TABLE Users (
   UserID INT PRIMARY KEY IDENTITY(1,1),
   Username NVARCHAR(255) NOT NULL,
   Email NVARCHAR(255) NOT NULL UNIQUE,
@@ -271,24 +271,271 @@ GROUP BY G.GameId, G.Title
 ORDER BY TotalRevenue DESC;
 ```
 
-Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
+Wyświetlanie użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
 
 ```tsql
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
+IF OBJECT_ID('MostReviewingUsers', 'V') IS NOT NULL
+  DROP VIEW MostReviewingUsers
+GO
+CREATE VIEW MostReviewingUsers AS
+SELECT TOP 100 PERCENT U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
+JOIN Reviews R ON U.UserID = R.UserID
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
+GO
 ```
 
 <h3> Opis procedur składowanych </h3>
 
+Procedura zalecająca gry danemu użytkownikowi na podstawie gier zakupionych przez innych użytkowników, którzy dzielą wspólne zakupy z danym użytkownikiem, przy czym w pierwszej kolejności występują gry, które są posiadane przez użytkówników o największej liczcbie wspólnych gier z danym użytkownikiem.
+
+```tsql
+REATE PROCEDURE GetRecommendedGames (@UserID INT)
+  AS
+  BEGIN
+  WITH UserOrders AS (
+    SELECT OrderID
+    FROM Orders
+    WHERE UserID = @UserID
+  ),
+  UserGames AS (
+    SELECT DISTINCT GameID
+    FROM OrderItems
+    WHERE OrderID IN (SELECT OrderID FROM UserOrders)
+  ),
+  MatchingUsers AS (
+    SELECT 
+      UserID, 
+      COUNT(DISTINCT GameID) AS [Matching Games Num]
+    FROM OrderItems AS OI
+    JOIN Orders AS O
+    ON OI.OrderID = O.OrderID
+    WHERE 
+      GameID IN (SELECT GameID FROM UserGames)
+      AND UserID <> @UserID
+    GROUP BY UserID
+  ), 
+  MatchingGames AS (
+  SELECT 
+      G.GameID,
+      G.Title,
+      U.[Matching Games Num] ,
+      ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
+    FROM MatchingUsers U
+    JOIN Orders AS O ON U.UserID = O.UserID
+    JOIN OrderItems AS OI ON O.OrderID = OI.OrderID
+    JOIN Games AS G ON OI.GameID = G.GameID
+    WHERE U.[Matching Games Num] >= 1
+    GROUP BY G.GameID, G.Title, U.[Matching Games Num], U.UserID
+  )
+  SELECT GameID, Title
+  FROM MatchingGames
+  WHERE RowNum = 1
+  ORDER BY [Matching Games Num] DESC
+END;
+GO
+```
+Przykładowe zastosowanie
+```tsql
+EXEC GetRecommendedGames 4
+```
+
+Procedura podejmująca próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego poświadczenia są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
+```tsql
+
+CREATE PROCEDURE userLogin 
+	@userName NVARCHAR(255), 
+	@password NVARCHAR(255)
+AS
+BEGIN
+	DECLARE @isAuthenticated BIT = 0
+  DECLARE @userID INT
+  SELECT @userID = UserID FROM Users WHERE UserName = @userName
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+	IF @ActiveBans <> 0
+    BEGIN
+      SET @isAuthenticated = 0
+      DECLARE @BanExpiration DATETIME
+      SELECT @BanExpiration = MAX(BanEnd) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+      PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' IS BANNED UNTIL ' + CONVERT(NVARCHAR, @BanExpiration)
+    END
+  ELSE
+    BEGIN
+      IF EXISTS (SELECT password FROM Users WHERE UserID = @userID)
+        BEGIN
+          IF (SELECT password FROM Users WHERE UserID = @userID) = CONVERT(NVARCHAR,HASHBYTES('SHA',@password),2)
+          BEGIN
+            SET @isAuthenticated = 1
+        END
+    END
+  END
+	PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' ATTEMPTED TO LOGIN AND THE LOGIN ' + CASE WHEN @isAuthenticated = 1 THEN 'WAS SUCCESSFUL' ELSE 'FAILED' END
+	IF @userID IS NOT NULL
+    BEGIN
+    INSERT INTO LoginAttempts(UserID, Time, Success) 
+	VALUES (@userID, GETDATE(), @isAuthenticated)
+    END
+	RETURN @isAuthenticated
+END
+GO
+```
+Przykładowe zastosowanie
+*Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania nawet z poprawnym hasłem kończy się niepowodzeniem*
+```tsql
+BEGIN
+  DECLARE @ok BIT
+  EXEC @ok = dbo.userLogin 'jim_smith', 'passw0rd'
+  SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+  EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+  SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+  EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+  EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+  EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+  EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+  EXEC @ok = dbo.userLogin 'jim_smith', 'passw0rd'
+  SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+SELECT * FROM UserBans
+END
+GO
+```
+
+Procedura pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
+```tsql
+CREATE PROCEDURE CalculateTotalSales 
+  @StartDate DATE = NULL, 
+  @EndDate DATE = NULL, 
+  @GameID INT = NULL
+AS
+BEGIN
+  SELECT 
+    G.Title AS GameTitle, 
+    SUM(OI.Quantity * OI.[Price in USD]) AS TotalSales
+  FROM 
+    OrderItems OI 
+    LEFT JOIN Games G ON OI.GameID = G.GameID
+    LEFT JOIN Orders O ON OI.OrderID = O.OrderID
+  WHERE 
+    (@StartDate IS NULL OR O.OrderDate >= @StartDate)
+    AND (@EndDate IS NULL OR O.OrderDate <= @EndDate)
+    AND (@GameID IS NULL OR G.GameID = @GameID)
+  GROUP BY 
+    G.Title
+  ORDER BY 
+    TotalSales DESC;
+END;
+GO
+```
+Przykładowe zastosowanie
+```tsql
+EXEC CalculateTotalSales 
+GO
+```
+Procedura wyszukiwająca wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
+```tsql
+IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
+  DROP PROCEDURE SearchUsers
+GO
+CREATE PROCEDURE SearchUsers
+  @Username NVARCHAR(255)
+AS
+  SELECT UserID, Username 
+  FROM Users
+  WHERE Username LIKE '%' + @Username + '%'
+GO
+```
+Przykładowe zastosowanie
+```tsql
+EXEC SearchUsers 'jo'
+GO
+```
+
+Procedura wyszukiwająca największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
+```tsql
+IF OBJECT_ID('GetBiggestConsumers', 'P') IS NOT NULL
+  DROP PROCEDURE GetBiggestConsumers
+GO
+CREATE PROCEDURE GetBiggestConsumers
+  @StartDate DATE = NULL,
+  @EndDate DATE = NULL,
+  @OrderBy NVARCHAR(20) = 'TotalSpent' -- Sorting by TotalSpent by default
+AS
+BEGIN
+  WITH UserPurchaseInfo AS (
+    SELECT
+      O.UserID,
+      COUNT(DISTINCT OI.GameID) AS GamesBoughtNum,
+      SUM(OI.[Price in USD] * OI.Quantity) AS TotalSpent
+    FROM
+      Orders O
+      JOIN OrderItems OI ON O.OrderID = OI.OrderID
+    WHERE
+      (@StartDate IS NULL OR O.OrderDate >= @StartDate)
+      AND (@EndDate IS NULL OR O.OrderDate <= @EndDate)
+    GROUP BY
+      O.UserID
+  )
+  SELECT
+    U.UserID,
+    PI.GamesBoughtNum,
+    PI.TotalSpent
+  FROM
+    UserPurchaseInfo PI
+    JOIN Users U ON PI.UserID = U.UserID
+  ORDER BY
+    CASE
+      WHEN @OrderBy = 'TotalSpent' THEN PI.TotalSpent
+      WHEN @OrderBy = 'GamesBought' THEN PI.GamesBoughtNum
+      ELSE PI.TotalSpent
+    END DESC;
+END;
+GO
+```
+Przykładowe zastosowanie
+```tsql
+EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
+GO
+```
+
+Procedura wyśwetlająca historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
+```tsql
+  DROP PROCEDURE GetUserPurchaseHistory
+GO
+CREATE PROCEDURE GetUserPurchaseHistory
+  @UserID INT
+AS
+BEGIN
+  SELECT
+    O.OrderID,
+    O.OrderDate,
+    G.Title,
+    OI.[Price in USD] * OI.Quantity AS TotalPrice
+  FROM
+    Orders O
+    JOIN OrderItems OI ON O.OrderID = OI.OrderID
+    JOIN Games G ON OI.GameID = G.GameID
+  WHERE
+    O.UserID = @UserID
+  ORDER BY
+    O.OrderDate ASC, O.OrderID ASC;
+END;
+GO
+```
+
+Przykładowe zastosowanie
+```tsql
+EXEC GetUserPurchaseHistory 2
+GO
+```
+
 <h3> Opis wyzwalaczy </h3>
+
 
 <h3> Opis programu klienckiego </h3>
 
 Program kliencki jest realizowany w języku Python. W programie są wykorzystywane odpowiednie biblioteki pozwalające na wyświetlanie rekordów tabeli Games w czasie rzeczywistym wraz z możliwością realizacji nastepujących operujących się na tej samej tabele operacji:
+
 - Dodawanie rekordu;
 - Usuwanie rekordu;
 - Edytowanie rekordu;
@@ -296,4 +543,3 @@ Program kliencki jest realizowany w języku Python. W programie są wykorzystywa
 - Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
 
 <h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
-

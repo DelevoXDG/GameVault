@@ -675,6 +675,7 @@ GO
 
 --- PROCEDURES
 
+-- 1
 IF OBJECT_ID('GetRecommendedGames', 'P') IS NOT NULL
   DROP PROCEDURE GetRecommendedGames
 GO
@@ -729,6 +730,63 @@ IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
 GO
 
 -- 2
+IF OBJECT_ID('userLogin', 'P') IS NOT NULL
+  DROP PROCEDURE userLogin
+GO
+CREATE PROCEDURE userLogin 
+	@userName NVARCHAR(255), 
+	@password NVARCHAR(255)
+AS
+BEGIN
+	DECLARE @isAuthenticated BIT = 0
+  DECLARE @userID INT
+  SELECT @userID = UserID FROM Users WHERE UserName = @userName
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+	IF @ActiveBans <> 0
+    BEGIN
+      SET @isAuthenticated = 0
+      DECLARE @BanExpiration DATETIME
+      SELECT @BanExpiration = MAX(BanEnd) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+      PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' IS BANNED UNTIL ' + CONVERT(NVARCHAR, @BanExpiration)
+    END
+  ELSE
+    BEGIN
+      IF EXISTS (SELECT password FROM Users WHERE UserID = @userID)
+        BEGIN
+          IF (SELECT password FROM Users WHERE UserID = @userID) = CONVERT(NVARCHAR,HASHBYTES('SHA',@password),2)
+          BEGIN
+            SET @isAuthenticated = 1
+        END
+    END
+  END
+	PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' ATTEMPTED TO LOGIN AND THE LOGIN ' + CASE WHEN @isAuthenticated = 1 THEN 'WAS SUCCESSFUL' ELSE 'FAILED' END
+	IF @userID IS NOT NULL
+    BEGIN
+    INSERT INTO LoginAttempts(UserID, Time, Success) 
+	VALUES (@userID, GETDATE(), @isAuthenticated)
+    END
+	RETURN @isAuthenticated
+END
+GO
+
+-- BEGIN
+--   DECLARE @ok BIT
+--   EXEC @ok = dbo.userLogin 'jim_smith', 'passw0rd'
+--   SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+--   EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+--   SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+--   EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+--   EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+--   EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+--   EXEC @ok = dbo.userLogin 'jim_smith', '000000'
+--   EXEC @ok = dbo.userLogin 'jim_smith', 'passw0rd'
+--   SELECT IIF (@ok = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+-- SELECT * FROM UserBans
+-- END
+-- GO
+
+-- 3
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
   @EndDate DATE = NULL, 
@@ -752,9 +810,8 @@ BEGIN
     TotalSales DESC;
 END;
 GO
--- EXEC CalculateTotalSales 
--- GO
 
+-- 4
 IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
   DROP PROCEDURE SearchUsers
 GO
@@ -769,6 +826,7 @@ GO
 -- EXEC SearchUsers 'jo'
 -- GO
 
+-- 5
 IF OBJECT_ID('GetBiggestConsumers', 'P') IS NOT NULL
   DROP PROCEDURE GetBiggestConsumers
 GO
@@ -810,6 +868,7 @@ GO
 -- EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 -- GO
 
+-- 6
 IF OBJECT_ID('GetUserPurchaseHistory', 'P') IS NOT NULL
   DROP PROCEDURE GetUserPurchaseHistory
 GO
@@ -832,6 +891,7 @@ BEGIN
     O.OrderDate ASC, O.OrderID ASC;
 END;
 GO
+
 -- EXEC GetUserPurchaseHistory 2
 -- GO
 
@@ -927,50 +987,7 @@ GO
 --- FUNCTIONS
 
 -- 1
-IF OBJECT_ID('userLogin', 'P') IS NOT NULL
-  DROP PROCEDURE userLogin
-GO
-CREATE PROCEDURE userLogin 
-	@userID INT, 
-	@password NVARCHAR(255)
-AS
-BEGIN
-	DECLARE @isAuthenticated BIT = 0
-  DECLARE @ActiveBans INT
-  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
-	IF @ActiveBans <> 0
-    BEGIN
-      SET @isAuthenticated = 0
-      DECLARE @BanExpiration DATETIME
-      SELECT @BanExpiration = MAX(BanEnd) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
-      PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' IS BANNED UNTIL ' + CONVERT(NVARCHAR, @BanExpiration)
-    END
-  ELSE
-    BEGIN
-      IF EXISTS (SELECT password FROM Users WHERE UserID = @userID)
-        BEGIN
-          IF (SELECT password FROM Users WHERE UserID = @userID) = CONVERT(NVARCHAR,HASHBYTES('SHA',@password),2)
-          BEGIN
-            SET @isAuthenticated = 1
-        END
-    END
-  END
-	PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' ATTEMPTED TO LOGIN AND THE LOGIN ' + CASE WHEN @isAuthenticated = 1 THEN 'WAS SUCCESSFUL' ELSE 'FAILED' END
-	INSERT INTO LoginAttempts(UserID, Time, Success) 
-	VALUES (@userID, GETDATE(), @isAuthenticated)
 
-	RETURN @isAuthenticated
-END
-GO
-
--- SELECT * FROM UserBans
--- BEGIN
---   DECLARE @LoginIsSuccessful BIT
---   EXEC @LoginIsSuccessful = dbo.userLogin 3, 'passw0rd'
-  
---   SELECT IIF (@LoginIsSuccessful = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
--- END
--- GO
 -- 2
 IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
   DROP FUNCTION GetGamesByGenre
