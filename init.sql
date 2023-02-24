@@ -1118,11 +1118,11 @@ GO
 -- GO
 
 -- 8
-IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION HowMuch
+IF OBJECT_ID('ConvertPrice', 'FN') IS NOT NULL
+  DROP FUNCTION ConvertPrice
 GO
 
-CREATE FUNCTION HowMuch
+CREATE FUNCTION ConvertPrice
 (
   @GameID INT,
   @Currency CHAR(3)
@@ -1137,7 +1137,7 @@ BEGIN
   RETURN ROUND((@Price * @ExchangeRate), 2)
 END;
 GO
--- SELECT dbo.HowMuch(1, 'PLN')
+-- SELECT dbo.ConvertPrice(1, 'PLN')
 -- GO
 
 -- TEST Tr_RemoveFromCartAndWishlist
