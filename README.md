@@ -26,12 +26,7 @@ Zaprojektowana baza danych ma kilka istotnych ograniczeń. Przede wszystkim brak
 W związku z tym, że sklep internetowy jest skomplikową instytucją finansową i nie może sobie pozwolić na utracenie takich ważnych danych, jak np. ilość spredanych towarów, dane użytkowników czy ich zamówień, dotyczące jest codziennie utworzenie różnicowej kopii zapasowej w godzinnach nocnych w związku z małym prawdopodobieństwem korzystania z serwisu w tym czasie. Również jest zalecone tworzenie cotygodniowej pełnej kopii zapasowej w nocnych godzinach weekendowych.
 
 <h3> Diagram ER wraz ze schematem bazy danych </h3>
-<object data="assets/ERD.pdf" type="application/pdf" width="700px">
-    <embed src="assets/ERD.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="http://yoursite.com/the.pdf">Download PDF</a>.</p>
-    </embed>
-</object>
-
+Znajduje się w pliku <a href="ERD.pdf">ERD.pdf</a>.
 
 <h3> Dodatkowe więzy integralności danych </h3>
 
@@ -255,27 +250,35 @@ JOIN GamePublishers GP ON G.GameId = GP.GameId
 JOIN Publishers P ON GP.PublisherId = P.PublisherId;
 ```
 
-Wyświetlanie dziesięciu najlepiej ocenionych gier, sortując rosnąco wyniki według średniej oceny i liczby recenzji:
+Wyświetlanie najlepiej ocenionych gier, sortując rosnąco wyniki według średniej oceny i liczby recenzji:
 
 ```tsql
 CREATE VIEW TopRatedGames AS
-SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameId) AS NumberOfReviews
-FROM Games G
-LEFT JOIN Score S ON G.GameID = S.GameID
-LEFT JOIN Reviews R ON G.GameID = R.GameID
-GROUP BY G.GameId, G.Title
-ORDER BY AverageScore DESC, NumberOfReviews DESC;
+  SELECT TOP 100 PERCENT G.GameID, G.Title, AVG(S.Score) AS [Average Score], COUNT(R.GameID) AS [Number of Reviews]
+  FROM Games AS G
+  LEFT JOIN Score AS S 
+  ON G.GameID = S.GameID
+  LEFT JOIN Reviews AS R
+  ON G.GameID = R.GameID
+  GROUP BY 
+    G.GameID, 
+    G.Title
+  ORDER BY 
+    [Average Score] DESC,
+    [Number of Reviews] DESC; 
+GO
 ```
 
-Wyświetlanie dziesięciu najlepiej sprzedających się gier, sortując malejąco po TotalRevenue:
+Wyświetlanie najlepiej sprzedających się gier, sortując malejąco po TotalRevenue:
 
 ```tsql
 CREATE VIEW TopSellingGames AS
-SELECT TOP 10 G.GameId, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
+SELECT TOP 100 PERCENT G.GameID, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
 FROM Games G
-JOIN OrderItems OI ON G.GameId = OI.GameId
-GROUP BY G.GameId, G.Title
+JOIN OrderItems OI ON G.GameID = OI.GameID
+GROUP BY G.GameID, G.Title
 ORDER BY TotalRevenue DESC;
+GO
 ```
 
 Wyświetlanie użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
@@ -348,7 +351,7 @@ Przykładowe zastosowanie
 EXEC GetRecommendedGames 4
 ```
 
-Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego poświadczenia są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
+Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego dane są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
 ```tsql
 CREATE PROCEDURE userLogin 
 	@userName NVARCHAR(255), 
