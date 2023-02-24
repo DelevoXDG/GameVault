@@ -381,7 +381,8 @@ BEGIN
 END
 GO
 ```
-Przykładowe zastosowanie
+<a name = "user_login_use">Przykładowe zastosowanie
+</a><br>
 *Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania nawet z poprawnym hasłem kończy się niepowodzeniem*
 ```tsql
 BEGIN
@@ -523,7 +524,7 @@ END;
 GO
 ```
 
-Przykładowe zastosowanie
+[Przykładowe zastosowanie](#user_login_use)
 ```tsql
 EXEC GetUserPurchaseHistory 2
 GO
@@ -531,8 +532,34 @@ GO
 
 <h3> Opis wyzwalaczy </h3>
 
+```tsql
+CREATE TRIGGER Tr_EncryptPasswordsTrigger 
+ON users
+INSTEAD OF INSERT
+AS
+	INSERT INTO users
+	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
+  FROM inserted AS I
+GO
+```
+Przykładowe zastosowanie<br>
+##user_login_use
 
 <h3> Opis programu klienckiego </h3>
+
+Wyzwalacz o nazwie Tr_EncryptPasswordsTrigger jest uruchamiany zamiast operacji wstawiania w tabeli Users. Szyfruje wartość kolumny hasła wstawionego wiersza za pomocą algorytmu haszującego SHA i wstawia wiersz z zaszyfrowanym hasłem do tabeli.
+```tsql
+CREATE TRIGGER Tr_EncryptPasswordsTrigger 
+ON users
+INSTEAD OF INSERT
+AS
+	INSERT INTO users
+	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
+  FROM inserted AS I
+GO
+```
+Przykładowe zastosowanie
+
 
 Program kliencki jest realizowany w języku Python. W programie są wykorzystywane odpowiednie biblioteki pozwalające na wyświetlanie rekordów tabeli Games w czasie rzeczywistym wraz z możliwością realizacji nastepujących operujących się na tej samej tabele operacji:
 
