@@ -94,7 +94,7 @@ GO
 
 -- 1
 CREATE TABLE Users (
-  UserId INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT PRIMARY KEY IDENTITY(1,1),
   Username NVARCHAR(255) NOT NULL,
   Email NVARCHAR(255) NOT NULL UNIQUE,
   Password NVARCHAR(255) NOT NULL
@@ -107,7 +107,7 @@ CREATE TABLE LoginAttempts (
   UserID INT NOT NULL,
   Time DATETIME NOT NULL,
   Success BIT NOT NULL DEFAULT 0,
-  FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
@@ -122,7 +122,7 @@ GO
 
 -- 4
 CREATE TABLE Games (
-  GameId INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT PRIMARY KEY IDENTITY(1,1),
   Title NVARCHAR(255) NOT NULL UNIQUE,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
@@ -132,104 +132,104 @@ GO
 
 -- 5
 CREATE TABLE GameGenres (
-  GameGenreId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  GameGenreID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   Genre NVARCHAR(255) NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 6
 CREATE TABLE Platforms (
-  PlatformId INT PRIMARY KEY IDENTITY(1,1),
+  PlatformID INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE
 );
 GO
 
 -- 7
 CREATE TABLE GamePlatforms (
-  GamePlatformId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
-  PlatformId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (PlatformId) REFERENCES Platforms (PlatformId) ON DELETE CASCADE ON UPDATE CASCADE
+  GamePlatformID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
+  PlatformID INT NOT NULL,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PlatformID) REFERENCES Platforms (PlatformID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 8
 CREATE TABLE UpcomingGames (
-  UpcomingGameId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  UpcomingGameID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   TrailerUrl NVARCHAR(255),
   ExpectedDeliveryDate DATE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 9
 CREATE TABLE PreOrderGames (
-  PreOrderGameId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  PreOrderGameID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   PreOrderBonus TEXT,
   PreOrderDiscount DECIMAL(2),
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 10
 CREATE TABLE BetaGames (
-  BetaGameId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  BetaGameID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   BetaStartDate DATE NOT NULL,
   BetaEndDate DATE NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 11
 CREATE TABLE ReleasedGames (
-  ReleasedGameId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  ReleasedGameID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   ReleaseDate DATE NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 12
 CREATE TABLE Score (
-  ScoreId INT PRIMARY KEY IDENTITY(1,1),
-  UserId INT NOT NULL,
-  GameId INT NOT NULL,
+  ScoreID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  GameID INT NOT NULL,
   Score INT NOT NULL CHECK (Score BETWEEN 1 AND 10),
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 13
 CREATE TABLE Reviews (
-  ReviewId INT PRIMARY KEY IDENTITY(1,1),
-  UserId INT NOT NULL,
-  GameId INT NOT NULL,
+  ReviewID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  GameID INT NOT NULL,
   Review TEXT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 14
 CREATE TABLE GameAwards (
-  GameAwardsId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
+  GameAwardsID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
   AwardName NVARCHAR(255) NOT NULL,
   Year INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 15
 CREATE TABLE Developers (
-  DeveloperId INT PRIMARY KEY IDENTITY(1,1),
+  DeveloperID INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE,
   Description TEXT,
   Website NVARCHAR(255) UNIQUE
@@ -238,17 +238,17 @@ GO
 
 -- 16
 CREATE TABLE GameDevelopers (
-  GameDeveloperId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
-  DeveloperId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (DeveloperId) REFERENCES Developers (DeveloperId) ON DELETE CASCADE ON UPDATE CASCADE
+  GameDeveloperID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
+  DeveloperID INT NOT NULL,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (DeveloperID) REFERENCES Developers (DeveloperID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 17
 CREATE TABLE Publishers (
-  PublisherId INT PRIMARY KEY IDENTITY(1,1),
+  PublisherID INT PRIMARY KEY IDENTITY(1,1),
   Name NVARCHAR(255) NOT NULL UNIQUE,
   Description TEXT,
   Website NVARCHAR(255) UNIQUE
@@ -257,59 +257,59 @@ GO
 
 -- 18
 CREATE TABLE GamePublishers (
-  GamePublisherId INT PRIMARY KEY IDENTITY(1,1),
-  GameId INT NOT NULL,
-  PublisherId INT NOT NULL,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (PublisherId) REFERENCES Publishers (PublisherId) ON DELETE CASCADE ON UPDATE CASCADE
+  GamePublisherID INT PRIMARY KEY IDENTITY(1,1),
+  GameID INT NOT NULL,
+  PublisherID INT NOT NULL,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (PublisherID) REFERENCES Publishers (PublisherID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 19
 CREATE TABLE Wishlist (
-  WishlistId INT PRIMARY KEY IDENTITY(1,1),
-  UserId INT NOT NULL,
-  GameId INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  WishlistID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  GameID INT NOT NULL,
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 20
 CREATE TABLE Cart (
-  CartId INT PRIMARY KEY IDENTITY(1,1),
-  UserId INT NOT NULL,
-  GameId INT NOT NULL,
+  CartID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
+  GameID INT NOT NULL,
   Quantity INT NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 21
 CREATE TABLE Orders (
-  OrderId INT PRIMARY KEY IDENTITY(1,1),
-  UserId INT NOT NULL,
+  OrderID INT PRIMARY KEY IDENTITY(1,1),
+  UserID INT NOT NULL,
   OrderDate DATE NOT NULL,
-  FOREIGN KEY (UserId) REFERENCES Users (UserId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 -- 22
 CREATE TABLE OrderItems (
-  OrderItemId INT PRIMARY KEY IDENTITY(1,1),
-  OrderId INT NOT NULL,
-  GameId INT NOT NULL,
+  OrderItemID INT PRIMARY KEY IDENTITY(1,1),
+  OrderID INT NOT NULL,
+  GameID INT NOT NULL,
   Quantity INT NOT NULL,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0),
-  FOREIGN KEY (OrderId) REFERENCES Orders (OrderId) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameId) REFERENCES Games (GameId) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (OrderID) REFERENCES Orders (OrderID) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
 GO
 
 --23
 CREATE TABLE ExchangeRate (
-  ExchangeRateId INT PRIMARY KEY IDENTITY(1,1),
+  ExchangeRateID INT PRIMARY KEY IDENTITY(1,1),
   Currency NVARCHAR(3) NOT NULL UNIQUE,
   [Equal 1 USD] MONEY NOT NULL CHECK ([Equal 1 USD] >= 0)
 );
@@ -343,51 +343,51 @@ GO
 
 -- 1
 CREATE VIEW GameGenresView AS
-SELECT GameId, CONVERT(NVARCHAR(MAX), (
+SELECT GameID, CONVERT(NVARCHAR(MAX), (
   SELECT Genre + ', '
   FROM GameGenres
-  WHERE GameId = G.GameId
+  WHERE GameID = G.GameID
   FOR XML PATH('')
 ), 1) AS Genres
 FROM GameGenres G
-GROUP BY GameId;
+GROUP BY GameID;
 GO
 
 -- 2
 CREATE VIEW GameDevelopersAndPublishers AS
-SELECT GameDevelopers.GameId, Developers.Name AS Developers, Publishers.Name AS Publishers
+SELECT GameDevelopers.GameID, Developers.Name AS Developers, Publishers.Name AS Publishers
 FROM GameDevelopers
-JOIN Developers ON GameDevelopers.DeveloperId = Developers.DeveloperId
-JOIN GamePublishers ON GameDevelopers.GameId = GamePublishers.GameId
-JOIN Publishers ON GamePublishers.PublisherId = Publishers.PublisherId
-GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
+JOIN Developers ON GameDevelopers.DeveloperID = Developers.DeveloperID
+JOIN GamePublishers ON GameDevelopers.GameID = GamePublishers.GameID
+JOIN Publishers ON GamePublishers.PublisherID = Publishers.PublisherID
+GROUP BY GameDevelopers.GameID, Developers.Name, Publishers.Name;
 GO
 
 -- 3
 CREATE VIEW ReleasedGamesWithPublishers AS
-SELECT R.GameId, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
+SELECT R.GameID, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
 FROM ReleasedGames R
-JOIN Games G ON R.GameId = G.GameId
-JOIN GamePublishers GP ON G.GameId = GP.GameId
-JOIN Publishers P ON GP.PublisherId = P.PublisherId;
+JOIN Games G ON R.GameID = G.GameID
+JOIN GamePublishers GP ON G.GameID = GP.GameID
+JOIN Publishers P ON GP.PublisherID = P.PublisherID;
 GO
 
 -- 4
 CREATE VIEW TopRatedGames AS
-SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameId) AS NumberOfReviews
+SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameID) AS NumberOfReviews
 FROM Games G
 LEFT JOIN Score S ON G.GameID = S.GameID
 LEFT JOIN Reviews R ON G.GameID = R.GameID
-GROUP BY G.GameId, G.Title
+GROUP BY G.GameID, G.Title
 ORDER BY AverageScore DESC, NumberOfReviews DESC;
 GO
 
 -- 5
 CREATE VIEW TopSellingGames AS
-SELECT TOP 10 G.GameId, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
+SELECT TOP 10 G.GameID, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
 FROM Games G
-JOIN OrderItems OI ON G.GameId = OI.GameId
-GROUP BY G.GameId, G.Title
+JOIN OrderItems OI ON G.GameID = OI.GameID
+GROUP BY G.GameID, G.Title
 ORDER BY TotalRevenue DESC;
 GO
 
@@ -395,7 +395,7 @@ GO
 CREATE VIEW MostActiveUsers AS
 SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
+JOIN Reviews R ON U.UserID = R.UserID
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
 GO
@@ -436,7 +436,7 @@ AS
 RETURN (
   SELECT G.*
   FROM Games G
-  JOIN GameGenres GG ON G.GameId = GG.GameId
+  JOIN GameGenres GG ON G.GameID = GG.GameID
   WHERE GG.Genre = @Genre
 );
 GO
@@ -451,8 +451,8 @@ AS
 RETURN (
   SELECT G.*
   FROM Games G
-  JOIN GamePlatforms GP ON G.GameId = GP.GameId
-  JOIN Platforms P ON GP.PlatformId = P.PlatformId
+  JOIN GamePlatforms GP ON G.GameID = GP.GameID
+  JOIN Platforms P ON GP.PlatformID = P.PlatformID
   WHERE P.Name = @Platform
 );
 GO
@@ -466,10 +466,10 @@ RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
 AS
 BEGIN
   INSERT INTO @Games
-  SELECT GameDevelopers.GameId, Games.Title
+  SELECT GameDevelopers.GameID, Games.Title
   FROM Developers
-  JOIN GameDevelopers ON Developers.DeveloperId = GameDevelopers.DeveloperID
-  JOIN Games ON Games.GameId = GameDevelopers.GameId
+  JOIN GameDevelopers ON Developers.DeveloperID = GameDevelopers.DeveloperID
+  JOIN Games ON Games.GameID = GameDevelopers.GameID
   WHERE Developers.Name = @Name
   RETURN
 END;
@@ -484,10 +484,10 @@ RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
 AS
 BEGIN
   INSERT INTO @Games
-  SELECT GamePublishers.GameId, Games.Title
+  SELECT GamePublishers.GameID, Games.Title
   FROM Publishers
-  JOIN GamePublishers ON Publishers.PublisherId = GamePublishers.PublisherId
-  JOIN Games ON Games.GameId = GamePublishers.GameId
+  JOIN GamePublishers ON Publishers.PublisherID = GamePublishers.PublisherID
+  JOIN Games ON Games.GameID = GamePublishers.GameID
   WHERE Publishers.Name = @Name
   RETURN
 END;
@@ -496,7 +496,7 @@ GO
 -- 5
 CREATE FUNCTION CalculateTotalPrice
 (
-  @UserId INT
+  @UserID INT
 )
 RETURNS MONEY
 AS
@@ -504,8 +504,8 @@ BEGIN
   DECLARE @TotalPrice MONEY;
   SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
   FROM Cart C
-  JOIN Games G ON C.GameId = G.GameId
-  WHERE C.UserId = @UserId;
+  JOIN Games G ON C.GameID = G.GameID
+  WHERE C.UserID = @UserID;
   RETURN @TotalPrice;
 END;
 GO
@@ -552,7 +552,7 @@ VALUES
 GO
 
 -- 3
-INSERT INTO GameGenres (GameId, Genre)
+INSERT INTO GameGenres (GameID, Genre)
 VALUES
   (1, N'Multiplayer'),
   (1, N'Open-World'),
@@ -572,7 +572,7 @@ VALUES
 GO
 
 -- 5
-INSERT INTO GamePlatforms (GameId, PlatformId) 
+INSERT INTO GamePlatforms (GameID, PlatformID) 
 VALUES 
   (1, 1),
   (2, 2),
@@ -582,7 +582,7 @@ VALUES
 GO
 
 -- 6
-INSERT INTO UpcomingGames (GameId, TrailerUrl, ExpectedDeliveryDate)
+INSERT INTO UpcomingGames (GameID, TrailerUrl, ExpectedDeliveryDate)
 VALUES
   (1, N'https://www.youtube.com/watch?v=btmN-bWwv0A', '2019-12-01'),
   (3, N'https://www.youtube.com/watch?v=K0u_kAWLJOA', '2018-04-20'),
@@ -592,7 +592,7 @@ VALUES
 GO
 
 -- 7
-INSERT INTO PreOrderGames (GameId, PreOrderBonus, PreOrderDiscount)
+INSERT INTO PreOrderGames (GameID, PreOrderBonus, PreOrderDiscount)
 VALUES
   (1, 'Bonus skin pack', 5.00),
   (4, 'Bonus weapon pack', 10.00),
@@ -602,7 +602,7 @@ VALUES
 GO
 
 -- 8
-INSERT INTO BetaGames (GameId, BetaStartDate, BetaEndDate)
+INSERT INTO BetaGames (GameID, BetaStartDate, BetaEndDate)
 VALUES
   (1, '2020-05-19', '2020-06-19'),
   (2, '2018-06-01', '2018-07-01'),
@@ -612,7 +612,7 @@ VALUES
 GO
 
 -- 9
-INSERT INTO ReleasedGames (GameId, ReleaseDate)
+INSERT INTO ReleasedGames (GameID, ReleaseDate)
 VALUES
   (1, '2020-06-19'),
   (3, '2018-04-20'),
@@ -622,7 +622,7 @@ VALUES
 GO
 
 -- 10
-INSERT INTO Score (UserId, GameId, Score) 
+INSERT INTO Score (UserID, GameID, Score) 
 VALUES 
   (1, 1, 9),
   (2, 1, 8),
@@ -634,7 +634,7 @@ VALUES
 GO
 
 -- 11
-INSERT INTO Reviews (UserId, GameId, Review) 
+INSERT INTO Reviews (UserID, GameID, Review) 
 VALUES 
   (1, 1, 'Great game with fantastic graphics and gameplay!'),
   (2, 1, 'Loved the storyline and the character development.'),
@@ -644,7 +644,7 @@ VALUES
 GO
 
 -- 12
-INSERT INTO GameAwards (GameId, AwardName, Year) 
+INSERT INTO GameAwards (GameID, AwardName, Year) 
 VALUES 
   (1, N'Best Game of the Year', 2020),
   (2, N'Best RPG of the Year', 2019),
@@ -655,15 +655,15 @@ VALUES
 -- 13
 INSERT INTO Developers (Name, Description, Website)
 VALUES
-  (N'Naughty Dog', 'A first-party video game developer based in Santa Monica, California', N'naughtydog.com'),
-  (N'Rockstar Studios', 'A subsidiary of Rockstar Games based in Edinburgh, Scotland', N'rockstargames.com'),
-  (N'Santa Monica Studio', 'A first-party video game developer based in Santa Monica, California', N'sms.playstation.com'),
-  (N'343 Industries', 'An American video game development studio located in Redmond, Washington', N'343industries.com'),
-  (N'Mojang Studios', 'A video game development studio based in Stockholm, Sweden', N'mojang.com');
+  (N'Naughty Dog', 'A first-party vIDeo game developer based in Santa Monica, California', N'naughtydog.com'),
+  (N'Rockstar Studios', 'A subsIDiary of Rockstar Games based in Edinburgh, Scotland', N'rockstargames.com'),
+  (N'Santa Monica Studio', 'A first-party vIDeo game developer based in Santa Monica, California', N'sms.playstation.com'),
+  (N'343 Industries', 'An American vIDeo game development studio located in Redmond, Washington', N'343industries.com'),
+  (N'Mojang Studios', 'A vIDeo game development studio based in Stockholm, Sweden', N'mojang.com');
 GO
 
 -- 14
-INSERT INTO GameDevelopers (GameId, DeveloperId) 
+INSERT INTO GameDevelopers (GameID, DeveloperID) 
 VALUES 
   (1, 1),
   (2, 2),
@@ -675,15 +675,15 @@ GO
 -- 15
 INSERT INTO Publishers (Name, Description, Website) 
 VALUES 
-  (N'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and video games.', N'ea.com'),
-  (N'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and video games.', N'activisionblizzard.com'),
-  (N'Ubisoft', 'Ubisoft is a leading publisher and developer of video games and interactive entertainment.', N'ubisoft.com'),
-  (N'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and video games.', N'take2games.com'),
-  (N'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of video games and interactive entertainment.', N'microsoft.com');
+  (N'Electronic Arts', 'Electronic Arts (EA) is a leading publisher and developer of interactive entertainment and vIDeo games.', N'ea.com'),
+  (N'Activision Blizzard', 'Activision Blizzard is a leading publisher of interactive entertainment and vIDeo games.', N'activisionblizzard.com'),
+  (N'Ubisoft', 'Ubisoft is a leading publisher and developer of vIDeo games and interactive entertainment.', N'ubisoft.com'),
+  (N'Take-Two Interactive', 'Take-Two Interactive is a leading publisher of interactive entertainment and vIDeo games.', N'take2games.com'),
+  (N'Microsoft', 'Microsoft is a leading technology company that is also involved in the publishing of vIDeo games and interactive entertainment.', N'microsoft.com');
 GO
 
 -- 16
-INSERT INTO GamePublishers (GameId, PublisherId) 
+INSERT INTO GamePublishers (GameID, PublisherID) 
 VALUES 
   (1, 1),
   (2, 2),
@@ -693,7 +693,7 @@ VALUES
 GO
 
 -- 17
-INSERT INTO Wishlist (UserId, GameId) 
+INSERT INTO Wishlist (UserID, GameID) 
 VALUES 
   (1, 2),
   (2, 3),
@@ -703,7 +703,7 @@ VALUES
 GO
 
 -- 18
-INSERT INTO Cart (UserId, GameId, Quantity) 
+INSERT INTO Cart (UserID, GameID, Quantity) 
 VALUES 
   (1, 2, 1),
   (2, 3, 2),
@@ -713,7 +713,7 @@ VALUES
 GO
 
 -- 19
-INSERT INTO Orders (UserId, OrderDate) 
+INSERT INTO Orders (UserID, OrderDate) 
 VALUES 
   (1, '2023-01-07'),
   (2, '2022-12-30'),
@@ -724,7 +724,7 @@ VALUES
 GO
 
 -- 20
-INSERT INTO OrderItems (OrderId, GameId, Quantity, [Price in USD]) 
+INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD]) 
 VALUES 
   (1, 1, 2, 29.99),
   (1, 2, 1, 9.99),
@@ -782,30 +782,30 @@ IF OBJECT_ID('GetMostActiveUsers', 'P') IS NOT NULL
 GO
 
 -- 1
-CREATE PROCEDURE GetRecommendedGames (@UserId INT)
+CREATE PROCEDURE GetRecommendedGames (@UserID INT)
 AS
 BEGIN
 WITH UserOrders AS (
-  SELECT OrderId
+  SELECT OrderID
   FROM Orders
-  WHERE UserId = @UserId
+  WHERE UserID = @UserID
 ),
 UserGames AS (
-  SELECT DISTINCT GameId
+  SELECT DISTINCT GameID
   FROM OrderItems
-  WHERE OrderId IN (SELECT OrderId FROM UserOrders)
+  WHERE OrderID IN (SELECT OrderID FROM UserOrders)
 ),
 MatchingUsers AS (
   SELECT 
-    UserId, 
-    COUNT(DISTINCT GameId) AS [Matching Games Num]
+    UserID, 
+    COUNT(DISTINCT GameID) AS [Matching Games Num]
   FROM OrderItems AS OI
   JOIN Orders AS O
-  ON OI.OrderId = O.OrderId
+  ON OI.OrderID = O.OrderID
   WHERE 
-    GameId IN (SELECT GameId FROM UserGames)
-    AND UserId <> @UserId
-  GROUP BY UserId
+    GameID IN (SELECT GameID FROM UserGames)
+    AND UserID <> @UserID
+  GROUP BY UserID
 )
 , MatchingGames AS (
   SELECT 
@@ -814,13 +814,13 @@ MatchingUsers AS (
     U.[Matching Games Num] ,
     ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
   FROM MatchingUsers U
-  JOIN Orders AS O ON U.UserId = O.UserId
-  JOIN OrderItems AS OI ON O.OrderId = OI.OrderId
-  JOIN Games AS G ON OI.GameId = G.GameId
+  JOIN Orders AS O ON U.UserID = O.UserID
+  JOIN OrderItems AS OI ON O.OrderID = OI.OrderID
+  JOIN Games AS G ON OI.GameID = G.GameID
   WHERE U.[Matching Games Num] >= 1
-  GROUP BY G.GameId, G.Title, U.[Matching Games Num], U.UserId
+  GROUP BY G.GameID, G.Title, U.[Matching Games Num], U.UserID
 )
-SELECT GameId, Title
+SELECT GameID, Title
 FROM MatchingGames
 WHERE RowNum = 1
 ORDER BY [Matching Games Num] DESC
@@ -833,7 +833,7 @@ GO
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
   @EndDate DATE = NULL, 
-  @GameId INT = NULL
+  @GameID INT = NULL
 AS
 BEGIN
   SELECT 
@@ -841,12 +841,12 @@ BEGIN
     SUM(OI.Quantity * OI.[Price in USD]) AS TotalSales
   FROM 
     OrderItems OI 
-    LEFT JOIN Games G ON OI.GameId = G.GameId
-    LEFT JOIN Orders O ON OI.OrderId = O.OrderId
+    LEFT JOIN Games G ON OI.GameID = G.GameID
+    LEFT JOIN Orders O ON OI.OrderID = O.OrderID
   WHERE 
     (@StartDate IS NULL OR O.OrderDate >= @StartDate)
     AND (@EndDate IS NULL OR O.OrderDate <= @EndDate)
-    AND (@GameId IS NULL OR G.GameId = @GameId)
+    AND (@GameID IS NULL OR G.GameID = @GameID)
   GROUP BY 
     G.Title
   ORDER BY 
@@ -868,8 +868,8 @@ BEGIN
   DECLARE @TotalRevenue MONEY
   SELECT @TotalRevenue = SUM(OI.Quantity * OI.[Price in USD])
   FROM OrderItems OI
-  LEFT JOIN Games G ON OI.GameId = G.GameId
-  LEFT JOIN Orders O ON OI.OrderId = O.OrderId
+  LEFT JOIN Games G ON OI.GameID = G.GameID
+  LEFT JOIN Orders O ON OI.OrderID = O.OrderID
   WHERE O.OrderDate IS NOT NULL
   RETURN @TotalRevenue
 END;
@@ -899,25 +899,25 @@ AS
 BEGIN
   WITH UserPurchaseInfo AS (
     SELECT
-      O.UserId,
+      O.UserID,
       COUNT(DISTINCT OI.GameID) AS GamesBoughtNum,
       SUM(OI.[Price in USD] * OI.Quantity) AS TotalSpent
     FROM
       Orders O
-      JOIN OrderItems OI ON O.OrderId = OI.OrderId
+      JOIN OrderItems OI ON O.OrderID = OI.OrderID
     WHERE
       (@StartDate IS NULL OR O.OrderDate >= @StartDate)
       AND (@EndDate IS NULL OR O.OrderDate <= @EndDate)
     GROUP BY
-      O.UserId
+      O.UserID
   )
   SELECT
-    U.UserId,
+    U.UserID,
     PI.GamesBoughtNum,
     PI.TotalSpent
   FROM
     UserPurchaseInfo PI
-    JOIN Users U ON PI.UserId = U.UserId
+    JOIN Users U ON PI.UserID = U.UserID
   ORDER BY
     CASE
       WHEN @OrderBy = 'TotalSpent' THEN PI.TotalSpent
