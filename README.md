@@ -1,6 +1,6 @@
 Herman Lazarchyk, Maksim Zdobnikau
 
-![Logo](logo.png) <h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
+<h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
 
 <h3> Cel i możliwości </h3>
 
