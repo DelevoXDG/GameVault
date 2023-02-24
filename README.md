@@ -288,7 +288,7 @@ GO
 
 <h3> Opis procedur składowanych </h3>
 
-Procedura zalecająca gry danemu użytkownikowi na podstawie gier zakupionych przez innych użytkowników, którzy dzielą wspólne zakupy z danym użytkownikiem, przy czym w pierwszej kolejności występują gry, które są posiadane przez użytkówników o największej liczcbie wspólnych gier z danym użytkownikiem.
+Procedura `GetRecommendedGames` zaleca gry danemu użytkownikowi na podstawie gier zakupionych przez innych użytkowników, którzy dzielą wspólne zakupy z danym użytkownikiem, przy czym w pierwszej kolejności występują gry, które są posiadane przez użytkówników o największej liczcbie wspólnych gier z danym użytkownikiem.
 
 ```tsql
 REATE PROCEDURE GetRecommendedGames (@UserID INT)
@@ -341,9 +341,8 @@ Przykładowe zastosowanie
 EXEC GetRecommendedGames 4
 ```
 
-Procedura podejmująca próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego poświadczenia są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
+Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego poświadczenia są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
 ```tsql
-
 CREATE PROCEDURE userLogin 
 	@userName NVARCHAR(255), 
 	@password NVARCHAR(255)
@@ -383,7 +382,7 @@ GO
 ```
 <a name = "user_login_use">Przykładowe zastosowanie
 </a><br>
-*Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania nawet z poprawnym hasłem kończy się niepowodzeniem*
+*Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowaniaę si nawet z poprawnym hasłem kończy się niepowodzeniem*
 ```tsql
 BEGIN
   DECLARE @ok BIT
@@ -402,7 +401,7 @@ END
 GO
 ```
 
-Procedura pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
+Procedura `CalculateTotalSales` po uruchomieniu pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
 ```tsql
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
@@ -433,11 +432,8 @@ Przykładowe zastosowanie
 EXEC CalculateTotalSales 
 GO
 ```
-Procedura wyszukiwająca wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
+Procedura `SearchUsers` po uruchomieniu wyszukiwa wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
 ```tsql
-IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
-  DROP PROCEDURE SearchUsers
-GO
 CREATE PROCEDURE SearchUsers
   @Username NVARCHAR(255)
 AS
@@ -452,11 +448,8 @@ EXEC SearchUsers 'jo'
 GO
 ```
 
-Procedura wyszukiwająca największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
+Procedura `GetBiggestConsumers` po uruchomieniu wyszukiwa największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
 ```tsql
-IF OBJECT_ID('GetBiggestConsumers', 'P') IS NOT NULL
-  DROP PROCEDURE GetBiggestConsumers
-GO
 CREATE PROCEDURE GetBiggestConsumers
   @StartDate DATE = NULL,
   @EndDate DATE = NULL,
@@ -499,10 +492,8 @@ EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 GO
 ```
 
-Procedura wyśwetlająca historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
+Procedura `GetUserPurchaseHistory` po uruchomieniu wyśwetlaja historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
 ```tsql
-  DROP PROCEDURE GetUserPurchaseHistory
-GO
 CREATE PROCEDURE GetUserPurchaseHistory
   @UserID INT
 AS
@@ -524,13 +515,15 @@ END;
 GO
 ```
 
-[Przykładowe zastosowanie](#user_login_use)
+Przykładowe zastosowanie
 ```tsql
 EXEC GetUserPurchaseHistory 2
 GO
 ```
 
 <h3> Opis wyzwalaczy </h3>
+
+Wyzwalacz `Tr_EncryptPasswordsTrigger` jest uruchamiany zamiast operacji wstawiania w tabeli Users. Szyfruje wartość kolumny hasła wstawionego wiersza za pomocą algorytmu haszującego SHA i wstawia wiersz z zaszyfrowanym hasłem do tabeli.
 
 ```tsql
 CREATE TRIGGER Tr_EncryptPasswordsTrigger 
@@ -543,26 +536,177 @@ AS
 GO
 ```
 Przykładowe zastosowanie<br>
-##user_login_use
+[Procedura logowania](#user_login_use)
 
-<h3> Opis programu klienckiego </h3>
-
-Wyzwalacz o nazwie Tr_EncryptPasswordsTrigger jest uruchamiany zamiast operacji wstawiania w tabeli Users. Szyfruje wartość kolumny hasła wstawionego wiersza za pomocą algorytmu haszującego SHA i wstawia wiersz z zaszyfrowanym hasłem do tabeli.
+Wyzwalacz `Tr_UserBanTrigger` jest uruchomiany po dodaniu nowego rekordu do tabeli `LoginAttempts` i automatycznie blokuje użytkownikowi możliwości zalogowania się na okres 5 minut, jeśli nie udało mu się zalogować 5 lub więcej razy w ciągu ostatnich 5 minut. Wyzwalacz wstawia nowy wiersz do tabeli UserBans, określając identyfikator użytkownika, czas rozpoczęcia bana i czas zakończenia bana.
 ```tsql
-CREATE TRIGGER Tr_EncryptPasswordsTrigger 
-ON users
-INSTEAD OF INSERT
+CREATE TRIGGER Tr_UserBanTrigger 
+ON LoginAttempts
+AFTER INSERT
 AS
-	INSERT INTO users
-	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
-  FROM inserted AS I
+BEGIN
+  DECLARE @UserID INT, @FailedLoginAttempts INT, @LastFailedLogin DATETIME, @BanStart DATETIME, @BanEnd DATETIME;
+
+  SELECT @UserID = UserID, @FailedLoginAttempts = COUNT(*) FROM LoginAttempts
+  WHERE UserID = (SELECT UserID FROM inserted)
+  AND Success = 0
+  AND Time BETWEEN DATEADD(MINUTE, -5, GETDATE()) AND GETDATE()
+  GROUP BY UserID;
+
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+
+  IF @FailedLoginAttempts >= 5 AND @ActiveBans = 0 
+  BEGIN
+    SELECT TOP 1 @LastFailedLogin = Time 
+    FROM LoginAttempts
+    WHERE UserID = @UserID
+    AND Success = 0
+    ORDER BY Time DESC;
+
+    SET @BanStart = @LastFailedLogin;
+    SET @BanEnd = DATEADD(MINUTE, 5, @BanStart);
+
+    INSERT INTO UserBans (UserID, BanStart, BanEnd)
+    VALUES (@UserID, @BanStart, @BanEnd);
+  END
+END;
+GO
+```
+Przykładowe zastosowanie<br>
+[Procedura logowania](#user_login_use)
+
+Wyzwalacz o nazwie `Tr_RemoveFromCartAndWishlist` usuwa grę zarówno z koszyka użytkownika, jak iz listy życzeń po zakupie tej gry.
+```tslq
+CREATE TRIGGER Tr_RemoveFromCartAndWishlist
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @gameID INT, @userID INT
+    SELECT @gameID = i.GameID, @userID = o.UserID
+    FROM inserted i
+    JOIN Orders o ON i.OrderID = o.OrderID
+    
+    DELETE FROM Cart
+    WHERE UserID = @userID AND GameID = @gameID
+    
+    DELETE FROM Wishlist
+    WHERE UserID = @userID AND GameID = @gameID
+END
+GO
+```
+Przykładowe zastosowanie
+```tsql
+BEGIN
+SELECT * FROM Wishlist WHERE UserID = 1
+SELECT * FROM Cart WHERE UserID = 1
+INSERT OrderItems (OrderID, GameID, Quantity, [Price in USD]) 
+VALUES (6, 2, 1, 1)
+SELECT * FROM Wishlist WHERE UserID = 1
+SELECT * FROM Cart WHERE UserID = 1
+END
+GO
+```
+
+Wyzwalacz `Tr_AutoGameAwards` jest uruchamiany po dodaniu nowego rekordu do tabeli OrderItems i automatycznie przyznaje grze nagrodę o nazwie `'Community's Favorite'` ('Ulubiony przez społeczność'), jeśli co najmniej 10 unikalnych użytkowników kupiło grę.
+```tsql
+CREATE TRIGGER Tr_AutoGameAwards
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+  DECLARE @GameID INT, @Count INT;
+
+  SELECT @GameID = i.GameID
+  FROM inserted i;
+  
+  DECLARE @AWARD_1_NAME NVARCHAR(255);
+  SET @AWARD_1_NAME= 'Community''s Favorite'
+  IF @AWARD_1_NAME NOT IN (SELECT AwardName FROM GameAwards WHERE GameID = @GameID)
+    BEGIN
+    SELECT @Count = COUNT(DISTINCT o.UserID)
+    FROM OrderItems oi
+    JOIN Orders o ON oi.OrderID = o.OrderID
+    WHERE oi.GameID = @GameID;
+    
+    
+    IF @Count >= 10
+    BEGIN
+      INSERT INTO GameAwards (GameID, AwardName, Year)
+      VALUES (@GameID, @AWARD_1_NAME, YEAR(GETDATE()));
+    END
+  END
+END;
 GO
 ```
 Przykładowe zastosowanie
 
+Wyzwalacz o nazwie Tr_DeleteAwardsOnGenreDelete usuwa nagrody w grach powiązane z usuniętym gatunkiem gier.
+```tsql
+BEGIN
+BEGIN
+  DELETE FROM Users WHERE 1=1;
+  DELETE FROM Orders WHERE 1=1;
+  DELETE FROM OrderItems WHERE 1=1;
+END
+INSERT INTO Users (Username, Email, Password)
+VALUES 
+('user1', 'user1@example.com', 'password1'),
+('user2', 'user2@example.com', 'password2'),
+('user3', 'user3@example.com', 'password3'),
+('user4', 'user4@example.com', 'password4'),
+('user5', 'user5@example.com', 'password5'),
+('user6', 'user6@example.com', 'password6'),
+('user7', 'user7@example.com', 'password7'),
+('user8', 'user8@example.com', 'password8'),
+('user9', 'user9@example.com', 'password9'),
+('user10', 'user10@example.com', 'password10');
+-- create orders for each user
+BEGIN
+  INSERT INTO Orders (UserID, OrderDate) 
+  VALUES 
+    ((SELECT UserID FROM Users WHERE Username = 'user1'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user2'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user3'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user4'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user5'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user6'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user7'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user8'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user9'), '2023-01-20'),
+    ((SELECT UserID FROM Users WHERE Username = 'user10'), '2023-01-20')
+END
+BEGIN
+  INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD])
+SELECT O.OrderID, 5, 1, G.[Price in USD]
+FROM Orders O
+JOIN Users u ON O.UserID = u.UserID
+JOIN Games G ON G.GameID = 5
+END
 
+-- SELECT * FROM OrderItems WHERE GameID = 5
+SELECT G. Title, GA.AwardName, GA.[Year]
+FROM GameAwards GA
+JOIN Games G ON g.GameID = GA.GameID
+WHERE GA.GameID = 5
+
+END
+```
+Przykładowe zastosowanie
+```tsql
+BEGIN
+  SELECT AwardName FROM GameAwards
+  BEGIN
+    DELETE FROM GameGenres 
+    WHERE Genre IN ('Shooter', 'Adventure')
+  END
+  SELECT AwardName FROM GameAwards
+END
+```
+
+<h3> Opis programu klienckiego </h3>
 Program kliencki jest realizowany w języku Python. W programie są wykorzystywane odpowiednie biblioteki pozwalające na wyświetlanie rekordów tabeli Games w czasie rzeczywistym wraz z możliwością realizacji nastepujących operujących się na tej samej tabele operacji:
-
 - Dodawanie rekordu;
 - Usuwanie rekordu;
 - Edytowanie rekordu;
@@ -570,3 +714,4 @@ Program kliencki jest realizowany w języku Python. W programie są wykorzystywa
 - Konwertacja cen wszystkich gier na inną walutę wedlug znanego kursu;
 
 <h3> Skrypt tworzący bazę danych wraz z typowymi zapytaniami </h3>
+Znajduje się w pliku [init.sql](init.sql)

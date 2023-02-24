@@ -413,7 +413,9 @@ BEGIN
   FROM inserted i;
   
   DECLARE @AWARD_1_NAME NVARCHAR(255);
+  DECLARE @AWARD_1_USER_TRESHOLD INT;
   SET @AWARD_1_NAME= 'Community''s Favorite'
+  SET @AWARD_1_USER_TRESHOLD= 10;
   IF @AWARD_1_NAME NOT IN (SELECT AwardName FROM GameAwards WHERE GameID = @GameID)
     BEGIN
     SELECT @Count = COUNT(DISTINCT o.UserID)
@@ -422,7 +424,7 @@ BEGIN
     WHERE oi.GameID = @GameID;
     
     
-    IF @Count >= 10
+    IF @Count >= @AWARD_1_USER_TRESHOLD
     BEGIN
       INSERT INTO GameAwards (GameID, AwardName, Year)
       VALUES (@GameID, @AWARD_1_NAME, YEAR(GETDATE()));
@@ -1141,6 +1143,8 @@ GO
 -- VALUES (6, 2, 1, 1)
 -- SELECT * FROM Wishlist WHERE UserID = 1
 -- SELECT * FROM Cart WHERE UserID = 1
+-- END
+-- GO
 
 -- END
 
