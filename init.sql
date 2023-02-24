@@ -1002,12 +1002,15 @@ CREATE FUNCTION GetGamesByGenre
 RETURNS TABLE
 AS 
 RETURN (
-  SELECT G.*
+  SELECT G.GameID, G.Title, GG.Genre
   FROM Games G
   JOIN GameGenres GG ON G.GameID = GG.GameID
   WHERE GG.Genre = @Genre
 );
 GO
+
+-- SELECT * FROM dbo.GetGamesByGenre(N'First-Person')
+-- GO
 
 -- 3
 IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
