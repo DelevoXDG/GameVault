@@ -319,7 +319,7 @@ GO
 
 Przykładowe zastosowanie:
 ```tsql
-SELECT * FROM MostActiveUsers;
+SELECT * FROM MostReviewingUsers;
 ```
 
 <h3> Opis stworzonych funkcji </h3>
