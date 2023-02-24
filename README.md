@@ -30,7 +30,7 @@ Znajduje się w pliku <a href="ERD.pdf">ERD.pdf</a>.
 
 <h3> Dodatkowe więzy integralności danych </h3>
 
-W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy integralności (NOT NULL, UNIQUE, PRIMARY KEY, FOREIGN KEY, CHECK, DEFAULT, CREATE INDEX) dla każdej tabeli istniejącej w zaprojektowanej bazie danych.
+W niżej przedstawionym opisie są zaznaczone wszystkie występujące więzy integralności (`NOT NULL`, `UNIQUE`, `PRIMARY KEY`, `FOREIGN KEY`, `CHECK`, `DEFAULT`, `CREATE INDEX`) dla każdej tabeli istniejącej w zaprojektowanej bazie danych.
 
 ```tsql
  CREATE TABLE Users (
@@ -232,6 +232,8 @@ Przykładowe zastosowanie:
 SELECT * FROM GameGenresView;
 ```
 
+---
+
 Wyświetlanie wszystkich deweloperów i wydawców dla każdej gry:
 
 ```tsql
@@ -245,9 +247,12 @@ GROUP BY GameDevelopers.GameID, Developers.Name, Publishers.Name;
 ```
 
 Przykładowe zastosowanie:
+
 ```tsql
 SELECT * FROM GameDevelopersAndPublishers;
 ```
+
+---
 
 Wyświetlanie odpowiedniej informacji o grach wydanych na rynku wraz z nazwami ich wszystkich wydawców:
 
@@ -259,6 +264,14 @@ JOIN Games G ON R.GameID = G.GameID
 JOIN GamePublishers GP ON G.GameID = GP.GameID
 JOIN Publishers P ON GP.PublisherID = P.PublisherID;
 ```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM ReleasedGamesWithPublishers;
+```
+
+---
 
 Wyświetlanie najlepiej ocenionych gier, sortując rosnąco wyniki według średniej oceny i liczby recenzji:
 
@@ -276,14 +289,14 @@ CREATE VIEW TopRatedGames AS
   ORDER BY 
     [Average Score] DESC,
     [Number of Reviews] DESC; 
-GO
 ```
-
 
 Przykładowe zastosowanie:
 ```tsql
 SELECT * FROM TopRatedGames;
 ```
+
+---
 
 Wyświetlanie najlepiej sprzedających się gier, sortując malejąco po TotalRevenue:
 
@@ -301,6 +314,8 @@ Przykładowe zastosowanie:
 ```tsql
 SELECT * FROM TopSellingGames;
 ```
+
+---
 
 Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
 
@@ -343,6 +358,8 @@ Przykładowe zastosowanie:
 SELECT * FROM dbo.GetGamesByGenre(N'First-Person');
 ```
 
+---
+
 Wyświetlanie informacji o grach w sklepie, które należą do określonej platformy:
 
 ```tsql
@@ -366,6 +383,8 @@ Przykładowe zastosowanie:
 ```tsql
 SELECT * FROM dbo.GetGamesByPlatform(N'PC');
 ```
+
+---
 
 Wyświetlanie informacji o grach powiązanych z określonym deweloperem:
 
@@ -393,6 +412,8 @@ Przykładowe zastosowanie:
 SELECT * FROM dbo.DeveloperGames(N'Naughty Dog');
 ```
 
+---
+
 Wyświetlanie informacji o grach powiązanych z określonym wydawcem:
 
 ```tsql
@@ -419,6 +440,8 @@ Przykładowe zastosowanie:
 SELECT * FROM dbo.DeveloperGames(N'Ubisoft');
 ```
 
+---
+
 Wyświetlanie obliczonej całkowitej kwoty w koszyku użytkownika na podstawie ilości każdej gry i jej ceny w USD:
 
 ```tsql
@@ -443,6 +466,8 @@ Przykładowe zastosowanie:
 ```tsql
 SELECT dbo.CalculateTotalPrice(2);
 ```
+
+---
 
 Wyświetlanie przeliczonej ceny gry na podaną walutę:
 
@@ -520,11 +545,15 @@ END;
 ```
 
 Przykładowe zastosowanie:
+
 ```tsql
 EXEC GetRecommendedGames 4;
 ```
 
-Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego dane są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie. 
+---
+
+Procedura `userLogin` po uruchomieniu podejmuje próbe logowania do konta użytkownika. Sprawdza, czy dane logowania użytkownika są prawidłowe, weryfikując jego nazwę użytkownika i hasło w bazie danych, a także sprawdza, czy użytkownik jest aktualnie zbanowany. Jeśli użytkownik nie jest zbanowany, a jego dane są prawidłowe, procedura zwraca wartość 1, co wskazuje na pomyślne logowanie. Procedura rejestruje również próbę logowania w tabeli LoginAttempts. Jeśli użytkownik został zbanowany lub dane logowania są nieprawidłowe, procedura zwraca wartość 0, co wskazuje na nieudane logowanie. Procedura generuje również komunikat wskazujący, czy logowanie powiodło się, czy nie.
+
 ```tsql
 CREATE PROCEDURE userLogin 
 	@userName NVARCHAR(255), 
@@ -562,9 +591,12 @@ BEGIN
 	RETURN @isAuthenticated
 END;
 ```
+
 <a name = "user_login_use">Przykładowe zastosowanie:
 </a><br>
+
 *Po pięciokrotnym podaniu nipoprawnego hasła użytkownik zostaje zbanowany i próba logowania się nawet z poprawnym hasłem kończy się niepowodzeniem.*
+
 ```tsql
 BEGIN
   DECLARE @ok BIT
@@ -581,8 +613,11 @@ BEGIN
 SELECT * FROM UserBans
 END;
 ```
+
 ---
+
 Procedura `CalculateTotalSales` po uruchomieniu pobiera łączną sprzedaż określonej gry lub wszystkich gier między określoną datą początkową a końcową i zwraca wynik posortowany według sprzedaży każdej gry w kolejności malejącej.
+
 ```tsql
 CREATE PROCEDURE CalculateTotalSales 
   @StartDate DATE = NULL, 
@@ -609,11 +644,15 @@ END;
 ```
 
 Przykładowe zastosowanie:
+
 ```tsql
 EXEC CalculateTotalSales;
 ```
+
 ---
+
 Procedura `SearchUsers` po uruchomieniu wyszukiwa wszystkich użytkowników, których nazwa użytkownika zawiera określony ciąg znaków. Zwraca identyfikator użytkownika i nazwę użytkownika wszystkich pasujących użytkowników.
+
 ```tsql
 CREATE PROCEDURE SearchUsers
   @Username NVARCHAR(255)
@@ -624,11 +663,15 @@ AS
 ```
 
 Przykładowe zastosowanie:
+
 ```tsql
 EXEC SearchUsers 'jo';
 ```
+
 ---
+
 Procedura `GetBiggestConsumers` po uruchomieniu wyszukiwa największych konsumentów na podstawie ich łącznych wydatków lub liczby gier kupionych w danym okresie, z opcją sortowania według dowolnej metryki.
+
 ```tsql
 CREATE PROCEDURE GetBiggestConsumers
   @StartDate DATE = NULL,
@@ -665,12 +708,17 @@ BEGIN
     END DESC;
 END;
 ```
+
 Przykładowe zastosowanie:
+
 ```tsql
 EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 ```
+
 ---
+
 Procedura `GetUserPurchaseHistory` po uruchomieniu wyśwetlaja historię zakupów danego użytkownika, w tym datę zamówienia, tytuł gry i cenę każdej zakupionej gry. Wynik jest sortowany według daty zamówienia i identyfikatora zamówienia.
+
 ```tsql
 CREATE PROCEDURE GetUserPurchaseHistory
   @UserID INT
@@ -693,12 +741,13 @@ END;
 ```
 
 Przykładowe zastosowanie:
+
 ```tsql
 EXEC GetUserPurchaseHistory 2;
 ```
 
 <h3> Opis wyzwalaczy </h3>
----
+
 Wyzwalacz `Tr_EncryptPasswordsTrigger` jest uruchamiany zamiast operacji wstawiania w tabeli Users. Szyfruje wartość kolumny hasła wstawionego wiersza za pomocą algorytmu haszującego SHA i wstawia wiersz z zaszyfrowanym hasłem do tabeli.
 
 ```tsql
@@ -709,12 +758,16 @@ AS
 	INSERT INTO users
 	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
   FROM inserted AS I
-GO
 ```
-Przykładowe zastosowanie<br>
+
+Przykładowe zastosowanie:<br>
+
 [Procedura logowania](#user_login_use)
+
 ---
+
 Wyzwalacz `Tr_UserBanTrigger` jest uruchomiany po dodaniu nowego rekordu do tabeli `LoginAttempts` i automatycznie blokuje użytkownikowi możliwości zalogowania się na okres 5 minut, jeśli nie udało mu się zalogować 5 lub więcej razy w ciągu ostatnich 5 minut. Wyzwalacz wstawia nowy wiersz do tabeli UserBans, określając identyfikator użytkownika, czas rozpoczęcia bana i czas zakończenia bana.
+
 ```tsql
 CREATE TRIGGER Tr_UserBanTrigger 
 ON LoginAttempts
@@ -747,13 +800,17 @@ BEGIN
     VALUES (@UserID, @BanStart, @BanEnd);
   END
 END;
-GO
 ```
-Przykładowe zastosowanie<br>
+
+Przykładowe zastosowanie:<br>
+
 [Procedura logowania](#user_login_use)
+
 ---
+
 Wyzwalacz o nazwie `Tr_RemoveFromCartAndWishlist` usuwa grę zarówno z koszyka użytkownika, jak iz listy życzeń po zakupie tej gry.
-```tslq
+
+```tsql
 CREATE TRIGGER Tr_RemoveFromCartAndWishlist
 ON OrderItems
 AFTER INSERT
@@ -769,10 +826,11 @@ BEGIN
     
     DELETE FROM Wishlist
     WHERE UserID = @userID AND GameID = @gameID
-END
-GO
+END;
 ```
+
 Przykładowe zastosowanie:
+
 ```tsql
 BEGIN
 SELECT * FROM Wishlist WHERE UserID = 1
@@ -781,11 +839,13 @@ INSERT OrderItems (OrderID, GameID, Quantity, [Price in USD])
 VALUES (6, 2, 1, 1)
 SELECT * FROM Wishlist WHERE UserID = 1
 SELECT * FROM Cart WHERE UserID = 1
-END
-GO
+END;
 ```
+
 ---
+
 Wyzwalacz `Tr_AutoGameAwards` jest uruchamiany po dodaniu nowego rekordu do tabeli OrderItems i automatycznie przyznaje grze nagrodę o nazwie `'Community's Favorite'` ('Ulubiony przez społeczność'), jeśli co najmniej 10 unikalnych użytkowników kupiło grę.
+
 ```tsql
 CREATE TRIGGER Tr_AutoGameAwards
 ON OrderItems
@@ -814,9 +874,10 @@ BEGIN
     END
   END
 END;
-GO
 ```
+
 Przykładowe zastosowanie:
+
 ```tsql
 BEGIN
 BEGIN
@@ -864,11 +925,13 @@ SELECT G. Title, GA.AwardName, GA.[Year]
 FROM GameAwards GA
 JOIN Games G ON g.GameID = GA.GameID
 WHERE GA.GameID = 5
-
 END
 ```
+
 ---
+
 Wyzwalacz o nazwie Tr_DeleteAwardsOnGenreDelete usuwa nagrody w grach powiązane z usuniętym gatunkiem gier.
+
 ```tsql
 CREATE TRIGGER Tr_DeleteAwardsOnGenreDelete
 ON GameGenres
@@ -878,10 +941,11 @@ BEGIN
   DELETE ga
   FROM GameAwards ga
   JOIN deleted d ON CHARINDEX(d.Genre, ga.AwardName) > 0;
-END
-
+END;
 ```
+
 Przykładowe zastosowanie:
+
 ```tsql
 BEGIN
   SELECT AwardName FROM GameAwards
@@ -890,10 +954,11 @@ BEGIN
     WHERE Genre IN ('Shooter', 'Adventure')
   END
   SELECT AwardName FROM GameAwards
-END
+END;
 ```
 
 <h3> Opis programu klienckiego </h3>
+
 Program kliencki jest realizowany w języku Python. W programie są wykorzystywane odpowiednie biblioteki pozwalające na wyświetlanie rekordów tabeli Games w czasie rzeczywistym wraz z możliwością realizacji nastepujących operujących się na tej samej tabele operacji:
 - Dodawanie rekordu;
 - Usuwanie rekordu;
