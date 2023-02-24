@@ -11,10 +11,10 @@ import datetime
 class CONFIG:
     DRIVER_NAME = 'SQL SERVER'
     SERVER_NAME = 'DELEVO-PC\SQLEXPRESS'
-    DATABASE_NAME = 'STEAM'
+    DATABASE_NAME = 'GameVault'
     TABLE_NAME = 'dbo.Games'
     APP_NAME = 'Management Studio'
-    FULL_APP_NAME = DATABASE_NAME + ' BD ' + APP_NAME 
+    FULL_APP_NAME = DATABASE_NAME + ' DB ' + APP_NAME 
     TABLE_EXCHANGE_RATE = 'dbo.ExchangeRate'
     
     DEFAULT_CURRENCY = 'USD'

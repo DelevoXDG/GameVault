@@ -1,10 +1,10 @@
 --- DATABASE
 
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'Steam')
-  CREATE DATABASE Steam
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'GameVault')
+  CREATE DATABASE GameVault
 GO
 
-USE Steam;
+USE GameVault;
 
 --- TABLES
 
