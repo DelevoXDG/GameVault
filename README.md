@@ -225,6 +225,12 @@ FROM GameGenres G
 GROUP BY GameId;
 ```
 
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM GameGenresView;
+```
+
 Wyświetlanie wszystkich deweloperów i wydawców dla każdej gry:
 
 ```tsql
@@ -237,6 +243,12 @@ JOIN Publishers ON GamePublishers.PublisherId = Publishers.PublisherId
 GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
 ```
 
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM GameDevelopersAndPublishers;
+```
+
 Wyświetlanie odpowiedniej informacji o grach wydanych na rynku wraz z nazwami ich wszystkich wydawców:
 
 ```tsql
@@ -246,6 +258,12 @@ FROM ReleasedGames R
 JOIN Games G ON R.GameId = G.GameId
 JOIN GamePublishers GP ON G.GameId = GP.GameId
 JOIN Publishers P ON GP.PublisherId = P.PublisherId;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM ReleasedGamesWithPublishers;
 ```
 
 Wyświetlanie dziesięciu najlepiej ocenionych gier, sortując rosnąco wyniki według średniej oceny i liczby recenzji:
@@ -260,6 +278,12 @@ GROUP BY G.GameId, G.Title
 ORDER BY AverageScore DESC, NumberOfReviews DESC;
 ```
 
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM TopRatedGames;
+```
+
 Wyświetlanie dziesięciu najlepiej sprzedających się gier, sortując malejąco po TotalRevenue:
 
 ```tsql
@@ -271,6 +295,12 @@ GROUP BY G.GameId, G.Title
 ORDER BY TotalRevenue DESC;
 ```
 
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM TopSellingGames;
+```
+
 Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę recenzji) z tabel "Users" i "Reviews", którzy napisali najwięcej recenzji, w kolejności malejącej liczby recenzji:
 
 ```tsql
@@ -280,6 +310,12 @@ FROM Users U
 JOIN Reviews R ON U.UserId = R.UserId
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
+```
+
+Przykładowe zastosowanie:
+
+```tsql
+SELECT * FROM MostActiveUsers;
 ```
 
 <h3> Opis procedur składowanych </h3>
