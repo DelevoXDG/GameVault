@@ -88,9 +88,18 @@ IF OBJECT_ID('Games', 'U') IS NOT NULL
   DROP TABLE Games
 GO
 
+IF OBJECT_ID('UserBans', 'U') IS NOT NULL
+  DROP TABLE UserBans
+
+IF OBJECT_ID('LoginAttempts', 'U') IS NOT NULL
+  DROP TABLE LoginAttempts
+GO
+
 IF OBJECT_ID('Users', 'U') IS NOT NULL
   DROP TABLE Users
 GO
+
+
 
 -- 1
 CREATE TABLE Users (
@@ -123,7 +132,7 @@ GO
 -- 4
 CREATE TABLE Games (
   GameID INT PRIMARY KEY IDENTITY(1,1),
-  Title NVARCHAR(255) NOT NULL UNIQUE,
+  Title NVARCHAR(255) NOT NULL,
   LastUpdatedDate DATE NOT NULL,
   Description TEXT,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0)
@@ -170,7 +179,7 @@ GO
 CREATE TABLE PreOrderGames (
   PreOrderGameID INT PRIMARY KEY IDENTITY(1,1),
   GameID INT NOT NULL,
-  PreOrderBonus TEXT,
+  PreOrderBonus NVARCHAR(255),
   PreOrderDiscount DECIMAL(2),
   FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -230,9 +239,9 @@ GO
 -- 15
 CREATE TABLE Developers (
   DeveloperID INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL UNIQUE,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website NVARCHAR(255) UNIQUE
+  Website NVARCHAR(255)
 );
 GO
 
@@ -249,9 +258,9 @@ GO
 -- 17
 CREATE TABLE Publishers (
   PublisherID INT PRIMARY KEY IDENTITY(1,1),
-  Name NVARCHAR(255) NOT NULL UNIQUE,
+  Name NVARCHAR(255) NOT NULL,
   Description TEXT,
-  Website NVARCHAR(255) UNIQUE
+  Website NVARCHAR(255)
 );
 GO
 
@@ -291,7 +300,8 @@ CREATE TABLE Orders (
   OrderID INT PRIMARY KEY IDENTITY(1,1),
   UserID INT NOT NULL,
   OrderDate DATE NOT NULL,
-  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE
+
+  FOREIGN KEY (UserID) REFERENCES Users (UserID) ON DELETE CASCADE ON UPDATE CASCADE,
 );
 GO
 
@@ -303,7 +313,7 @@ CREATE TABLE OrderItems (
   Quantity INT NOT NULL,
   [Price in USD] MONEY NOT NULL CHECK ([Price in USD] >= 0),
   FOREIGN KEY (OrderID) REFERENCES Orders (OrderID) ON DELETE CASCADE ON UPDATE CASCADE,
-  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE
+  FOREIGN KEY (GameID) REFERENCES Games (GameID) ON DELETE CASCADE ON UPDATE CASCADE --- might need to change this
 );
 GO
 
@@ -315,243 +325,145 @@ CREATE TABLE ExchangeRate (
 );
 GO
 
---- VIEWS
-
-IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
-  DROP VIEW GameGenresView
-GO
-
-IF OBJECT_ID('GameDevelopersAndPublishers', 'V') IS NOT NULL
-  DROP VIEW GameDevelopersAndPublishers;
-GO
-
-IF OBJECT_ID('ReleasedGamesWithPublishers', 'V') IS NOT NULL
-  DROP VIEW ReleasedGamesWithPublishers
-GO
-
-IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
-  DROP VIEW TopRatedGames
-GO
-
-IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
-  DROP VIEW TopSellingGames
-GO
-
-IF OBJECT_ID('MostActiveUsers', 'V') IS NOT NULL
-  DROP VIEW MostActiveUsers
-GO
+-- TRIGGERS
 
 -- 1
-CREATE VIEW GameGenresView AS
-SELECT GameID, CONVERT(NVARCHAR(MAX), (
-  SELECT Genre + ', '
-  FROM GameGenres
-  WHERE GameID = G.GameID
-  FOR XML PATH('')
-), 1) AS Genres
-FROM GameGenres G
-GROUP BY GameID;
+IF OBJECT_ID('Tr_EncryptPasswordsTrigger', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_EncryptPasswordsTrigger
+GO
+CREATE TRIGGER Tr_EncryptPasswordsTrigger 
+ON users
+INSTEAD OF INSERT
+AS
+	INSERT INTO users
+	SELECT I.username, I.email, CONVERT(NVARCHAR,HASHBYTES('SHA',I.password),2)
+  FROM inserted AS I
 GO
 
 -- 2
-CREATE VIEW GameDevelopersAndPublishers AS
-SELECT GameDevelopers.GameID, Developers.Name AS Developers, Publishers.Name AS Publishers
-FROM GameDevelopers
-JOIN Developers ON GameDevelopers.DeveloperID = Developers.DeveloperID
-JOIN GamePublishers ON GameDevelopers.GameID = GamePublishers.GameID
-JOIN Publishers ON GamePublishers.PublisherID = Publishers.PublisherID
-GROUP BY GameDevelopers.GameID, Developers.Name, Publishers.Name;
+IF OBJECT_ID('Tr_UserBanTrigger', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_UserBanTrigger
+GO
+CREATE TRIGGER Tr_UserBanTrigger 
+ON LoginAttempts
+AFTER INSERT
+AS
+BEGIN
+  DECLARE @UserID INT, @FailedLoginAttempts INT, @LastFailedLogin DATETIME, @BanStart DATETIME, @BanEnd DATETIME;
+
+  SELECT @UserID = UserID, @FailedLoginAttempts = COUNT(*) FROM LoginAttempts
+  WHERE UserID = (SELECT UserID FROM inserted)
+  AND Success = 0
+  AND Time BETWEEN DATEADD(MINUTE, -5, GETDATE()) AND GETDATE()
+  GROUP BY UserID;
+
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+
+  IF @FailedLoginAttempts >= 5 AND @ActiveBans = 0 
+  BEGIN
+    SELECT TOP 1 @LastFailedLogin = Time 
+    FROM LoginAttempts
+    WHERE UserID = @UserID
+    AND Success = 0
+    ORDER BY Time DESC;
+
+    SET @BanStart = @LastFailedLogin;
+    SET @BanEnd = DATEADD(MINUTE, 5, @BanStart);
+
+    INSERT INTO UserBans (UserID, BanStart, BanEnd)
+    VALUES (@UserID, @BanStart, @BanEnd);
+  END
+END;
 GO
 
 -- 3
-CREATE VIEW ReleasedGamesWithPublishers AS
-SELECT R.GameID, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
-FROM ReleasedGames R
-JOIN Games G ON R.GameID = G.GameID
-JOIN GamePublishers GP ON G.GameID = GP.GameID
-JOIN Publishers P ON GP.PublisherID = P.PublisherID;
+IF OBJECT_ID('Tr_RemoveFromCartAndWishlist', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_RemoveFromCartAndWishlist
 GO
-
+CREATE TRIGGER Tr_RemoveFromCartAndWishlist
+ON OrderItems
+AFTER INSERT
+AS
+BEGIN
+    DECLARE @gameID INT, @userID INT
+    SELECT @gameID = i.GameID, @userID = o.UserID
+    FROM inserted i
+    JOIN Orders o ON i.OrderID = o.OrderID
+    
+    DELETE FROM Cart
+    WHERE UserID = @userID AND GameID = @gameID
+    
+    DELETE FROM Wishlist
+    WHERE UserID = @userID AND GameID = @gameID
+END
+GO
 -- 4
-CREATE VIEW TopRatedGames AS
-SELECT TOP 10 G.GameID, G.Title, AVG(S.Score) AS AverageScore, COUNT(R.GameID) AS NumberOfReviews
-FROM Games G
-LEFT JOIN Score S ON G.GameID = S.GameID
-LEFT JOIN Reviews R ON G.GameID = R.GameID
-GROUP BY G.GameID, G.Title
-ORDER BY AverageScore DESC, NumberOfReviews DESC;
+IF OBJECT_ID('Tr_AutoGameAwards', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_AutoGameAwards
 GO
-
--- 5
-CREATE VIEW TopSellingGames AS
-SELECT TOP 10 G.GameID, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
-FROM Games G
-JOIN OrderItems OI ON G.GameID = OI.GameID
-GROUP BY G.GameID, G.Title
-ORDER BY TotalRevenue DESC;
-GO
-
--- 6
-CREATE VIEW MostActiveUsers AS
-SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
-FROM Users U
-JOIN Reviews R ON U.UserID = R.UserID
-GROUP BY U.Username
-ORDER BY NumberOfReviews DESC;
-GO
-
---- FUNCTIONS
-
-IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
-  DROP FUNCTION GetGamesByGenre
-GO
-
-IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
-  DROP FUNCTION GetGamesByPlatform
-GO
-
-IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
-  DROP FUNCTION DeveloperGames
-GO
-
-IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
-  DROP FUNCTION PublisherGames
-GO
-
-IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalPrice
-GO
-
-IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
-  DROP FUNCTION HowMuch
-GO
-
--- 1
-CREATE FUNCTION GetGamesByGenre
-(
-  @Genre NVARCHAR(255)
-)
-RETURNS TABLE
-AS 
-RETURN (
-  SELECT G.*
-  FROM Games G
-  JOIN GameGenres GG ON G.GameID = GG.GameID
-  WHERE GG.Genre = @Genre
-);
-GO
-
--- 2
-CREATE FUNCTION GetGamesByPlatform
-(
-  @Platform NVARCHAR(255)
-)
-RETURNS TABLE
-AS
-RETURN (
-  SELECT G.*
-  FROM Games G
-  JOIN GamePlatforms GP ON G.GameID = GP.GameID
-  JOIN Platforms P ON GP.PlatformID = P.PlatformID
-  WHERE P.Name = @Platform
-);
-GO
-
--- 3
-CREATE FUNCTION DeveloperGames
-(
-  @Name NVARCHAR(255)
-)
-RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+CREATE TRIGGER Tr_AutoGameAwards
+ON OrderItems
+AFTER INSERT
 AS
 BEGIN
-  INSERT INTO @Games
-  SELECT GameDevelopers.GameID, Games.Title
-  FROM Developers
-  JOIN GameDevelopers ON Developers.DeveloperID = GameDevelopers.DeveloperID
-  JOIN Games ON Games.GameID = GameDevelopers.GameID
-  WHERE Developers.Name = @Name
-  RETURN
+  DECLARE @GameID INT, @Count INT;
+
+  SELECT @GameID = i.GameID
+  FROM inserted i;
+  
+  DECLARE @AWARD_1_NAME NVARCHAR(255);
+  SET @AWARD_1_NAME= 'Community''s Favorite'
+  IF @AWARD_1_NAME NOT IN (SELECT AwardName FROM GameAwards WHERE GameID = @GameID)
+    BEGIN
+    SELECT @Count = COUNT(DISTINCT o.UserID)
+    FROM OrderItems oi
+    JOIN Orders o ON oi.OrderID = o.OrderID
+    WHERE oi.GameID = @GameID;
+    
+    
+    IF @Count >= 10
+    BEGIN
+      INSERT INTO GameAwards (GameID, AwardName, Year)
+      VALUES (@GameID, @AWARD_1_NAME, YEAR(GETDATE()));
+    END
+  END
 END;
 GO
-
--- 4
-CREATE FUNCTION PublisherGames
-(
-  @Name NVARCHAR(255)
-)
-RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+--5
+IF OBJECT_ID('Tr_DeleteAwardsOnGenreDelete', 'TR') IS NOT NULL
+  DROP TRIGGER Tr_DeleteAwardsOnGenreDelete
+GO
+CREATE TRIGGER Tr_DeleteAwardsOnGenreDelete
+ON GameGenres
+AFTER DELETE
 AS
 BEGIN
-  INSERT INTO @Games
-  SELECT GamePublishers.GameID, Games.Title
-  FROM Publishers
-  JOIN GamePublishers ON Publishers.PublisherID = GamePublishers.PublisherID
-  JOIN Games ON Games.GameID = GamePublishers.GameID
-  WHERE Publishers.Name = @Name
-  RETURN
-END;
+  DELETE ga
+  FROM GameAwards ga
+  JOIN deleted d ON CHARINDEX(d.Genre, ga.AwardName) > 0;
+END
+
 GO
-
--- 5
-CREATE FUNCTION CalculateTotalPrice
-(
-  @UserID INT
-)
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @TotalPrice MONEY;
-  SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
-  FROM Cart C
-  JOIN Games G ON C.GameID = G.GameID
-  WHERE C.UserID = @UserID;
-  RETURN @TotalPrice;
-END;
-GO
-
--- 6
-CREATE FUNCTION HowMuch
-(
-  @GameID INT,
-  @Currency NVARCHAR(3)
-)
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @Price MONEY = 0
-  DECLARE @ExchangeRate MONEY = 0
-  SELECT @Price = [Price in USD] FROM Games WHERE GameID = @GameID
-  SELECT @ExchangeRate = [Equal 1 USD] FROM [ExchangeRate] WHERE [Currency] = @Currency
-  RETURN ROUND((@Price * @ExchangeRate), 2)
-END;
-GO
-
---- INSERT DATA
-
--- 1
+-- SAMPLE DATA
 INSERT INTO Users (Username, Email, Password)
 VALUES
-  (N'john_doe', N'john_doe@example.com', N'password1'),
-  (N'jane_doe', N'jane_doe@example.com', N'password2'),
-  (N'jim_smith', N'jim_smith@example.com', N'password3'),
-  (N'sara_lee', N'sara_lee@example.com', N'password4'),
-  (N'tom_jones', N'tom_jones@example.com', N'password5'),
-  (N'jimmy_johns', N'big_jimmy@example.com', N'password6');
-GO
-
--- 2
+  ('john_doe', 'john_doe@example.com', '12345678'),
+  ('jane_doe', 'jane_doe@example.com', 'qwerty'),
+  ('jim_smith', 'jim_smith@example.com', 'passw0rd'),
+  ('sara_lee', 'sara_lee@example.com', 'letmein'),
+  ('tom_jones', 'tom_jones@example.com', 'abc123'),
+  ('jimmy_johns', 'big_jimmy@example.com', 'admin');
+-- SELECT * FROM USERS
+-- GO;
 INSERT INTO Games (Title, LastUpdatedDate, Description, [Price in USD])
 VALUES
-  (N'The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
-  (N'Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
-  (N'God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
-  (N'Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
-  (N'Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
-  (N'Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
-GO
-
--- 3
+  ('The Last of Us Part II', '2023-03-15', 'Survive and explore a post-apocalyptic world filled with danger and complex characters.', 59.99),
+  ('Red Dead Redemption 2', '2022-09-25', 'Live the life of an outlaw in a stunning open world filled with memorable characters and tough choices.', 59.99),
+  ('God of War', '2022-10-01', 'Journey with Kratos and his son Atreus through Norse mythology in this epic adventure.', 39.99),
+  ('Halo 5: Guardians', '2022-06-15', 'Join Master Chief and Spartan Locke in a battle to save the galaxy from a new threat.', 59.99),
+  ('Minecraft', '2022-11-30', 'Unleash your creativity and build anything you can imagine in a blocky, procedurally generated world.', 26.95),
+  ('Cyberpunk 2077', '2022-01-15', 'Experience the gritty world of Night City in this action-packed RPG.', 49.99);
 INSERT INTO GameGenres (GameID, Genre)
 VALUES
   (1, N'Multiplayer'),
@@ -715,27 +627,26 @@ GO
 -- 19
 INSERT INTO Orders (UserID, OrderDate) 
 VALUES 
-  (1, '2023-01-07'),
-  (2, '2022-12-30'),
-  (3, '2022-12-03'),
-  (4, '2022-09-15'),
+  (6, '2022-07-15'),
   (5, '2022-08-01'),
-  (6, '2022-07-15');
-GO
+  (4, '2022-09-15'),
+  (3, '2022-12-03'),
+  (2, '2022-12-30'),
+  (1, '2023-01-07'),
+  (2, '2023-02-02');
 
--- 20
 INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD]) 
 VALUES 
   (1, 1, 2, 29.99),
-  (1, 2, 1, 9.99),
+  (1, 2, 1, 59.99),
   (1, 3, 3, 44.97),
   (1, 4, 1, 19.99),
   (1, 5, 2, 29.98),
-  (2, 2, 1, 9.99),
+  (2, 2, 1, 59.99),
   (2, 3, 2, 29.98),
   (2, 5, 1, 14.99),
   (3, 1, 1, 14.99),
-  (3, 2, 1, 9.99),
+  (3, 2, 1, 59.99),
   (3, 3, 1, 14.99),
   (3, 4, 2, 39.98),
   (3, 5, 1, 14.99),
@@ -743,11 +654,14 @@ VALUES
   (4, 3, 1, 14.99),
   (4, 4, 1, 19.99),
   (4, 5, 1, 14.99),
-  (5, 1, 2, 29.98),
-  (5, 2, 1, 9.99),
+  (5, 5, 2, 29.98),
+  (5, 2, 1, 59.99),
   (5, 4, 2, 39.98),
-  (5, 6, 1, 49.99);
-GO
+  (5, 6, 1, 49.99),
+  (6, 1, 1, 29.99),
+  (7, 1, 1, 29.99),
+  (7, 3, 1, 14.99);
+  
 
 -- 21
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
@@ -764,70 +678,55 @@ GO
 IF OBJECT_ID('GetRecommendedGames', 'P') IS NOT NULL
   DROP PROCEDURE GetRecommendedGames
 GO
-
-IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
-  DROP PROCEDURE CalculateTotalSales
-GO
-
-IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
-  DROP FUNCTION CalculateTotalRevenue
-GO
-
-IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
-  DROP PROCEDURE SearchUsers
-GO
-
-IF OBJECT_ID('GetMostActiveUsers', 'P') IS NOT NULL
-  DROP PROCEDURE GetMostActiveUsers
-GO
-
--- 1
 CREATE PROCEDURE GetRecommendedGames (@UserID INT)
-AS
-BEGIN
-WITH UserOrders AS (
-  SELECT OrderID
-  FROM Orders
-  WHERE UserID = @UserID
-),
-UserGames AS (
-  SELECT DISTINCT GameID
-  FROM OrderItems
-  WHERE OrderID IN (SELECT OrderID FROM UserOrders)
-),
-MatchingUsers AS (
+  AS
+  BEGIN
+  WITH UserOrders AS (
+    SELECT OrderID
+    FROM Orders
+    WHERE UserID = @UserID
+  ),
+  UserGames AS (
+    SELECT DISTINCT GameID
+    FROM OrderItems
+    WHERE OrderID IN (SELECT OrderID FROM UserOrders)
+  ),
+  MatchingUsers AS (
+    SELECT 
+      UserID, 
+      COUNT(DISTINCT GameID) AS [Matching Games Num]
+    FROM OrderItems AS OI
+    JOIN Orders AS O
+    ON OI.OrderID = O.OrderID
+    WHERE 
+      GameID IN (SELECT GameID FROM UserGames)
+      AND UserID <> @UserID
+    GROUP BY UserID
+  ), 
+  MatchingGames AS (
   SELECT 
-    UserID, 
-    COUNT(DISTINCT GameID) AS [Matching Games Num]
-  FROM OrderItems AS OI
-  JOIN Orders AS O
-  ON OI.OrderID = O.OrderID
-  WHERE 
-    GameID IN (SELECT GameID FROM UserGames)
-    AND UserID <> @UserID
-  GROUP BY UserID
-)
-, MatchingGames AS (
-  SELECT 
-    G.GameID,
-    G.Title,
-    U.[Matching Games Num] ,
-    ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
-  FROM MatchingUsers U
-  JOIN Orders AS O ON U.UserID = O.UserID
-  JOIN OrderItems AS OI ON O.OrderID = OI.OrderID
-  JOIN Games AS G ON OI.GameID = G.GameID
-  WHERE U.[Matching Games Num] >= 1
-  GROUP BY G.GameID, G.Title, U.[Matching Games Num], U.UserID
-)
-SELECT GameID, Title
-FROM MatchingGames
-WHERE RowNum = 1
-ORDER BY [Matching Games Num] DESC
+      G.GameID,
+      G.Title,
+      U.[Matching Games Num] ,
+      ROW_NUMBER() OVER (PARTITION BY G.Title ORDER BY U.[Matching Games Num] DESC) AS RowNum
+    FROM MatchingUsers U
+    JOIN Orders AS O ON U.UserID = O.UserID
+    JOIN OrderItems AS OI ON O.OrderID = OI.OrderID
+    JOIN Games AS G ON OI.GameID = G.GameID
+    WHERE U.[Matching Games Num] >= 1
+    GROUP BY G.GameID, G.Title, U.[Matching Games Num], U.UserID
+  )
+  SELECT GameID, Title
+  FROM MatchingGames
+  WHERE RowNum = 1
+  ORDER BY [Matching Games Num] DESC
 END;
 GO
 
 -- EXEC GetRecommendedGames 4
+IF OBJECT_ID('CalculateTotalSales', 'P') IS NOT NULL
+  DROP PROCEDURE CalculateTotalSales
+GO
 
 -- 2
 CREATE PROCEDURE CalculateTotalSales 
@@ -853,32 +752,12 @@ BEGIN
     TotalSales DESC;
 END;
 GO
-
--- EXEC GetTopRatedGames 10
--- GO
-
 -- EXEC CalculateTotalSales 
 -- GO
 
--- 3
-CREATE FUNCTION CalculateTotalRevenue ()
-RETURNS MONEY
-AS
-BEGIN
-  DECLARE @TotalRevenue MONEY
-  SELECT @TotalRevenue = SUM(OI.Quantity * OI.[Price in USD])
-  FROM OrderItems OI
-  LEFT JOIN Games G ON OI.GameID = G.GameID
-  LEFT JOIN Orders O ON OI.OrderID = O.OrderID
-  WHERE O.OrderDate IS NOT NULL
-  RETURN @TotalRevenue
-END;
+IF OBJECT_ID('SearchUsers', 'P') IS NOT NULL
+  DROP PROCEDURE SearchUsers
 GO
-
--- SELECT dbo.CalculateTotalRevenue()
--- GO
-
--- 4
 CREATE PROCEDURE SearchUsers
   @Username NVARCHAR(255)
 AS
@@ -890,11 +769,13 @@ GO
 -- EXEC SearchUsers 'jo'
 -- GO
 
--- 5
-CREATE PROCEDURE GetMostActiveUsers
+IF OBJECT_ID('GetBiggestConsumers', 'P') IS NOT NULL
+  DROP PROCEDURE GetBiggestConsumers
+GO
+CREATE PROCEDURE GetBiggestConsumers
   @StartDate DATE = NULL,
   @EndDate DATE = NULL,
-  @OrderBy NVARCHAR(20) = N'TotalSpent' -- Default to sorting by TotalSpent in descending order
+  @OrderBy NVARCHAR(20) = 'TotalSpent' -- Sorting by TotalSpent by default
 AS
 BEGIN
   WITH UserPurchaseInfo AS (
@@ -922,9 +803,387 @@ BEGIN
     CASE
       WHEN @OrderBy = 'TotalSpent' THEN PI.TotalSpent
       WHEN @OrderBy = 'GamesBought' THEN PI.GamesBoughtNum
+      ELSE PI.TotalSpent
     END DESC;
 END;
 GO
-
--- EXEC GetMostActiveUsers '2022-12-01', '2022-12-31', 'GamesBought';
+-- EXEC GetBiggestConsumers '2022-12-01', '2022-12-31', 'GamesBought';
 -- GO
+
+IF OBJECT_ID('GetUserPurchaseHistory', 'P') IS NOT NULL
+  DROP PROCEDURE GetUserPurchaseHistory
+GO
+CREATE PROCEDURE GetUserPurchaseHistory
+  @UserID INT
+AS
+BEGIN
+  SELECT
+    O.OrderID,
+    O.OrderDate,
+    G.Title,
+    OI.[Price in USD] * OI.Quantity AS TotalPrice
+  FROM
+    Orders O
+    JOIN OrderItems OI ON O.OrderID = OI.OrderID
+    JOIN Games G ON OI.GameID = G.GameID
+  WHERE
+    O.UserID = @UserID
+  ORDER BY
+    O.OrderDate ASC, O.OrderID ASC;
+END;
+GO
+-- EXEC GetUserPurchaseHistory 2
+-- GO
+
+--- VIEWS
+
+-- 1
+IF OBJECT_ID('GameGenresView', 'V') IS NOT NULL
+  DROP VIEW GameGenresView
+GO
+
+CREATE VIEW GameGenresView AS
+  SELECT GameID, CONVERT(NVARCHAR(MAX), (
+    SELECT Genre + ', '
+    FROM GameGenres
+    WHERE GameID = G.GameID
+    FOR XML PATH('')
+  ), 1) AS Genres
+  FROM GameGenres G
+  GROUP BY GameID;
+GO
+
+-- 2
+IF OBJECT_ID('GameDevelopersAndPublishers', 'V') IS NOT NULL
+  DROP VIEW GameDevelopersAndPublishers;
+GO
+
+CREATE VIEW GameDevelopersAndPublishers AS
+SELECT GameDevelopers.GameID, Developers.Name AS Developers, Publishers.Name AS Publishers
+FROM GameDevelopers
+JOIN Developers ON GameDevelopers.DeveloperID = Developers.DeveloperID
+JOIN GamePublishers ON GameDevelopers.GameID = GamePublishers.GameID
+JOIN Publishers ON GamePublishers.PublisherID = Publishers.PublisherID
+GROUP BY GameDevelopers.GameID, Developers.Name, Publishers.Name;
+GO
+
+-- 3
+IF OBJECT_ID('ReleasedGamesWithPublishers', 'V') IS NOT NULL
+  DROP VIEW ReleasedGamesWithPublishers
+GO
+
+CREATE VIEW ReleasedGamesWithPublishers AS
+SELECT R.GameID, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
+FROM ReleasedGames R
+JOIN Games G ON R.GameID = G.GameID
+JOIN GamePublishers GP ON G.GameID = GP.GameID
+JOIN Publishers P ON GP.PublisherID = P.PublisherID;
+GO
+
+-- 4
+IF OBJECT_ID('TopRatedGames', 'V') IS NOT NULL
+  DROP VIEW TopRatedGames
+GO
+CREATE VIEW TopRatedGames AS
+  SELECT TOP 100 PERCENT G.GameID, G.Title, AVG(S.Score) AS [Average Score], COUNT(R.GameID) AS [Number of Reviews]
+  FROM Games AS G
+  LEFT JOIN Score AS S 
+  ON G.GameID = S.GameID
+  LEFT JOIN Reviews AS R
+  ON G.GameID = R.GameID
+  GROUP BY 
+    G.GameID, 
+    G.Title
+  ORDER BY 
+    [Average Score] DESC,
+    [Number of Reviews] DESC; 
+GO
+
+
+-- 5
+IF OBJECT_ID('TopSellingGames', 'V') IS NOT NULL
+  DROP VIEW TopSellingGames
+GO
+CREATE VIEW TopSellingGames AS
+SELECT TOP 100 PERCENT G.GameID, G.Title, SUM(OI.[Price in USD] * OI.Quantity) AS TotalRevenue
+FROM Games G
+JOIN OrderItems OI ON G.GameID = OI.GameID
+GROUP BY G.GameID, G.Title
+ORDER BY TotalRevenue DESC;
+GO
+
+-- 6
+IF OBJECT_ID('MostReviewingUsers', 'V') IS NOT NULL
+  DROP VIEW MostReviewingUsers
+GO
+CREATE VIEW MostReviewingUsers AS
+SELECT TOP 100 PERCENT U.Username, COUNT(*) AS NumberOfReviews
+FROM Users U
+JOIN Reviews R ON U.UserID = R.UserID
+GROUP BY U.Username
+ORDER BY NumberOfReviews DESC;
+GO
+
+--- FUNCTIONS
+
+-- 1
+IF OBJECT_ID('userLogin', 'P') IS NOT NULL
+  DROP PROCEDURE userLogin
+GO
+CREATE PROCEDURE userLogin 
+	@userID INT, 
+	@password NVARCHAR(255)
+AS
+BEGIN
+	DECLARE @isAuthenticated BIT = 0
+  DECLARE @ActiveBans INT
+  SELECT @ActiveBans = COUNT(*) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+	IF @ActiveBans <> 0
+    BEGIN
+      SET @isAuthenticated = 0
+      DECLARE @BanExpiration DATETIME
+      SELECT @BanExpiration = MAX(BanEnd) FROM UserBans WHERE UserID = @userID AND BanEnd >= GETDATE()
+      PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' IS BANNED UNTIL ' + CONVERT(NVARCHAR, @BanExpiration)
+    END
+  ELSE
+    BEGIN
+      IF EXISTS (SELECT password FROM Users WHERE UserID = @userID)
+        BEGIN
+          IF (SELECT password FROM Users WHERE UserID = @userID) = CONVERT(NVARCHAR,HASHBYTES('SHA',@password),2)
+          BEGIN
+            SET @isAuthenticated = 1
+        END
+    END
+  END
+	PRINT 'USER ID' + CONVERT(NVARCHAR, @userID) + ' ATTEMPTED TO LOGIN AND THE LOGIN ' + CASE WHEN @isAuthenticated = 1 THEN 'WAS SUCCESSFUL' ELSE 'FAILED' END
+	INSERT INTO LoginAttempts(UserID, Time, Success) 
+	VALUES (@userID, GETDATE(), @isAuthenticated)
+
+	RETURN @isAuthenticated
+END
+GO
+
+-- SELECT * FROM UserBans
+-- BEGIN
+--   DECLARE @LoginIsSuccessful BIT
+--   EXEC @LoginIsSuccessful = dbo.userLogin 3, 'passw0rd'
+  
+--   SELECT IIF (@LoginIsSuccessful = 1, 'SUCCESSFUL', 'FAILED') AS [Login Attempt]
+-- END
+-- GO
+-- 2
+IF OBJECT_ID('GetGamesByGenre', 'IF') IS NOT NULL
+  DROP FUNCTION GetGamesByGenre
+GO
+
+CREATE FUNCTION GetGamesByGenre
+(
+  @Genre NVARCHAR(255)
+)
+RETURNS TABLE
+AS 
+RETURN (
+  SELECT G.*
+  FROM Games G
+  JOIN GameGenres GG ON G.GameID = GG.GameID
+  WHERE GG.Genre = @Genre
+);
+GO
+
+-- 3
+IF OBJECT_ID('GetGamesByPlatform', 'IF') IS NOT NULL
+  DROP FUNCTION GetGamesByPlatform
+GO
+
+CREATE FUNCTION GetGamesByPlatform
+(
+  @Platform NVARCHAR(255)
+)
+RETURNS TABLE
+AS
+RETURN (
+  SELECT G.*
+  FROM Games G
+  JOIN GamePlatforms GP ON G.GameID = GP.GameID
+  JOIN Platforms P ON GP.PlatformID = P.PlatformID
+  WHERE P.Name = @Platform
+);
+GO
+
+-- 4
+IF OBJECT_ID('DeveloperGames', 'TF') IS NOT NULL
+  DROP FUNCTION DeveloperGames
+GO
+
+CREATE FUNCTION DeveloperGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GameDevelopers.GameID, Games.Title
+  FROM Developers
+  JOIN GameDevelopers ON Developers.DeveloperID = GameDevelopers.DeveloperID
+  JOIN Games ON Games.GameID = GameDevelopers.GameID
+  WHERE Developers.Name = @Name
+  RETURN
+END;
+GO
+
+-- 5
+IF OBJECT_ID('PublisherGames', 'TF') IS NOT NULL
+  DROP FUNCTION PublisherGames
+GO
+
+CREATE FUNCTION PublisherGames
+(
+  @Name NVARCHAR(255)
+)
+RETURNS @Games TABLE (GameID INT, Title NVARCHAR(255))
+AS
+BEGIN
+  INSERT INTO @Games
+  SELECT GamePublishers.GameID, Games.Title
+  FROM Publishers
+  JOIN GamePublishers ON Publishers.PublisherID = GamePublishers.PublisherID
+  JOIN Games ON Games.GameID = GamePublishers.GameID
+  WHERE Publishers.Name = @Name
+  RETURN
+END;
+GO
+-- 6
+IF OBJECT_ID('CalculateTotalPrice', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalPrice
+GO
+
+CREATE FUNCTION CalculateTotalPrice
+(
+  @UserID INT
+)
+RETURNS MONEY
+AS
+BEGIN
+    DECLARE @TotalPrice MONEY;
+    SELECT @TotalPrice = SUM(C.Quantity * G.[Price in USD])
+    FROM Cart C
+    JOIN Games G ON C.GameID = G.GameID
+    WHERE C.UserID = @UserID;
+    RETURN @TotalPrice;
+END;
+GO
+-- 7
+IF OBJECT_ID('CalculateTotalRevenue', 'FN') IS NOT NULL
+  DROP FUNCTION CalculateTotalRevenue
+GO
+
+CREATE FUNCTION CalculateTotalRevenue ()
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @TotalRevenue MONEY
+  SELECT @TotalRevenue = SUM(OI.Quantity * OI.[Price in USD])
+  FROM OrderItems OI
+  LEFT JOIN Games G ON OI.GameID = G.GameID
+  LEFT JOIN Orders O ON OI.OrderID = O.OrderID
+  WHERE O.OrderDate IS NOT NULL
+  
+  RETURN @TotalRevenue
+END;
+GO
+-- SELECT dbo.CalculateTotalRevenue()
+-- GO
+
+-- 8
+IF OBJECT_ID('HowMuch', 'FN') IS NOT NULL
+  DROP FUNCTION HowMuch
+GO
+
+CREATE FUNCTION HowMuch
+(
+  @GameID INT,
+  @Currency CHAR(3)
+)
+RETURNS MONEY
+AS
+BEGIN
+  DECLARE @Price MONEY = 0
+  DECLARE @ExchangeRate MONEY = 0
+  SET @Price = (SELECT [Price in USD] FROM Games WHERE @GameID = GameID)
+		SET @ExchangeRate = (SELECT [Equal 1 USD] FROM [ExchangeRate] WHERE @Currency = [Currency])
+  RETURN ROUND((@Price * @ExchangeRate), 2)
+END;
+GO
+-- SELECT dbo.HowMuch(1, 'PLN')
+-- GO
+
+-- TEST Tr_RemoveFromCartAndWishlist
+-- BEGIN
+-- INSERT OrderItems (OrderID, GameID, Quantity, [Price in USD]) 
+-- VALUES (6, 2, 1, 1)
+-- SELECT * FROM Wishlist WHERE UserID = 1
+-- SELECT * FROM Cart WHERE UserID = 1
+
+-- END
+
+-- TEST Tr_AutoGameAward
+-- BEGIN
+-- BEGIN
+--   DELETE FROM Users WHERE 1=1;
+--   DELETE FROM Orders WHERE 1=1;
+--   DELETE FROM OrderItems WHERE 1=1;
+-- END
+-- INSERT INTO Users (Username, Email, Password)
+-- VALUES 
+-- ('user1', 'user1@example.com', 'password1'),
+-- ('user2', 'user2@example.com', 'password2'),
+-- ('user3', 'user3@example.com', 'password3'),
+-- ('user4', 'user4@example.com', 'password4'),
+-- ('user5', 'user5@example.com', 'password5'),
+-- ('user6', 'user6@example.com', 'password6'),
+-- ('user7', 'user7@example.com', 'password7'),
+-- ('user8', 'user8@example.com', 'password8'),
+-- ('user9', 'user9@example.com', 'password9'),
+-- ('user10', 'user10@example.com', 'password10');
+-- -- create orders for each user
+-- BEGIN
+--   INSERT INTO Orders (UserID, OrderDate) 
+--   VALUES 
+--     ((SELECT UserID FROM Users WHERE Username = 'user1'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user2'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user3'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user4'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user5'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user6'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user7'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user8'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user9'), '2023-01-20'),
+--     ((SELECT UserID FROM Users WHERE Username = 'user10'), '2023-01-20')
+-- END
+-- BEGIN
+--   INSERT INTO OrderItems (OrderID, GameID, Quantity, [Price in USD])
+-- SELECT O.OrderID, 5, 1, G.[Price in USD]
+-- FROM Orders O
+-- JOIN Users u ON O.UserID = u.UserID
+-- JOIN Games G ON G.GameID = 5
+-- END
+
+-- -- SELECT * FROM OrderItems WHERE GameID = 5
+-- SELECT G. Title, GA.AwardName, GA.[Year]
+-- FROM GameAwards GA
+-- JOIN Games G ON g.GameID = GA.GameID
+-- WHERE GA.GameID = 5
+
+-- END
+GO
+
+-- TEST Tr_Tr_DeleteAwardsOnGenreDelete
+-- BEGIN
+--   SELECT AwardName FROM GameAwards
+--   BEGIN
+--     DELETE FROM GameGenres 
+--     WHERE Genre IN ('Shooter', 'Adventure')
+--   END
+--   SELECT AwardName FROM GameAwards
+-- END
