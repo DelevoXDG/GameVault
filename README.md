@@ -217,14 +217,14 @@ Wyświetlanie wszystkich gatunków dla każdej gry:
 
 ```tsql
 CREATE VIEW GameGenresView AS
-SELECT GameId, CONVERT(NVARCHAR(MAX), (
+SELECT GameID, CONVERT(NVARCHAR(MAX), (
   SELECT Genre + ', '
   FROM GameGenres
-  WHERE GameId = G.GameId
+  WHERE GameID = G.GameID
   FOR XML PATH('')
 ), 1) AS Genres
 FROM GameGenres G
-GROUP BY GameId;
+GROUP BY GameID;
 ```
 
 Przykładowe zastosowanie:
@@ -236,12 +236,12 @@ Wyświetlanie wszystkich deweloperów i wydawców dla każdej gry:
 
 ```tsql
 CREATE VIEW GameDevelopersAndPublishers AS
-SELECT GameDevelopers.GameId, Developers.Name AS Developers, Publishers.Name AS Publishers
+SELECT GameDevelopers.GameID, Developers.Name AS Developers, Publishers.Name AS Publishers
 FROM GameDevelopers
-JOIN Developers ON GameDevelopers.DeveloperId = Developers.DeveloperId
-JOIN GamePublishers ON GameDevelopers.GameId = GamePublishers.GameId
-JOIN Publishers ON GamePublishers.PublisherId = Publishers.PublisherId
-GROUP BY GameDevelopers.GameId, Developers.Name, Publishers.Name;
+JOIN Developers ON GameDevelopers.DeveloperID = Developers.DeveloperID
+JOIN GamePublishers ON GameDevelopers.GameID = GamePublishers.GameID
+JOIN Publishers ON GamePublishers.PublisherID = Publishers.PublisherID
+GROUP BY GameDevelopers.GameID, Developers.Name, Publishers.Name;
 ```
 
 Przykładowe zastosowanie:
@@ -253,11 +253,11 @@ Wyświetlanie odpowiedniej informacji o grach wydanych na rynku wraz z nazwami i
 
 ```tsql
 CREATE VIEW ReleasedGamesWithPublishers AS
-SELECT R.GameId, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
+SELECT R.GameID, G.Title AS GameTitle, P.Name AS PublisherName, R.ReleaseDate
 FROM ReleasedGames R
-JOIN Games G ON R.GameId = G.GameId
-JOIN GamePublishers GP ON G.GameId = GP.GameId
-JOIN Publishers P ON GP.PublisherId = P.PublisherId;
+JOIN Games G ON R.GameID = G.GameID
+JOIN GamePublishers GP ON G.GameID = GP.GameID
+JOIN Publishers P ON GP.PublisherID = P.PublisherID;
 ```
 
 Wyświetlanie najlepiej ocenionych gier, sortując rosnąco wyniki według średniej oceny i liczby recenzji:
@@ -308,7 +308,7 @@ Wyświetlanie dziesięciu użytkowników (ich nazwy użytkowników i liczbę rec
 CREATE VIEW MostActiveUsers AS
 SELECT TOP 10 U.Username, COUNT(*) AS NumberOfReviews
 FROM Users U
-JOIN Reviews R ON U.UserId = R.UserId
+JOIN Reviews R ON U.UserID = R.UserID
 GROUP BY U.Username
 ORDER BY NumberOfReviews DESC;
 ```
