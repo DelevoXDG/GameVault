@@ -1,8 +1,6 @@
 Herman Lazarchyk, Maksim Zdobnikau
 
-<h1> Baza Danych Sklepu Internetowego Gier Komputerowych </h1>
-
-<img src="src/assets/logo_200.png" alt="GameVault Logo" width="200"/>
+<h1><img align="center" src="src/assets/logo_200.png" alt="GameVault Logo" width="300"/>Baza Danych Sklepu Internetowego Gier Komputerowych</h1>
 <h3> Cel i możliwości </h3>
 
 Zaprojektowana baza danych sklepu internetowego gier komputerowych umożliwia użytkownikom przeglądanie, wybieranie i kupowanie gier. Dzięki odpowiednim tabelom w bazie danych, użytkownicy mogą przeglądać gry według różnych kryteriów, takich jak gatunek, platforma, wydawca, deweloper, a także korzystać z funkcjonalności takich jak przedsprzedaż, beta testy, recenzje i oceny użytkowników, również jak i  tworzenie list życzeń i koszyków zakupowych. Dodatkowo, baza danych umożliwia twórcom gier przeglądanie i aktualizowanie swoich danych, a także otrzymywanie nagród i wyróżnień. Wszystko to pozwala na łatwe i przyjemne korzystanie ze sklepu internetowego gier komputerowych oraz umożliwia na szybkie i wygodne kupowanie gier dla ich fanów.
