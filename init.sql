@@ -669,10 +669,10 @@ VALUES
 INSERT INTO ExchangeRate (Currency, [Equal 1 USD]) 
 VALUES 
   (N'USD', 1.00),
-  (N'EUR', 0.93),
+  (N'EUR', 0.95),
   (N'GBP', 0.83),
-  (N'JPY', 134.15),
-  (N'PLN', 4.45);
+  (N'JPY', 135.58),
+  (N'PLN', 4.47);
 GO
 
 --- PROCEDURES
